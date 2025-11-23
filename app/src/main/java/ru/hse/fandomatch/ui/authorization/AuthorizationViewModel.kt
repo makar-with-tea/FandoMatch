@@ -8,13 +8,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
+import ru.hse.fandomatch.domain.usecase.user.GetPastLoginUseCase
+import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
 
 class AuthorizationViewModel(
+    private val loginUseCase: LoginUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
     private val _state: MutableStateFlow<AuthorizationState> =
-        MutableStateFlow(AuthorizationState.Idle)
+        MutableStateFlow(AuthorizationState.Main())
     val state: StateFlow<AuthorizationState>
         get() = _state
     private val _action = MutableStateFlow<AuthorizationAction?>(null)
@@ -27,16 +31,11 @@ class AuthorizationViewModel(
                 login(event.login, event.password)
             }
 
-            is AuthorizationEvent.RegistrationButtonClicked -> {
-                register(event.login, event.password)
-            }
-
             is AuthorizationEvent.ShowPasswordButtonClicked -> {
                 changeVisibilityState()
             }
 
             is AuthorizationEvent.Clear -> clear()
-            is AuthorizationEvent.CheckPastLogin -> checkPastLogin()
         }
     }
 
@@ -70,11 +69,20 @@ class AuthorizationViewModel(
 
         viewModelScope.launch(dispatcherIO) {
             try {
+                loginUseCase.execute(login, password)
                 withContext(dispatcherMain) {
                     _action.value = AuthorizationAction.NavigateToMatches
                 }
-            } catch (_: Exception) {
+            } catch (e: Exception) {
                 withContext(dispatcherMain) {
+                    if (e is InvalidCredentialsException) {
+                        _state.value = (_state.value as AuthorizationState.Main).copy(
+                            loginError = AuthorizationState.AuthorizationError.IDLE,
+                            passwordError = AuthorizationState.AuthorizationError.INVALID_CREDENTIALS,
+                            isLoading = false
+                        )
+                        return@withContext
+                    }
                     _state.value = (_state.value as AuthorizationState.Main).copy(
                         passwordError =
                             AuthorizationState.AuthorizationError.NETWORK,
@@ -87,16 +95,8 @@ class AuthorizationViewModel(
     }
 
     private fun clear() {
-        _state.value = AuthorizationState.Idle
+        _state.value = AuthorizationState.Main()
         _action.value = null
-    }
-
-    private fun register(login: String, password: String) {
-        _state.value = AuthorizationState.Main(
-            login = login,
-            password = password
-        )
-        _action.value = AuthorizationAction.NavigateToRegistration
     }
 
     private fun changeVisibilityState() {
@@ -104,21 +104,6 @@ class AuthorizationViewModel(
             _state.value = (_state.value as AuthorizationState.Main).copy(
                 passwordVisibility = !(_state.value as AuthorizationState.Main).passwordVisibility
             )
-        }
-    }
-
-    private fun checkPastLogin() {
-        _state.value = AuthorizationState.Loading
-        viewModelScope.launch(dispatcherIO) {
-            val username = null
-            // todo usecase
-            withContext(dispatcherMain) {
-                if (username != null) {
-                    _action.value = AuthorizationAction.NavigateToMatches
-                } else {
-                    _state.value = AuthorizationState.Main()
-                }
-            }
         }
     }
 }

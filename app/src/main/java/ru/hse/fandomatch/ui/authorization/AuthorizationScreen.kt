@@ -33,7 +33,6 @@ import ru.hse.fandomatch.ui.composables.MyTitle
 @Composable
 fun AuthorizationScreen(
     navigateToMatches: () -> Unit,
-    navigateToRegistration: () -> Unit,
     viewModel: AuthorizationViewModel = koinViewModel()
 ) {
     val state = viewModel.state.collectAsState()
@@ -43,11 +42,6 @@ fun AuthorizationScreen(
     when (action.value) {
         is AuthorizationAction.NavigateToMatches -> {
             navigateToMatches()
-            viewModel.obtainEvent(AuthorizationEvent.Clear)
-        }
-
-        is AuthorizationAction.NavigateToRegistration -> {
-            navigateToRegistration()
             viewModel.obtainEvent(AuthorizationEvent.Clear)
         }
 
@@ -61,17 +55,10 @@ fun AuthorizationScreen(
                 onLoginClick = { login, password ->
                     viewModel.obtainEvent(AuthorizationEvent.LoginButtonClicked(login, password))
                 },
-                onRegistrationClick = {login, password ->
-                    viewModel.obtainEvent(AuthorizationEvent.RegistrationButtonClicked(login, password))
-                },
                 onShowPasswordClick = {
                     viewModel.obtainEvent(AuthorizationEvent.ShowPasswordButtonClicked)
                 }
             )
-        }
-        is AuthorizationState.Idle -> {
-            IdleState()
-            viewModel.obtainEvent(AuthorizationEvent.CheckPastLogin)
         }
         is AuthorizationState.Loading -> {
             LoadingState()
@@ -83,7 +70,6 @@ fun AuthorizationScreen(
 fun MainState(
     state: AuthorizationState.Main,
     onLoginClick: (String, String) -> Unit,
-    onRegistrationClick: (String, String) -> Unit,
     onShowPasswordClick: () -> Unit
 ) {
     val login: MutableState<String> = remember { mutableStateOf(state.login) }
@@ -126,28 +112,6 @@ fun MainState(
             }) {
                 Text(stringResource(id = R.string.login_button))
             }
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.no_account),
-                    fontSize = 14.sp
-                )
-                TextButton(
-                    onClick = {
-                        onRegistrationClick(login.value, password.value)
-                    },
-                    modifier = Modifier.width(145.dp),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.register_button),
-                        modifier = Modifier.padding(0.dp),
-                        fontSize = 14.sp
-                    )
-                }
-            }
         }
     }
 
@@ -170,11 +134,6 @@ private fun AuthorizationState.AuthorizationError.toText() = when (this) {
 }
 
 @Composable
-fun IdleState() {
-    LoadingBlock()
-}
-
-@Composable
 fun LoadingState() {
     LoadingBlock()
 }
@@ -183,6 +142,6 @@ fun LoadingState() {
 @Composable
 fun AuthorizationScreenPreview() {
     AuthorizationScreen(
-            {}, {}
+            {}
     )
 }

@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">FandoMatch</string>
 
+    <string name="intro_title">Добро пожаловать!</string>
+
     <string name="authorization_title">Авторизация</string>
     <string name="login_label">Логин</string>
     <string name="password_label">Пароль</string>
@@ -8,12 +10,35 @@
     <string name="no_account">Нет аккаунта?</string>
     <string name="register_button">Зарегистрироваться</string>
 
-    <string name="account_icon_description">Аккаунт</string>
 
-    <string name="registration_title">Регистрация</string>
+    <string name="account_icon_description">Аккаунт</string>
+    <string name="matches_icon_description">Знакомства</string>
+
     <string name="account_title">Аккаунт</string>
     <string name="my_profile_title">Мой профиль</string>
 
+    <string name="registration_title">Регистрация</string>
+    <string name="name_label">Имя</string>
+    <string name="surname_label">Фамилия</string>
+    <string name="email_label">Электронная почта</string>
+    <string name="repeat_password_label">Повторите пароль</string>
+    <string name="already_have_account">Уже есть аккаунт?</string>
+    <string name="next_step">Далее</string>
+    <string name="birthdate_title">Дата рождения</string>
+    <string name="select_birthdate">Выберите дату рождения</string>
+    <string name="gender_title">Пол</string>
+    <string name="select_gender">Выберите пол</string>
+    <string name="male_gender">Мужской</string>
+    <string name="female_gender">Женский</string>
+    <string name="unspecified_gender">Не указан</string>
+    <string name="avatar_title">Аватар</string>
+    <string name="select_avatar">Выберите аватар</string>
+    <string name="no_avatar_selected">Аватар не выбран</string>
+    <string name="agree_terms">Я согласен с <u>условиями использования</u> и <u>политикой конфиденциальности</u></string>
+    <string name="complete_registration">Завершить регистрацию</string>
+    
+    <string name="name_content_error">Имя должно содержать только буквы</string>
+    <string name="surname_content_error">Фамилия должна содержать только буквы</string>
     <string name="name_length_error">Имя должно быть длиной от 2 до 20 символов</string>
     <string name="surname_length_error">Фамилия должна быть длиной от 2 до 20 символов</string>
     <string name="login_length_error">Логин должен быть длиной от 5 до 15 символов</string>
@@ -24,6 +49,10 @@
     <string name="login_taken_error">Данный логин уже занят</string>
     <string name="registration_failed_error">Ошибка регистрации</string>
     <string name="email_content_error">Неверный формат почты</string>
+    <string name="birthdate_too_young_error">Возраст должен быть не менее 12 лет</string>
+    <string name="birthdate_empty_error">Дата рождения не может быть пустой</string>
+    <string name="gender_not_selected_error">Необходимо выбрать пол</string>
+    <string name="password_complexity_error">Пароль должен содержать заглавные и строчные буквы, цифры и специальные символы</string>
 
     <string name="empty_login_error">"Логин не может быть пустым</string>
     <string name="empty_password_error">Пароль не может быть пустым</string>
@@ -37,4 +66,6 @@
     <string name="arrow_back_description">Назад</string>
 
     <string name="repeat_new_password_label">Повторите новый пароль</string>
+
+    <string name="matches_title">Знакомства</string>
 </resources>

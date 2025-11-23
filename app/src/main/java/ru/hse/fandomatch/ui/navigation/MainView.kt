@@ -15,8 +15,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.authorization.AuthorizationScreen
+import ru.hse.fandomatch.ui.intro.IntroScreen
+import ru.hse.fandomatch.ui.registration.RegistrationScreen
+import ru.hse.fandomatch.ui.utils.orFalse
 
 sealed class Route(val route: String) {
+    data object Intro: Route("intro")
     data object Authorization : Route("authorization")
 
     data object Registration : Route("registration")
@@ -26,7 +30,6 @@ sealed class Route(val route: String) {
     data object Matches: Route("matches")
 }
 
-
 @Composable
 fun MainView() {
     Log.d("MainView", "SetUpNavHost")
@@ -34,65 +37,64 @@ fun MainView() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val navigateToAccount = {
-        navController.navigate(Route.Account.route) {
+    fun navigateToRoute(route: Route) {
+        navController.navigate(route.route) {
             launchSingleTop = true
             restoreState = true
         }
+        Log.d("Navigation", "MainView to ${route.route} from $currentRoute")
     }
+
+    // todo go back from the first screen??
 
     Scaffold(
         topBar = {
             val screenTitle = when (currentRoute) {
                 Route.Authorization.route -> stringResource(id = R.string.authorization_title)
-                Route.Registration.route -> stringResource(id = R.string.registration_title)
                 Route.Account.route -> stringResource(id = R.string.my_profile_title)
-                else -> ""
+                Route.Matches.route -> stringResource(id = R.string.matches_title)
+                else -> null
             }
 
-            if (currentRoute != Route.Authorization.route && currentRoute != Route.Registration.route) {
+            screenTitle?.let {
                 TopBar(
-                    title = screenTitle,
+                    state = TopBarState.Title(
+                        title = screenTitle,
+                    ),
                     onBackClick = { navController.popBackStack() }
                 )
             }
         },
         bottomBar = {
             Log.d("SetUpNavHost", "Current route: $currentRoute")
-            if (currentRoute != Route.Authorization.route && currentRoute != Route.Registration.route) {
-                BottomNavigationBar(
-                    navigateToAccount = navigateToAccount,
+            if (currentRoute?.canShowBottomBar().orFalse()) {
+                BottomBar(
+                    navigateToMatches = { navigateToRoute(Route.Matches) },
+                    navigateToAccount = { navigateToRoute(Route.Account) },
                     currentRoute = currentRoute
                 )
             }
         }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            NavHost(navController = navController, startDestination = Route.Authorization.route) {
+            NavHost(navController = navController, startDestination = Route.Intro.route) {
+                composable(Route.Intro.route) {
+                    IntroScreen(
+                        navigateToMatches = { navigateToRoute(Route.Matches) },
+                        navigateToLogin = { navigateToRoute(Route.Authorization) },
+                        navigateToRegistration = { navigateToRoute(Route.Registration) },
+                    )
+                }
                 composable(Route.Authorization.route) {
                     AuthorizationScreen(
-                        navigateToRegistration = {
-                            navController.navigate(Route.Registration.route) {
-                                popUpTo(Route.Authorization.route) {
-                                    inclusive = true
-                                    saveState = false
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                            Log.d("Navigation", "Navigate to Registration from Authorization")
-                        },
-                        navigateToMatches = {
-                            navController.navigate(Route.Matches.route) {
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                            Log.d("Navigation", "Navigate to Matches from Authorization")
-                        },
+                        navigateToMatches = { navigateToRoute(Route.Matches) }
                     )
                 }
                 composable(Route.Registration.route) {
-                    Text("Registration TODO")
+                    RegistrationScreen(
+                        navigateToMatches = { navigateToRoute(Route.Matches) },
+                        navigateBack = { navController.popBackStack() },
+                    )
                 }
                 composable(Route.Matches.route) {
                     Text("Matches TODO")
@@ -103,4 +105,10 @@ fun MainView() {
             }
         }
     }
+}
+
+private fun String.canShowBottomBar(): Boolean {
+    return this != Route.Authorization.route
+            && this != Route.Registration.route
+            && this != Route.Intro.route
 }

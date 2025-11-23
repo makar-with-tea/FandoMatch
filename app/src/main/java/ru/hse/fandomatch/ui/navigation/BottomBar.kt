@@ -19,19 +19,33 @@ import ru.hse.fandomatch.R
 
 
 @Composable
-fun BottomNavigationBar(
+fun BottomBar(
+    navigateToMatches: () -> Unit,
     navigateToAccount: () -> Unit,
     currentRoute: String?
 ) {
     val isPortrait = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
 
-
     NavigationBar(
         modifier = Modifier
-            .height(if (isPortrait) 100.dp else 48.dp),
+            .height(if (isPortrait) 100.dp else 30.dp),
         containerColor = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer
     ) {
+        NavigationBarItem(
+            selected = currentRoute == Route.Matches.route,
+            icon = {
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_cards_stack_star),
+                    contentDescription = stringResource(R.string.matches_icon_description)
+                )
+            },
+            onClick = {
+                navigateToMatches()
+                Log.d("Navigation", "BottomNav to Matches from $currentRoute")
+            }
+        )
 
         NavigationBarItem(
             selected = currentRoute == Route.Account.route,
