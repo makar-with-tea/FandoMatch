@@ -17,7 +17,6 @@ sealed class AuthorizationState {
         val isLoading: Boolean = false
     ) : AuthorizationState()
 
-    data object Idle : AuthorizationState()
     data object Loading : AuthorizationState()
 }
 
@@ -26,16 +25,10 @@ sealed class AuthorizationEvent {
         val login: String,
         val password: String
     ): AuthorizationEvent()
-    data class RegistrationButtonClicked(
-        val login: String,
-        val password: String
-    ): AuthorizationEvent()
     data object ShowPasswordButtonClicked: AuthorizationEvent()
     data object Clear: AuthorizationEvent()
-    data object CheckPastLogin: AuthorizationEvent()
 }
 
 sealed class AuthorizationAction {
     data object NavigateToMatches : AuthorizationAction()
-    data object NavigateToRegistration : AuthorizationAction()
 }
