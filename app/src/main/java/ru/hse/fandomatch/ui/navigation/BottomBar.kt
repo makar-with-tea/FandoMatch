@@ -29,8 +29,8 @@ fun BottomBar(
     NavigationBar(
         modifier = Modifier
             .height(if (isPortrait) 100.dp else 30.dp),
-        containerColor = MaterialTheme.colorScheme.primaryContainer,
-        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
     ) {
         NavigationBarItem(
             selected = currentRoute == Route.Matches.route,

@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.domain.repos
 
+import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.Token
 import ru.hse.fandomatch.domain.model.User
 
@@ -23,4 +24,8 @@ interface GlobalRepository {
 
     suspend fun deleteUser(login: String)
     suspend fun checkPassword(login: String, password: String): Boolean
+
+    suspend fun getSuggestedProfiles(userId: Long, size: Int): List<ProfileCard>
+    suspend fun likeProfile(userId: Long, profileId: Long)
+    suspend fun dislikeProfile(userId: Long, profileId: Long)
 }

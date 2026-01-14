@@ -7,7 +7,7 @@ val primaryContainerLight = Color(0xFFF0DBFF)
 val onPrimaryContainerLight = Color(0xFF563A70)
 val secondaryLight = Color(0xFF7B4E80)
 val onSecondaryLight = Color(0xFFFFFFFF)
-val secondaryContainerLight = Color(0xFFFFD5FF)
+val secondaryContainerLight = Color(0xFFFFDAFF)
 val onSecondaryContainerLight = Color(0xFF613767)
 val tertiaryLight = Color(0xFF35618E)
 val onTertiaryLight = Color(0xFFFFFFFF)
@@ -218,6 +218,28 @@ val surfaceContainerHighDarkHighContrast = Color(0xFF3E3A40)
 val surfaceContainerHighestDarkHighContrast = Color(0xFF4A454B)
 
 
+class CustomColors {
+    companion object {
+        val animeMangaBackground = Color(0xFFFF9897)
+        val booksBackground = Color(0xFF77C8EE)
+        val cartoonsBackground = Color(0xFFFFDC80)
+        val filmsBackground = Color(0xFF81C1FF)
+        val tvSeriesBackground = Color(0xFFB35FC0)
+        val gamesBackground = Color(0xFF66BB6A)
+        val tabletopGamesBackground = Color(0xFFFFD781)
+        val musicBackground = Color(0xFFBE6282)
+        val comicsBackground = Color(0xFFCE7B63)
+        val theaterMusicalsBackground = Color(0xFF8A69C2)
+        val podcastsBackground = Color(0xFF58A199)
+        val contentCreatorsBackground = Color(0xFF6673BD)
+        val celebritiesBackground = Color(0xFFD2DC71)
+        val sportsBackground = Color(0xFFAF968D)
+        val historyBackground = Color(0xFFB2D58F)
+        val mythologyBackground = Color(0xFF836B63)
+        val otherBackground = Color(0xFFBDBDBD)
+        // todo dark theme
+    }
+}
 
 
 

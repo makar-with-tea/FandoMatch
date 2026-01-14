@@ -68,4 +68,9 @@
     <string name="repeat_new_password_label">Повторите новый пароль</string>
 
     <string name="matches_title">Знакомства</string>
+    <string name="no_profiles_found_error">Профили не найдены. Попробуйте изменить фильтры поиска.</string>
+    <string name="retry_load">Повторить загрузку</string>
+
+    <string name="like_profile_description">Лайк</string>
+    <string name="dislike_profile_description">Дизлайк</string>
 </resources>

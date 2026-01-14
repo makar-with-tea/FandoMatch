@@ -6,12 +6,23 @@ data class Fandom(
     val category: FandomCategory
 )
 
-// todo real categories
 enum class FandomCategory {
-    ANIME,
-    BOOK,
-    FILM,
-    GAME,
-    MUSIC_GROUP,
+    ANIME_MANGA,
+    BOOKS,
+    CARTOONS,
+    FILMS,
+    TV_SERIES,
+    GAMES,
+    TABLETOP_GAMES,
+    MUSIC,
+    THEATER_MUSICALS,
+    PODCASTS,
+    COMICS,
+    CONTENT_CREATORS,
+    CELEBRITIES,
+    SPORTS,
+    HISTORY,
+    MYTHOLOGY,
     OTHER
 }
+
