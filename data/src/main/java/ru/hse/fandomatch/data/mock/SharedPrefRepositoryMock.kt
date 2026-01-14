@@ -11,6 +11,10 @@ class SharedPrefRepositoryMock(): SharedPrefRepository {
 
     override suspend fun getUser(): String? = null
 
+    override suspend fun saveUserId(id: Long) = Unit
+
+    override suspend fun getUserId(): Long? = null
+
     override suspend fun clearInfo() = Unit
 
     override fun saveToken(token: String) = Unit

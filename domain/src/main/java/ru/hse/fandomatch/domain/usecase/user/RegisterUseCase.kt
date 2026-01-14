@@ -17,6 +17,7 @@ class RegisterUseCase(
         avatarUri: String?,
         password: String
     ) {
+        // todo use all info
         val res = globalRepository.register(name, email, login, password)
         sharedPrefRepository.saveUser(login)
         sharedPrefRepository.saveToken(res.accessToken)

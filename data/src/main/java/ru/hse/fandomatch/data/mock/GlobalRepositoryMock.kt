@@ -7,6 +7,7 @@ import ru.hse.fandomatch.domain.model.User
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Gender
+import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import java.time.LocalDate
 
@@ -49,12 +50,20 @@ class GlobalRepositoryMock: GlobalRepository {
         return login == mockUser.login && password == mockUser.passwordHash
     }
 
+    override suspend fun getSuggestedProfiles(userId: Long, size: Int): List<ProfileCard> {
+        return mockProfileCards.shuffled().take(size)
+    }
+
+    override suspend fun likeProfile(userId: Long, profileId: Long) = Unit
+
+    override suspend fun dislikeProfile(userId: Long, profileId: Long) = Unit
+
     companion object {
         val mockFandoms = listOf(
             Fandom(
                 id = 1,
                 name = "One Piece",
-                category = FandomCategory.ANIME,
+                category = FandomCategory.ANIME_MANGA,
             ),
             Fandom(
                 id = 2,
@@ -64,17 +73,28 @@ class GlobalRepositoryMock: GlobalRepository {
             Fandom(
                 id = 3,
                 name = "My Chemical Romance",
-                category = FandomCategory.MUSIC_GROUP,
+                category = FandomCategory.MUSIC,
             ),
+            Fandom(
+                id = 4,
+                name = "Ведьмак",
+                category = FandomCategory.BOOKS,
+            ),
+            Fandom(
+                id = 5,
+                name = "Утиные истории",
+                category = FandomCategory.CARTOONS,
+            )
         )
         val mockUser = User(
+            id = 1,
             nickname = "Johny",
             login = "johndoe",
             email = "johndoe@email.com",
             phone = "88005553535",
             fandoms = mockFandoms,
             description = "just some guy.",
-            firstName = "John",
+            name = "John",
             gender = Gender.MALE,
             passwordHash = "password1",
             birthDate = LocalDate.of(1990, 5, 20),
@@ -85,6 +105,49 @@ class GlobalRepositoryMock: GlobalRepository {
         val mockToken = Token(
             accessToken = "accessToken",
             refreshToken = "refreshToken",
+        )
+
+        val mockProfileCards = listOf(
+            ProfileCard(
+                id = 12345,
+                fandoms = mockFandoms,
+                description = "Я люблю аниме и музыку :3",
+                name = "Алиса",
+                gender = Gender.FEMALE,
+                avatarUrl = "luffy",
+                age = 21,
+                compatibilityPercentage = 95,
+            ),
+            ProfileCard(
+                id = 67890,
+                fandoms = listOf(mockFandoms[0]),
+                description = "Just a pirate in search of adventure.",
+                name = "Bob",
+                gender = Gender.MALE,
+                avatarUrl = "peace_was_never_an_option",
+                age = null,
+                compatibilityPercentage = 80,
+            ),
+            ProfileCard(
+                id = 11223,
+                fandoms = listOf(mockFandoms[2]),
+                description = "Music is life.",
+                name = "Charlie",
+                gender = Gender.NOT_SPECIFIED,
+                avatarUrl = "pet_the_forbidden_dog",
+                age = 25,
+                compatibilityPercentage = 70,
+            ),
+            ProfileCard(
+                id = 44556,
+                fandoms = listOf(),
+                description = "Just a mysterious person.",
+                name = "Dana",
+                gender = Gender.FEMALE,
+                avatarUrl = null,
+                age = 30,
+                compatibilityPercentage = 60,
+            ),
         )
 
     }

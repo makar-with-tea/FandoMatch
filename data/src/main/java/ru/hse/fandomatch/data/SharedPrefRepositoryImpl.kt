@@ -17,10 +17,25 @@ class SharedPrefRepositoryImpl(
     }
 
     override suspend fun getUser(): String? {
-//        return preferences.getString("login", null).also {
-//            Log.d("SharedPrefRepository", "getUser: $it")
-//        }
-        return null
+        return preferences.getString("login", null).also {
+            Log.d("SharedPrefRepository", "getUser: $it")
+        }
+    }
+
+    override suspend fun saveUserId(id: Long) {
+        Log.d("SharedPrefRepository", "saveUserId: $id")
+        preferences.edit { putLong("user_id", id) }
+    }
+
+    override suspend fun getUserId(): Long? {
+        return preferences.getLong("user_id", -1L).let {
+            if (it == -1L) {
+                null
+            } else {
+                Log.d("SharedPrefRepository", "getUserId: $it")
+                it
+            }
+        }
     }
 
     override suspend fun clearInfo() {

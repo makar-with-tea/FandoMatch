@@ -1,23 +1,33 @@
 package ru.hse.fandomatch.ui.matches
 
+import ru.hse.fandomatch.domain.model.ProfileCard
+
 sealed class MatchesState {
     enum class MatchesError {
-        IDLE
+        IDLE,
+        NETWORK,
+        NO_PROFILES_FOUND,
     }
     data class Main(
-        // todo type ProfileCardModel or smth
-//        val profileStack: List<ProfileCardModel> = emptyList(),
-        val isLoading: Boolean = false
+        val profileStack: List<ProfileCard> = emptyList(),
+        val isLoading: Boolean = false,
+        val error: MatchesError = MatchesError.IDLE,
     ) : MatchesState()
     data object Loading : MatchesState()
+
+    data object Idle : MatchesState()
 }
 
 sealed class MatchesEvent {
-    data object LoadMatches : MatchesEvent()
-    data class LikeProfile(val profileId: Int) : MatchesEvent()
-    data class DislikeProfile(val profileId: Int) : MatchesEvent()
+    data object LoadSuggestedProfiles : MatchesEvent()
+    data class LikedProfile(val profileId: Long) : MatchesEvent()
+    data class DislikedProfile(val profileId: Long) : MatchesEvent()
+    data class ProfileClicked(val profileId: Long) : MatchesEvent()
+    data object Clear : MatchesEvent()
 }
 
-sealed class AuthorizationAction {
-    data object NavigateToMatches : AuthorizationAction()
+sealed class MatchesAction {
+    data class NavigateToProfile(
+        val profileId: Long,
+    ) : MatchesAction()
 }

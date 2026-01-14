@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.authorization.AuthorizationScreen
 import ru.hse.fandomatch.ui.intro.IntroScreen
+import ru.hse.fandomatch.ui.matches.MatchesScreen
 import ru.hse.fandomatch.ui.registration.RegistrationScreen
 import ru.hse.fandomatch.ui.utils.orFalse
 
@@ -28,6 +29,12 @@ sealed class Route(val route: String) {
     data object Account: Route("account")
 
     data object Matches: Route("matches")
+
+    data object Profile: Route("profile/{profile_id}") {
+        fun createRoute(profileId: Long): String {
+            return "profile/$profileId"
+        }
+    }
 }
 
 @Composable
@@ -43,6 +50,14 @@ fun MainView() {
             restoreState = true
         }
         Log.d("Navigation", "MainView to ${route.route} from $currentRoute")
+    }
+
+    fun navigateToRouteWithArgs(route: String) {
+        navController.navigate(route) {
+            launchSingleTop = true
+            restoreState = true
+        }
+        Log.d("Navigation", "MainView to $route from $currentRoute")
     }
 
     // todo go back from the first screen??
@@ -97,10 +112,25 @@ fun MainView() {
                     )
                 }
                 composable(Route.Matches.route) {
-                    Text("Matches TODO")
+                    MatchesScreen(
+                        navigateToProfile = { profileId ->
+                            Log.d("Navigation", "Navigate to profile $profileId")
+                            navigateToRouteWithArgs(
+                                Route.Profile.createRoute(profileId)
+                            )
+                        },
+                    )
                 }
                 composable(Route.Account.route) {
                     Text("Account TODO")
+                }
+                composable(Route.Profile.route) { backStackEntry ->
+                    val profileId = backStackEntry.arguments?.getString("profile_id")?.toIntOrNull()
+                    if (profileId != null) {
+                        Text("Profile $profileId TODO")
+                    } else {
+                        Text("Profile not found")
+                    }
                 }
             }
         }
