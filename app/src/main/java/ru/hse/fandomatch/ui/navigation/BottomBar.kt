@@ -27,10 +27,12 @@ fun BottomBar(
     currentRoute: String?
 ) {
     NavigationBar(
+        modifier = Modifier.height(100.dp),
         containerColor = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
     ) {
         NavigationBarItem(
+            modifier = Modifier.size(28.dp),
             selected = currentRoute == Route.Matches.route,
             icon = {
                 Icon(
