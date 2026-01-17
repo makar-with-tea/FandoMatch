@@ -21,14 +21,12 @@ import ru.hse.fandomatch.R
 @Composable
 fun BottomBar(
     navigateToMatches: () -> Unit,
-    navigateToAccount: () -> Unit,
+    navigateToMyProfile: () -> Unit,
+    navigateToChats: () -> Unit,
+    navigateToFeed: () -> Unit,
     currentRoute: String?
 ) {
-    val isPortrait = LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT
-
     NavigationBar(
-        modifier = Modifier
-            .height(if (isPortrait) 100.dp else 30.dp),
         containerColor = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
     ) {
@@ -48,16 +46,46 @@ fun BottomBar(
         )
 
         NavigationBarItem(
-            selected = currentRoute == Route.Account.route,
+            selected = currentRoute == Route.Feed.route,
+            icon = {
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_feed),
+                    contentDescription = stringResource(R.string.feed_icon_description)
+                )
+            },
+            onClick = {
+                navigateToFeed()
+                Log.d("Navigation", "BottomNav to Feed from $currentRoute")
+            }
+        )
+
+        NavigationBarItem(
+            selected = currentRoute == Route.Chats.route,
+            icon = {
+                Icon(
+                    modifier = Modifier.size(24.dp),
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_message),
+                    contentDescription = stringResource(R.string.chats_icon_description)
+                )
+            },
+            onClick = {
+                navigateToChats()
+                Log.d("Navigation", "BottomNav to Chats from $currentRoute")
+            }
+        )
+
+        NavigationBarItem(
+            selected = currentRoute == Route.MyProfile.route,
             icon = {
                 Icon(
                     modifier = Modifier.size(24.dp),
                     imageVector = ImageVector.vectorResource(R.drawable.ic_account_box),
-                    contentDescription = stringResource(R.string.account_icon_description)
+                    contentDescription = stringResource(R.string.my_profile_icon_description)
                 )
             },
             onClick = {
-                navigateToAccount()
+                navigateToMyProfile()
                 Log.d("Navigation", "BottomNav to Account from $currentRoute")
             }
         )

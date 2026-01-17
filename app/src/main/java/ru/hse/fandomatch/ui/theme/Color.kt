@@ -226,7 +226,7 @@ class CustomColors {
         val filmsBackground = Color(0xFF81C1FF)
         val tvSeriesBackground = Color(0xFFB35FC0)
         val gamesBackground = Color(0xFF66BB6A)
-        val tabletopGamesBackground = Color(0xFFFFD781)
+        val tabletopGamesBackground = Color(0xFFFFF8C4)
         val musicBackground = Color(0xFFBE6282)
         val comicsBackground = Color(0xFFCE7B63)
         val theaterMusicalsBackground = Color(0xFF8A69C2)

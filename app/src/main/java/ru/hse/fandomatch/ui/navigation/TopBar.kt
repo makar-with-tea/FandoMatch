@@ -1,10 +1,12 @@
 package ru.hse.fandomatch.ui.navigation
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -17,16 +19,36 @@ import androidx.compose.ui.unit.dp
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.composables.MyTitle
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+data class TopBarState(
+    val title: String,
+    val endIcons: List<EndIconState> = emptyList()
+)
+
+data class EndIconState(
+    @field:DrawableRes val iconId: Int,
+    val onClick: () -> Unit,
+    val description: String?
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
-    title: String,
-    onBackClick: () -> Unit,
-    modifier: Modifier = Modifier,
+    state: TopBarState,
+    onBackClick: () -> Unit
 ) {
     TopAppBar(
-        modifier = modifier,
-        title = { MyTitle(text = title) },
+        title = { MyTitle(text = state.title) },
+        actions = {
+            state.endIcons.forEach { endIcon ->
+                IconButton(onClick = endIcon.onClick) {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = endIcon.iconId),
+                        contentDescription = endIcon.description,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(

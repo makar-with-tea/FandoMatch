@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.ProfileCard
+import ru.hse.fandomatch.ui.utils.nameAndAgeString
+import ru.hse.fandomatch.ui.utils.rawResId
 import kotlin.div
 
 @Composable
@@ -57,22 +60,13 @@ fun SwipeableCardContent(
             .clickable(enabled = isTop) { onClick() }
             .padding(16.dp)
     ) {
-        if (profile.avatarUrl != null) {
-            RawImage(
-                context = LocalContext.current, rawResId = rawResId(
-                    profile.avatarUrl!!, LocalContext.current
-                )
-            )
-        } else {
-            Image(
-                painter = painterResource(id = R.drawable.ic_account_placeholder),
-                contentDescription = null,
-                modifier = modifier
-                    .fillMaxSize()
-                    .aspectRatio(0.8f),
-                contentScale = ContentScale.Crop
-            )
-        }
+        RawImageOrPlaceholder(
+            url = profile.avatarUrl,
+            context = LocalContext.current,
+            placeholderId = R.drawable.ic_account_placeholder,
+            modifier = modifier
+                .fillMaxHeight(),
+        )
 
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -85,11 +79,12 @@ fun SwipeableCardContent(
             Text(
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 fontSize = 24.sp,
-                text = "${profile.name}${profile.age?.let { ", $it" }.orEmpty()}"
+                text = nameAndAgeString(profile.name, profile.age)
             )
             Text(text = profile.description.orEmpty())
             FandomGrid(
-                fandoms = profile.fandoms.map { it.name to it.category },
+                fandoms = profile.fandoms,
+                maxLines = 2,
             )
 
             Row(
@@ -123,8 +118,4 @@ fun SwipeableCardContent(
             }
         }
     }
-}
-
-private fun rawResId(name: String, context: Context): Int {
-    return context.resources.getIdentifier(name, "raw", context.packageName)
 }

@@ -17,6 +17,7 @@ import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.authorization.AuthorizationScreen
 import ru.hse.fandomatch.ui.intro.IntroScreen
 import ru.hse.fandomatch.ui.matches.MatchesScreen
+import ru.hse.fandomatch.ui.myprofile.MyProfileScreen
 import ru.hse.fandomatch.ui.registration.RegistrationScreen
 import ru.hse.fandomatch.ui.utils.orFalse
 
@@ -26,7 +27,7 @@ sealed class Route(val route: String) {
 
     data object Registration : Route("registration")
 
-    data object Account: Route("account")
+    data object MyProfile: Route("my_profile")
 
     data object Matches: Route("matches")
 
@@ -35,6 +36,10 @@ sealed class Route(val route: String) {
             return "profile/$profileId"
         }
     }
+
+    data object Feed: Route("feed")
+
+    data object Chats: Route("messages")
 }
 
 @Composable
@@ -66,14 +71,42 @@ fun MainView() {
         topBar = {
             val screenTitle = when (currentRoute) {
                 Route.Authorization.route -> stringResource(id = R.string.authorization_title)
-                Route.Account.route -> stringResource(id = R.string.my_profile_title)
+                Route.MyProfile.route -> stringResource(id = R.string.my_profile_title)
                 Route.Matches.route -> stringResource(id = R.string.matches_title)
                 else -> null
             }
 
+            val endIcons = when (currentRoute) {
+                Route.Matches.route -> listOf(
+                    EndIconState(
+                        iconId = R.drawable.ic_filters,
+                        onClick = { /* TODO */ },
+                        description = stringResource(id = R.string.filters_icon_description)
+                    )
+                )
+
+                Route.MyProfile.route -> listOf(
+                    EndIconState(
+                        iconId = R.drawable.ic_edit,
+                        onClick = { /* TODO */ },
+                        description = stringResource(id = R.string.edit_profile_icon_description)
+                    ),
+                    EndIconState(
+                        iconId = R.drawable.ic_settings,
+                        onClick = { /* TODO */ },
+                        description = stringResource(id = R.string.settings_icon_description)
+                    )
+                )
+
+                else -> listOf()
+            }
+
             screenTitle?.let {
                 TopBar(
-                    title = screenTitle,
+                    state = TopBarState(
+                        title = screenTitle,
+                        endIcons = endIcons,
+                    ),
                     onBackClick = { navController.popBackStack() }
                 )
             }
@@ -83,7 +116,9 @@ fun MainView() {
             if (currentRoute?.canShowBottomBar().orFalse()) {
                 BottomBar(
                     navigateToMatches = { navigateToRoute(Route.Matches) },
-                    navigateToAccount = { navigateToRoute(Route.Account) },
+                    navigateToMyProfile = { navigateToRoute(Route.MyProfile) },
+                    navigateToChats = { /* TODO */ },
+                    navigateToFeed = { /* TODO */ },
                     currentRoute = currentRoute
                 )
             }
@@ -119,8 +154,8 @@ fun MainView() {
                         },
                     )
                 }
-                composable(Route.Account.route) {
-                    Text("Account TODO")
+                composable(Route.MyProfile.route) {
+                    MyProfileScreen()
                 }
                 composable(Route.Profile.route) { backStackEntry ->
                     val profileId = backStackEntry.arguments?.getString("profile_id")?.toIntOrNull()
