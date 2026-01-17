@@ -34,6 +34,8 @@
     <string name="avatar_title">Аватар</string>
     <string name="select_avatar">Выберите аватар</string>
     <string name="no_avatar_selected">Аватар не выбран</string>
+    <string name="avatar_success">Аватар успешно загружен</string>
+    <string name="avatar_error">Ошибка загрузки аватара</string>
     <string name="agree_terms">Я согласен с <u>условиями использования</u> и <u>политикой конфиденциальности</u></string>
     <string name="complete_registration">Завершить регистрацию</string>
     

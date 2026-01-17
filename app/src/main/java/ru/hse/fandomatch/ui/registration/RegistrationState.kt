@@ -1,6 +1,6 @@
 package ru.hse.fandomatch.ui.registration
 
-sealed class RegistrationState {
+sealed interface RegistrationState {
     enum class RegistrationError {
         NAME_LENGTH,
         NAME_CONTENT,
@@ -20,6 +20,8 @@ sealed class RegistrationState {
         GENDER_NOT_SELECTED,
     }
 
+    sealed interface Main: RegistrationState
+
     data class Name(
         val name: String = "",
         val email: String = "",
@@ -28,23 +30,43 @@ sealed class RegistrationState {
         val emailError: RegistrationError = RegistrationError.IDLE,
         val loginError: RegistrationError = RegistrationError.IDLE,
         val isLoading: Boolean = false
-    ) : RegistrationState()
+    ) : Main
 
     data class DateOfBirth(
         val dateOfBirthMillis: Long? = null,
         val error: RegistrationError = RegistrationError.IDLE
-    ) : RegistrationState()
+    ) : Main
 
     data class Gender(
         val gender: GenderType? = null,
         val error: RegistrationError = RegistrationError.IDLE
-    ) : RegistrationState()
+    ) : Main
 
     data class Avatar(
-        val avatarUri: String? = null,
+        val avatarByteArray: ByteArray?,
         val error: RegistrationError = RegistrationError.IDLE,
         val isUploading: Boolean = false
-    ) : RegistrationState()
+    ) : Main {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Avatar
+
+            if (isUploading != other.isUploading) return false
+            if (!avatarByteArray.contentEquals(other.avatarByteArray)) return false
+            if (error != other.error) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = isUploading.hashCode()
+            result = 31 * result + (avatarByteArray?.contentHashCode() ?: 0)
+            result = 31 * result + error.hashCode()
+            return result
+        }
+    }
 
     data class Password(
         val password: String = "",
@@ -55,10 +77,18 @@ sealed class RegistrationState {
         val passwordError: RegistrationError = RegistrationError.IDLE,
         val passwordRepeatError: RegistrationError = RegistrationError.IDLE,
         val isLoading: Boolean = false
-    ) : RegistrationState()
+    ) : Main
 
-    data object Idle : RegistrationState()
-    data object Loading : RegistrationState()
+    fun Main.isLoading(): Boolean {
+        return when (this) {
+            is Name -> isLoading
+            is Password -> isLoading
+            else -> false
+        }
+    }
+
+    data object Idle : RegistrationState
+    data object Loading : RegistrationState
 }
 
 sealed class RegistrationEvent {
@@ -70,7 +100,21 @@ sealed class RegistrationEvent {
 
     data class DateSelected(val dateOfBirthMillis: Long?) : RegistrationEvent()
     data class GenderSelected(val gender: GenderType?) : RegistrationEvent()
-    data class AvatarSelected(val avatarUri: String?) : RegistrationEvent()
+    data class AvatarSelected(val avatarByteArray: ByteArray?) : RegistrationEvent() {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as AvatarSelected
+
+            return avatarByteArray.contentEquals(other.avatarByteArray)
+        }
+
+        override fun hashCode(): Int {
+            return avatarByteArray?.contentHashCode() ?: 0
+        }
+    }
+
     data class PasswordSubmit(
         val password: String,
         val passwordRepeat: String,

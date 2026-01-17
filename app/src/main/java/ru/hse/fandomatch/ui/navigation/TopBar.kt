@@ -1,11 +1,10 @@
 package ru.hse.fandomatch.ui.navigation
 
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -18,23 +17,16 @@ import androidx.compose.ui.unit.dp
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.composables.MyTitle
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun TopBar(
-    state: TopBarState,
-    onBackClick: () -> Unit
+    title: String,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     TopAppBar(
-        title = {
-            when (state) {
-                is TopBarState.Title -> MyTitle(text = state.title)
-                is TopBarState.ProgressBar -> LinearProgressIndicator(
-                    progress = { state.progress },
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-        },
+        modifier = modifier,
+        title = { MyTitle(text = title) },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(
@@ -51,14 +43,4 @@ fun TopBar(
             actionIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer
         )
     )
-}
-
-sealed interface TopBarState {
-    data class Title(
-       val title: String,
-    ): TopBarState
-
-    data class ProgressBar(
-        val progress: Float,
-    ): TopBarState
 }

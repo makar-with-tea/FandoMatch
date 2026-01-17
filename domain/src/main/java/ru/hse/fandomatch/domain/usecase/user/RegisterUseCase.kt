@@ -14,7 +14,7 @@ class RegisterUseCase(
         login: String,
         dateOfBirthMillis: Long,
         gender: Gender,
-        avatarUri: String?,
+        avatarByteArray: ByteArray?,
         password: String
     ) {
         // todo use all info

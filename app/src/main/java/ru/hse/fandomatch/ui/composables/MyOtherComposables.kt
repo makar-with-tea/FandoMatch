@@ -2,15 +2,12 @@ package ru.hse.fandomatch.ui.composables
 
 import android.content.Context
 import android.graphics.BitmapFactory
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -37,10 +34,11 @@ import ru.hse.fandomatch.R
 
 @Composable
 fun MyTitle(
-    text: String
+    text: String,
+    modifier: Modifier = Modifier,
 ) {
     Text(
-        modifier = Modifier.padding(8.dp),
+        modifier = modifier.padding(8.dp),
         text = text,
         fontWeight = FontWeight.Bold,
         fontSize = 24.sp
@@ -49,15 +47,16 @@ fun MyTitle(
 
 @Composable
 fun MyTextField(
+    modifier: Modifier = Modifier,
     value: String,
     label: String,
     isError: Boolean,
     enabled: Boolean = true,
     errorText: String? = null,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
 ) {
     TextField(
-        modifier = Modifier.padding(8.dp),
+        modifier = modifier.padding(8.dp),
         value = value,
         label = { Text(label) },
         isError = isError,
@@ -69,6 +68,7 @@ fun MyTextField(
 
 @Composable
 fun MyPasswordField(
+    modifier: Modifier = Modifier,
     value: String,
     label: String,
     isError: Boolean,
@@ -78,7 +78,7 @@ fun MyPasswordField(
     errorText: String? = null
 ) {
     TextField(
-        modifier = Modifier.padding(8.dp),
+        modifier = modifier.padding(8.dp),
         value = value,
         label = { Text(label) },
         isError = isError,

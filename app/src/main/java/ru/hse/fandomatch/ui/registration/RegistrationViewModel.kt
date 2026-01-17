@@ -28,11 +28,43 @@ class RegistrationViewModel(
         var login: String = "",
         var dateOfBirthMillis: Long? = null,
         var gender: GenderType? = null,
-        var avatarUri: String? = null,
+        var avatarByteArray: ByteArray? = null,
         var password: String = "",
         var passwordRepeat: String = "",
         var agreed: Boolean = false
-    )
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as Form
+
+            if (dateOfBirthMillis != other.dateOfBirthMillis) return false
+            if (agreed != other.agreed) return false
+            if (name != other.name) return false
+            if (email != other.email) return false
+            if (login != other.login) return false
+            if (gender != other.gender) return false
+            if (!avatarByteArray.contentEquals(other.avatarByteArray)) return false
+            if (password != other.password) return false
+            if (passwordRepeat != other.passwordRepeat) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = dateOfBirthMillis?.hashCode() ?: 0
+            result = 31 * result + agreed.hashCode()
+            result = 31 * result + name.hashCode()
+            result = 31 * result + email.hashCode()
+            result = 31 * result + login.hashCode()
+            result = 31 * result + (gender?.hashCode() ?: 0)
+            result = 31 * result + (avatarByteArray?.contentHashCode() ?: 0)
+            result = 31 * result + password.hashCode()
+            result = 31 * result + passwordRepeat.hashCode()
+            return result
+        }
+    }
 
     private val form = Form()
 
@@ -51,7 +83,7 @@ class RegistrationViewModel(
             )
             is RegistrationEvent.DateSelected -> handleDate(event.dateOfBirthMillis)
             is RegistrationEvent.GenderSelected -> handleGender(event.gender)
-            is RegistrationEvent.AvatarSelected -> handleAvatar(event.avatarUri)
+            is RegistrationEvent.AvatarSelected -> handleAvatar(event.avatarByteArray)
             is RegistrationEvent.PasswordSubmit -> handlePassword(
                 password = event.password,
                 passwordRepeat = event.passwordRepeat,
@@ -142,11 +174,11 @@ class RegistrationViewModel(
             return
         }
         form.gender = gender
-        _state.value = RegistrationState.Avatar(form.avatarUri)
+        _state.value = RegistrationState.Avatar(form.avatarByteArray)
     }
 
-    private fun handleAvatar(avatarUri: String?) {
-        form.avatarUri = avatarUri
+    private fun handleAvatar(avatarByteArray: ByteArray?) {
+        form.avatarByteArray = avatarByteArray
         _state.value = RegistrationState.Password(password = form.password, passwordRepeat = form.passwordRepeat)
     }
 
@@ -215,7 +247,7 @@ class RegistrationViewModel(
                     form.login,
                     form.dateOfBirthMillis!!,
                     form.gender!!.toDomainGender(),
-                    form.avatarUri,
+                    form.avatarByteArray,
                     form.password
                 )
                 withContext(dispatcherMain) {
@@ -274,7 +306,7 @@ class RegistrationViewModel(
                 gender = form.gender
             )
             is RegistrationState.Password -> RegistrationState.Avatar(
-                avatarUri = form.avatarUri
+                avatarByteArray = form.avatarByteArray
             )
             else -> _state.value.also {
                 _action.value = RegistrationAction.NavigateBack
@@ -289,7 +321,7 @@ class RegistrationViewModel(
             login = ""
             dateOfBirthMillis = null
             gender = null
-            avatarUri = null
+            avatarByteArray = null
             password = ""
             passwordRepeat = ""
             agreed = false
