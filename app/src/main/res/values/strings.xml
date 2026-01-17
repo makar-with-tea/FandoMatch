@@ -11,8 +11,13 @@
     <string name="register_button">Зарегистрироваться</string>
 
 
-    <string name="account_icon_description">Аккаунт</string>
+    <string name="my_profile_icon_description">Аккаунт</string>
     <string name="matches_icon_description">Знакомства</string>
+    <string name="feed_icon_description">Лента</string>
+    <string name="chats_icon_description">Чаты</string>
+    <string name="filters_icon_description">Фильтры</string>
+    <string name="settings_icon_description">Настройки</string>
+    <string name="edit_profile_icon_description">Редактировать профиль</string>
 
     <string name="account_title">Аккаунт</string>
     <string name="my_profile_title">Мой профиль</string>

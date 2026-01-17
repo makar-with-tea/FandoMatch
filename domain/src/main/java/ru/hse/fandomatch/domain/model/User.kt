@@ -15,6 +15,7 @@ data class User(
     val passwordHash: String,
     val birthDate: LocalDate,
     val avatarUrl: String? = null,
+    val backgroundUrl: String? = null,
     val city: City? = null
 )
 

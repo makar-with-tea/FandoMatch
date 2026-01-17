@@ -3,6 +3,7 @@ package ru.hse.fandomatch.ui.utils
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import java.io.ByteArrayOutputStream
+import android.content.Context
 
 fun Boolean?.orFalse(): Boolean = this ?: false
 
@@ -24,3 +25,9 @@ class BitmapHelper {
         }
     }
 }
+
+fun rawResId(name: String, context: Context): Int {
+    return context.resources.getIdentifier(name, "raw", context.packageName)
+}
+
+fun nameAndAgeString(name: String, age: Int?): String = "$name${age?.let { ", $it" }.orEmpty()}"

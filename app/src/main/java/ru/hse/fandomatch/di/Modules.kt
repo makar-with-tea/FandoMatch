@@ -5,7 +5,6 @@ import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 import ru.hse.fandomatch.data.SharedPrefRepositoryImpl
 import ru.hse.fandomatch.data.mock.GlobalRepositoryMock
-import ru.hse.fandomatch.data.mock.SharedPrefRepositoryMock
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
 import ru.hse.fandomatch.domain.usecase.matches.DislikeProfileUseCase
@@ -15,6 +14,7 @@ import ru.hse.fandomatch.domain.usecase.user.GetPastLoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
 import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.RegisterUseCase
+import ru.hse.fandomatch.ui.myprofile.MyProfileViewModel
 import ru.hse.fandomatch.ui.authorization.AuthorizationViewModel
 import ru.hse.fandomatch.ui.intro.IntroViewModel
 import ru.hse.fandomatch.ui.matches.MatchesViewModel
@@ -32,6 +32,7 @@ val appModule = module {
             dislikeProfileUseCase = get()
         )
     }
+    viewModel<MyProfileViewModel> { MyProfileViewModel() }
 }
 
 val dataModule = module {
