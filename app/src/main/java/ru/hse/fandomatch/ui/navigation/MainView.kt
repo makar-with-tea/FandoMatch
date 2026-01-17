@@ -73,9 +73,7 @@ fun MainView() {
 
             screenTitle?.let {
                 TopBar(
-                    state = TopBarState.Title(
-                        title = screenTitle,
-                    ),
+                    title = screenTitle,
                     onBackClick = { navController.popBackStack() }
                 )
             }
