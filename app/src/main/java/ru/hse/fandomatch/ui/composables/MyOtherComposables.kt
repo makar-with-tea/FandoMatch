@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -196,5 +198,30 @@ fun AvatarWithBackground(
         Spacer(
             modifier = Modifier.height(30.dp)
         )
+    }
+}
+
+@Composable
+fun NewMessagesIndicator(
+    modifier: Modifier = Modifier,
+    count: Int,
+) {
+    val shortenedCount = if (count > 99) "99+" else count.toString()
+    if (count > 0) {
+        Box(
+            modifier = modifier
+                .height(28.dp)
+                .defaultMinSize(minWidth = 28.dp)
+                .background(MaterialTheme.colorScheme.tertiary, shape = RoundedCornerShape(28.dp))
+                .padding(2.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = shortenedCount,
+                color = MaterialTheme.colorScheme.onTertiary,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }

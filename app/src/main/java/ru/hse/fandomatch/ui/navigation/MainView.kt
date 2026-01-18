@@ -15,6 +15,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.authorization.AuthorizationScreen
+import ru.hse.fandomatch.ui.chat.ChatScreen
+import ru.hse.fandomatch.ui.chatslist.ChatsListScreen
 import ru.hse.fandomatch.ui.intro.IntroScreen
 import ru.hse.fandomatch.ui.matches.MatchesScreen
 import ru.hse.fandomatch.ui.myprofile.MyProfileScreen
@@ -39,7 +41,13 @@ sealed class Route(val route: String) {
 
     data object Feed: Route("feed")
 
-    data object Chats: Route("messages")
+    data object ChatsList: Route("chats_list")
+
+    data object Chat: Route("chat/{chat_id}") {
+        fun createRoute(chatId: Long): String {
+            return "chat/$chatId"
+        }
+    }
 }
 
 @Composable
@@ -73,6 +81,7 @@ fun MainView() {
                 Route.Authorization.route -> stringResource(id = R.string.authorization_title)
                 Route.MyProfile.route -> stringResource(id = R.string.my_profile_title)
                 Route.Matches.route -> stringResource(id = R.string.matches_title)
+                Route.ChatsList.route -> stringResource(id = R.string.chats_list_title)
                 else -> null
             }
 
@@ -98,6 +107,14 @@ fun MainView() {
                     )
                 )
 
+                Route.ChatsList.route -> listOf(
+                    EndIconState(
+                        iconId = R.drawable.ic_search,
+                        onClick = { /* TODO */ },
+                        description = stringResource(id = R.string.search_icon_description)
+                    ),
+                )
+
                 else -> listOf()
             }
 
@@ -117,7 +134,7 @@ fun MainView() {
                 BottomBar(
                     navigateToMatches = { navigateToRoute(Route.Matches) },
                     navigateToMyProfile = { navigateToRoute(Route.MyProfile) },
-                    navigateToChats = { /* TODO */ },
+                    navigateToChats = { navigateToRoute(Route.ChatsList) },
                     navigateToFeed = { /* TODO */ },
                     currentRoute = currentRoute
                 )
@@ -157,6 +174,16 @@ fun MainView() {
                 composable(Route.MyProfile.route) {
                     MyProfileScreen()
                 }
+                composable(Route.ChatsList.route) {
+                    ChatsListScreen(
+                        navigateToChat = { chatId ->
+                            Log.d("Navigation", "Navigate to chat $chatId")
+                            navigateToRouteWithArgs(
+                                Route.Chat.createRoute(chatId)
+                            )
+                        }
+                    )
+                }
                 composable(Route.Profile.route) { backStackEntry ->
                     val profileId = backStackEntry.arguments?.getString("profile_id")?.toIntOrNull()
                     if (profileId != null) {
@@ -165,13 +192,23 @@ fun MainView() {
                         Text("Profile not found")
                     }
                 }
+                composable(Route.Chat.route) { backStackEntry ->
+                    val chatId = backStackEntry.arguments?.getString("chat_id")?.toLongOrNull()
+                    ChatScreen(
+                        chatId = chatId,
+                        onBackClicked = { navController.popBackStack() }
+                    )
+                }
             }
         }
     }
 }
 
 private fun String.canShowBottomBar(): Boolean {
-    return this != Route.Authorization.route
-            && this != Route.Registration.route
-            && this != Route.Intro.route
+    return this !in listOf(
+        Route.Authorization.route,
+        Route.Registration.route,
+        Route.Intro.route,
+        Route.Chat.route, // todo check if it works
+    )
 }
