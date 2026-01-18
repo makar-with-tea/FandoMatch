@@ -14,7 +14,7 @@
     <string name="my_profile_icon_description">Аккаунт</string>
     <string name="matches_icon_description">Знакомства</string>
     <string name="feed_icon_description">Лента</string>
-    <string name="chats_icon_description">Чаты</string>
+    <string name="chats_list_icon_description">Чаты</string>
     <string name="filters_icon_description">Фильтры</string>
     <string name="settings_icon_description">Настройки</string>
     <string name="edit_profile_icon_description">Редактировать профиль</string>
@@ -77,7 +77,16 @@
     <string name="matches_title">Знакомства</string>
     <string name="no_profiles_found_error">Профили не найдены. Попробуйте изменить фильтры поиска.</string>
     <string name="retry_load">Повторить загрузку</string>
-
     <string name="like_profile_description">Лайк</string>
     <string name="dislike_profile_description">Дизлайк</string>
+
+    <string name="chats_list_title">Чаты</string>
+    <string name="search_icon_description">Поиск контактов</string>
+    <string name="last_message_time_years">г.</string>
+    <string name="last_message_time_months">мес.</string>
+    <string name="last_message_time_weeks">нед.</string>
+    <string name="last_message_time_days">дн.</string>
+
+    <string name="type_a_message">Сообщение</string>
+    <string name="send_message_button_description">Отправить сообщение</string>
 </resources>

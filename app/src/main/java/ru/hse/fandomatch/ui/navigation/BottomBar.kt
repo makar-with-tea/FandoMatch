@@ -2,12 +2,14 @@ package ru.hse.fandomatch.ui.navigation
 
 import android.content.res.Configuration
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -41,6 +43,7 @@ fun BottomBar(
                     contentDescription = stringResource(R.string.matches_icon_description)
                 )
             },
+            // todo play with colors
             onClick = {
                 navigateToMatches()
                 Log.d("Navigation", "BottomNav to Matches from $currentRoute")
@@ -63,17 +66,17 @@ fun BottomBar(
         )
 
         NavigationBarItem(
-            selected = currentRoute == Route.Chats.route,
+            selected = currentRoute == Route.ChatsList.route,
             icon = {
                 Icon(
                     modifier = Modifier.size(24.dp),
                     imageVector = ImageVector.vectorResource(R.drawable.ic_message),
-                    contentDescription = stringResource(R.string.chats_icon_description)
+                    contentDescription = stringResource(R.string.chats_list_icon_description)
                 )
             },
             onClick = {
                 navigateToChats()
-                Log.d("Navigation", "BottomNav to Chats from $currentRoute")
+                Log.d("Navigation", "BottomNav to ChatsList from $currentRoute")
             }
         )
 

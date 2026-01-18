@@ -16,6 +16,8 @@ import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.RegisterUseCase
 import ru.hse.fandomatch.ui.myprofile.MyProfileViewModel
 import ru.hse.fandomatch.ui.authorization.AuthorizationViewModel
+import ru.hse.fandomatch.ui.chat.ChatViewModel
+import ru.hse.fandomatch.ui.chatslist.ChatsListViewModel
 import ru.hse.fandomatch.ui.intro.IntroViewModel
 import ru.hse.fandomatch.ui.matches.MatchesViewModel
 import ru.hse.fandomatch.ui.registration.RegistrationViewModel
@@ -33,6 +35,8 @@ val appModule = module {
         )
     }
     viewModel<MyProfileViewModel> { MyProfileViewModel() }
+    viewModel<ChatsListViewModel> { ChatsListViewModel() }
+    viewModel<ChatViewModel> { ChatViewModel() }
 }
 
 val dataModule = module {

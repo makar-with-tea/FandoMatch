@@ -19,7 +19,7 @@ class MyProfileViewModel(
     val action: StateFlow<MyProfileAction?> get() = _action
 
     fun obtainEvent(event: MyProfileEvent) {
-        Log.i("ProfileViewModel", "Obtained event: $event")
+        Log.i("MyProfileViewModel", "Obtained event: $event")
         when (event) {
             else -> Unit // whatever
         }
