@@ -29,7 +29,7 @@ import ru.hse.fandomatch.domain.model.Message
 fun Message(
     modifier: Modifier,
     message: Message,
-    needsTail: Boolean = true,
+    needsTail: Boolean,
     otherSidePadding: Dp = 40.dp,
 ) {
     Box(
@@ -76,7 +76,7 @@ private fun IncomingMessageBox(
     val triangleSizePx = LocalDensity.current.run { triangleSize.toPx() }
     val cornerRadiusPx = LocalDensity.current.run { cornerRadius.toPx() }
 
-    val shape = remember(triangleSize, cornerRadius) {
+    val shape = remember(triangleSize, cornerRadius, needsTail) {
         GenericShape { size, _ ->
             val tail = Path().apply {
                 if (!needsTail) return@apply
@@ -127,11 +127,11 @@ private fun OutgoingMessageBox(
         GenericShape { size, _ ->
             val tail = Path().apply {
                 if (!needsTail) return@apply
-                    moveTo(size.width, size.height)
-                    lineTo(size.width - triangleSizePx * 2, size.height)
-                    lineTo(size.width - triangleSizePx * 2, size.height - triangleSizePx * 2)
-                    lineTo(size.width, size.height)
-                    close()
+                moveTo(size.width, size.height)
+                lineTo(size.width - triangleSizePx * 2, size.height)
+                lineTo(size.width - triangleSizePx * 2, size.height - triangleSizePx * 2)
+                lineTo(size.width, size.height)
+                close()
             }
 
             val body = Path().apply {

@@ -88,6 +88,7 @@ class ChatViewModel(
                 }
                 currentState.copy(messages = updatedMessages)
             }
+
             else -> currentState
         }
     }
