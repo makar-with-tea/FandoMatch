@@ -80,6 +80,47 @@
     <string name="like_profile_description">Лайк</string>
     <string name="dislike_profile_description">Дизлайк</string>
 
+    <string name="fandom_category_anime_manga">Аниме и манга</string>
+    <string name="fandom_category_books">Книги</string>
+    <string name="fandom_category_cartoons">Мультфильмы</string>
+    <string name="fandom_category_films">Фильмы</string>
+    <string name="fandom_category_tv_series">Сериалы</string>
+    <string name="fandom_category_games">Игры</string>
+    <string name="fandom_category_tabletop_games">Настольные игры</string>
+    <string name="fandom_category_music">Музыка</string>
+    <string name="fandom_category_theater_musicals">Театр и мюзиклы</string>
+    <string name="fandom_category_podcasts">Подкасты</string>
+    <string name="fandom_category_comics">Комиксы</string>
+    <string name="fandom_category_content_creators">Контент-криэйторы</string>
+    <string name="fandom_category_celebrities">Знаменитости</string>
+    <string name="fandom_category_sports">Спорт</string>
+    <string name="fandom_category_history">История</string>
+    <string name="fandom_category_mythology">Мифология</string>
+    <string name="fandom_category_other">Другое</string>
+
+    <string name="city_moscow">Москва</string>
+    <string name="city_saint_petersburg">Санкт-Петербург</string>
+    <string name="city_novosibirsk">Новосибирск</string>
+    <string name="city_yekaterinburg">Екатеринбург</string>
+    <string name="city_other">Другой</string>
+
+    <string name="filters_title">Фильтры</string>
+    <string name="gender_filter_label">Пол</string>
+    <string name="age_filter_label">Возраст</string>
+    <string name="age_filter_selected_range">Выбранный диапазон: %1$d - %2$s</string>
+    <string name="age_filter_no_age">Возраст не указан</string>
+    <string name="fandom_category_filter_label">Категории фандомов</string>
+    <string name="fandom_filter_label">Фандомы</string>
+    <string name="fandom_filter_input_fandom_name">Название фандома</string>
+    <string name="fandom_filter_close_suggested_icon_description">Скрыть предложенные фандомы</string>
+    <string name="fandom_filter_no_fandoms_found">Фандомы не найдены</string>
+    <string name="fandom_filter_delete_fandom_icon_description">Удалить фандом</string>
+    <string name="city_filter_label">Ваш город: %1$s</string>
+    <string name="city_filter_no_city">не указано</string>
+    <string name="city_filter_only_in_city_checkbox">Только в моем городе</string>
+    <string name="reset_filters_button">Сбросить</string>
+    <string name="apply_filters_button">Применить</string>
+
     <string name="chats_list_title">Чаты</string>
     <string name="search_icon_description">Поиск контактов</string>
     <string name="last_message_time_years">г.</string>

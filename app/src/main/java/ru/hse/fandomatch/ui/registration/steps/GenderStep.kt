@@ -21,16 +21,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.sp
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.ui.composables.MyTitle
-import ru.hse.fandomatch.ui.registration.GenderType
 import ru.hse.fandomatch.ui.registration.RegistrationState
 import ru.hse.fandomatch.ui.registration.getText
 import ru.hse.fandomatch.ui.registration.isFieldError
+import ru.hse.fandomatch.ui.utils.stringId
 
 @Composable
 internal fun GenderStep(
-    state: RegistrationState.Gender,
-    onNext: (GenderType) -> Unit,
+    state: RegistrationState.GenderChoice,
+    onNext: (Gender) -> Unit,
     onBackPressed: () -> Unit,
 ) {
     BackHandler {
@@ -45,9 +46,9 @@ internal fun GenderStep(
 
         var selectedIndex by remember { mutableIntStateOf(0) }
         val options = listOf(
-            GenderType.MALE,
-            GenderType.FEMALE,
-            GenderType.UNSPECIFIED,
+            Gender.MALE,
+            Gender.FEMALE,
+            Gender.NOT_SPECIFIED,
         )
 
         Column(
@@ -82,10 +83,4 @@ internal fun GenderStep(
             onClick = { onNext(options[selectedIndex]) }
         ) { Text(stringResource(R.string.next_step)) }
     }
-}
-
-private fun GenderType.stringId(): Int = when (this) {
-    GenderType.MALE -> R.string.male_gender
-    GenderType.FEMALE -> R.string.female_gender
-    GenderType.UNSPECIFIED -> R.string.unspecified_gender
 }

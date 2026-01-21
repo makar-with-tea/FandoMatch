@@ -216,32 +216,3 @@ val surfaceContainerLowDarkHighContrast = Color(0xFF221E24)
 val surfaceContainerDarkHighContrast = Color(0xFF332F35)
 val surfaceContainerHighDarkHighContrast = Color(0xFF3E3A40)
 val surfaceContainerHighestDarkHighContrast = Color(0xFF4A454B)
-
-
-class CustomColors {
-    companion object {
-        val animeMangaBackground = Color(0xFFFF9897)
-        val booksBackground = Color(0xFF77C8EE)
-        val cartoonsBackground = Color(0xFFFFDC80)
-        val filmsBackground = Color(0xFF81C1FF)
-        val tvSeriesBackground = Color(0xFFB35FC0)
-        val gamesBackground = Color(0xFF66BB6A)
-        val tabletopGamesBackground = Color(0xFFFFF8C4)
-        val musicBackground = Color(0xFFBE6282)
-        val comicsBackground = Color(0xFFCE7B63)
-        val theaterMusicalsBackground = Color(0xFF8A69C2)
-        val podcastsBackground = Color(0xFF58A199)
-        val contentCreatorsBackground = Color(0xFF6673BD)
-        val celebritiesBackground = Color(0xFFD2DC71)
-        val sportsBackground = Color(0xFFAF968D)
-        val historyBackground = Color(0xFFB2D58F)
-        val mythologyBackground = Color(0xFF836B63)
-        val otherBackground = Color(0xFFBDBDBD)
-        // todo dark theme
-    }
-}
-
-
-
-
-

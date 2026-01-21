@@ -80,7 +80,7 @@ fun ChatsListScreen(
 }
 
 @Composable
-fun MainState(
+private fun MainState(
     state: ChatsListState.Main,
     onChatClicked: (Long) -> Unit,
 ) {
@@ -162,7 +162,7 @@ fun MainState(
 }
 
 @Composable
-fun LoadingState() {
+private fun LoadingState() {
     val animatable = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
@@ -212,11 +212,11 @@ fun LoadingState() {
 }
 
 @Composable
-fun IdleState() = LoadingBlock()
+private fun IdleState() = LoadingBlock()
 
 @Preview(showBackground = true)
 @Composable
-fun ChatsListScreenPreview() {
+private fun ChatsListScreenPreview() {
     ChatsListScreen(
             {}
     )

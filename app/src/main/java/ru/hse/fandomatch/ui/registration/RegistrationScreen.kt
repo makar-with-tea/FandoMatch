@@ -23,6 +23,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.registration.steps.AvatarStep
 import ru.hse.fandomatch.ui.registration.steps.DateStep
@@ -82,7 +83,7 @@ fun RegistrationScreen(
 
                                 is RegistrationState.Name -> 0.2f
                                 is RegistrationState.DateOfBirth -> 0.4f
-                                is RegistrationState.Gender -> 0.6f
+                                is RegistrationState.GenderChoice -> 0.6f
                                 is RegistrationState.Avatar -> 0.8f
                                 is RegistrationState.Password -> 1f
                             }
@@ -150,7 +151,7 @@ private fun MainState(
     state: RegistrationState.Main,
     saveName: (String, String, String) -> Unit,
     saveDateOfBirth: (Long?) -> Unit,
-    saveGender: (GenderType) -> Unit,
+    saveGender: (Gender) -> Unit,
     saveAvatar: (ByteArray?) -> Unit,
     savePassword: (String, String, Boolean) -> Unit,
     onBackPressed: () -> Unit,
@@ -181,7 +182,7 @@ private fun MainState(
                     )
                 }
 
-                is RegistrationState.Gender -> GenderStep(
+                is RegistrationState.GenderChoice -> GenderStep(
                     state = state,
                     onNext = saveGender,
                     onBackPressed = onBackPressed,

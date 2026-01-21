@@ -17,6 +17,7 @@ import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.authorization.AuthorizationScreen
 import ru.hse.fandomatch.ui.chat.ChatScreen
 import ru.hse.fandomatch.ui.chatslist.ChatsListScreen
+import ru.hse.fandomatch.ui.filters.FiltersScreen
 import ru.hse.fandomatch.ui.intro.IntroScreen
 import ru.hse.fandomatch.ui.matches.MatchesScreen
 import ru.hse.fandomatch.ui.myprofile.MyProfileScreen
@@ -24,30 +25,26 @@ import ru.hse.fandomatch.ui.registration.RegistrationScreen
 import ru.hse.fandomatch.ui.utils.orFalse
 
 sealed class Route(val route: String) {
-    data object Intro: Route("intro")
     data object Authorization : Route("authorization")
+    data object Chat : Route("chat/{chat_id}") {
+        fun createRoute(chatId: Long): String {
+            return "chat/$chatId"
+        }
+    }
 
-    data object Registration : Route("registration")
-
-    data object MyProfile: Route("my_profile")
-
-    data object Matches: Route("matches")
-
-    data object Profile: Route("profile/{profile_id}") {
+    data object ChatsList : Route("chats_list")
+    data object Feed : Route("feed")
+    data object Filters : Route("filters")
+    data object Intro : Route("intro")
+    data object Matches : Route("matches")
+    data object MyProfile : Route("my_profile")
+    data object Profile : Route("profile/{profile_id}") {
         fun createRoute(profileId: Long): String {
             return "profile/$profileId"
         }
     }
 
-    data object Feed: Route("feed")
-
-    data object ChatsList: Route("chats_list")
-
-    data object Chat: Route("chat/{chat_id}") {
-        fun createRoute(chatId: Long): String {
-            return "chat/$chatId"
-        }
-    }
+    data object Registration : Route("registration")
 }
 
 @Composable
@@ -82,6 +79,7 @@ fun MainView() {
                 Route.MyProfile.route -> stringResource(id = R.string.my_profile_title)
                 Route.Matches.route -> stringResource(id = R.string.matches_title)
                 Route.ChatsList.route -> stringResource(id = R.string.chats_list_title)
+                Route.Filters.route -> stringResource(id = R.string.filters_title)
                 else -> null
             }
 
@@ -89,7 +87,7 @@ fun MainView() {
                 Route.Matches.route -> listOf(
                     EndIconState(
                         iconId = R.drawable.ic_filters,
-                        onClick = { /* TODO */ },
+                        onClick = { navigateToRoute(Route.Filters) },
                         description = stringResource(id = R.string.filters_icon_description)
                     )
                 )
@@ -199,6 +197,13 @@ fun MainView() {
                         onBackClicked = { navController.popBackStack() }
                     )
                 }
+                composable(Route.Filters.route) {
+                    FiltersScreen(
+                        navigateToMatches = {
+                            navigateToRoute(Route.Matches)
+                        },
+                    )
+                }
             }
         }
     }
@@ -210,5 +215,6 @@ private fun String.canShowBottomBar(): Boolean {
         Route.Registration.route,
         Route.Intro.route,
         Route.Chat.route, // todo check if it works
+        Route.Filters.route,
     )
 }

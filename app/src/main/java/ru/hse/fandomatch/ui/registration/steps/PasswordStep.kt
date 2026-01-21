@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.ui.composables.MyCheckBox
 import ru.hse.fandomatch.ui.composables.MyPasswordField
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.registration.RegistrationState
@@ -70,15 +71,11 @@ internal fun PasswordStep(
                 onIconClick = onPasswordRepeatVisibilityChanged,
                 passwordVisibility = state.passwordRepeatVisibility
             )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.clickable {
-                    agreed.value = !agreed.value
-                }
-            ) {
-                Checkbox(checked = agreed.value, onCheckedChange = { agreed.value = it })
-                Text(stringResource(R.string.agree_terms))
-            }
+            MyCheckBox(
+                isChecked = agreed.value,
+                onCheckedChange = { agreed.value = it },
+                label = stringResource(R.string.agree_terms)
+            )
         }
         Button(
             modifier = Modifier.fillMaxWidth(),

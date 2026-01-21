@@ -17,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.ui.composables.EndIcon
 import ru.hse.fandomatch.ui.composables.MyTitle
 
 data class TopBarState(
@@ -40,13 +41,7 @@ fun TopBar(
         title = { MyTitle(text = state.title) },
         actions = {
             state.endIcons.forEach { endIcon ->
-                IconButton(onClick = endIcon.onClick) {
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = endIcon.iconId),
-                        contentDescription = endIcon.description,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                EndIcon(endIcon)
             }
         },
         navigationIcon = {
