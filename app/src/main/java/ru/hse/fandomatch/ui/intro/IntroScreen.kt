@@ -75,7 +75,7 @@ fun IntroScreen(
 }
 
 @Composable
-fun MainState(
+private fun MainState(
     onLoginClick: () -> Unit,
     onRegistrationClick: () -> Unit,
 ) {
@@ -110,18 +110,18 @@ fun MainState(
 }
 
 @Composable
-fun LoadingState() {
+private fun LoadingState() {
     LoadingBlock()
 }
 
 @Composable
-fun IdleState() {
+private fun IdleState() {
     LoadingBlock()
 }
 
 @Preview(showBackground = true)
 @Composable
-fun IntroScreenPreview() {
+private fun IntroScreenPreview() {
     IntroScreen(
         {}, {}, {}
     )

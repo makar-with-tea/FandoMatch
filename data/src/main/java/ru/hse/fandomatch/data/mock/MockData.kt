@@ -5,6 +5,7 @@ import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
+import ru.hse.fandomatch.domain.model.Filters
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.model.ProfileCard
@@ -283,4 +284,14 @@ val mockChat = Chat(
             timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35).toEpochSecond(java.time.ZoneOffset.UTC) * 1000,
         )
     ),
+)
+
+val mockFilters = Filters(
+    genders = Gender.entries,
+    minAge = 18,
+    maxAge = 30,
+    categories = listOf(FandomCategory.ANIME_MANGA, FandomCategory.GAMES),
+    fandoms = listOf(),
+    userCity = City.MOSCOW,
+    onlyInUserCity = true,
 )

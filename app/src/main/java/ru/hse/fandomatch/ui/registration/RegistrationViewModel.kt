@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.exception.LoginAlreadyInUseException
+import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.usecase.user.RegisterUseCase
 import java.time.Instant
 import java.time.LocalDate
@@ -27,7 +28,7 @@ class RegistrationViewModel(
         var email: String = "",
         var login: String = "",
         var dateOfBirthMillis: Long? = null,
-        var gender: GenderType? = null,
+        var gender: Gender? = null,
         var avatarByteArray: ByteArray? = null,
         var password: String = "",
         var passwordRepeat: String = "",
@@ -154,7 +155,7 @@ class RegistrationViewModel(
             return
         }
         val date = Instant.ofEpochMilli(dateOfBirthMillis).atZone(ZoneId.systemDefault()).toLocalDate()
-        if (date.isAfter(LocalDate.now().minusYears(12))) {
+        if (date.isAfter(LocalDate.now().minusYears(MIN_AGE_IN_YEARS))) {
             _state.value = RegistrationState.DateOfBirth(
                 dateOfBirthMillis = dateOfBirthMillis,
                 error = RegistrationState.RegistrationError.DOB_TOO_YOUNG
@@ -162,12 +163,12 @@ class RegistrationViewModel(
             return
         }
         form.dateOfBirthMillis = dateOfBirthMillis
-        _state.value = RegistrationState.Gender(form.gender)
+        _state.value = RegistrationState.GenderChoice(form.gender)
     }
 
-    private fun handleGender(gender: GenderType?) {
+    private fun handleGender(gender: Gender?) {
         if (gender == null) {
-            _state.value = RegistrationState.Gender(
+            _state.value = RegistrationState.GenderChoice(
                 gender = null,
                 error = RegistrationState.RegistrationError.GENDER_NOT_SELECTED
             )
@@ -246,7 +247,7 @@ class RegistrationViewModel(
                     form.email,
                     form.login,
                     form.dateOfBirthMillis!!,
-                    form.gender!!.toDomainGender(),
+                    form.gender!!,
                     form.avatarByteArray,
                     form.password
                 )
@@ -299,10 +300,10 @@ class RegistrationViewModel(
                 email = form.email,
                 login = form.login
             )
-            is RegistrationState.Gender -> RegistrationState.DateOfBirth(
+            is RegistrationState.GenderChoice -> RegistrationState.DateOfBirth(
                 dateOfBirthMillis = form.dateOfBirthMillis
             )
-            is RegistrationState.Avatar -> RegistrationState.Gender(
+            is RegistrationState.Avatar -> RegistrationState.GenderChoice(
                 gender = form.gender
             )
             is RegistrationState.Password -> RegistrationState.Avatar(
@@ -331,8 +332,4 @@ class RegistrationViewModel(
     }
 }
 
-fun GenderType.toDomainGender(): ru.hse.fandomatch.domain.model.Gender = when (this) {
-    GenderType.MALE -> ru.hse.fandomatch.domain.model.Gender.MALE
-    GenderType.FEMALE -> ru.hse.fandomatch.domain.model.Gender.FEMALE
-    GenderType.UNSPECIFIED -> ru.hse.fandomatch.domain.model.Gender.NOT_SPECIFIED
-}
+private const val MIN_AGE_IN_YEARS : Long = 16

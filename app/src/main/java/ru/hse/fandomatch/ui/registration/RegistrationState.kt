@@ -1,5 +1,7 @@
 package ru.hse.fandomatch.ui.registration
 
+import ru.hse.fandomatch.domain.model.Gender
+
 sealed interface RegistrationState {
     enum class RegistrationError {
         NAME_LENGTH,
@@ -37,8 +39,8 @@ sealed interface RegistrationState {
         val error: RegistrationError = RegistrationError.IDLE
     ) : Main
 
-    data class Gender(
-        val gender: GenderType? = null,
+    data class GenderChoice(
+        val gender: Gender? = null,
         val error: RegistrationError = RegistrationError.IDLE
     ) : Main
 
@@ -99,7 +101,7 @@ sealed class RegistrationEvent {
     ) : RegistrationEvent()
 
     data class DateSelected(val dateOfBirthMillis: Long?) : RegistrationEvent()
-    data class GenderSelected(val gender: GenderType?) : RegistrationEvent()
+    data class GenderSelected(val gender: Gender?) : RegistrationEvent()
     data class AvatarSelected(val avatarByteArray: ByteArray?) : RegistrationEvent() {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -132,5 +134,3 @@ sealed class RegistrationAction {
 
     data object NavigateBack : RegistrationAction()
 }
-
-enum class GenderType { MALE, FEMALE, UNSPECIFIED }
