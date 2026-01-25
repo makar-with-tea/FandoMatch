@@ -7,6 +7,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.NavHost
@@ -17,17 +19,18 @@ import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.authorization.AuthorizationScreen
 import ru.hse.fandomatch.ui.chat.ChatScreen
 import ru.hse.fandomatch.ui.chatslist.ChatsListScreen
+import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.filters.FiltersScreen
 import ru.hse.fandomatch.ui.intro.IntroScreen
 import ru.hse.fandomatch.ui.matches.MatchesScreen
-import ru.hse.fandomatch.ui.myprofile.MyProfileScreen
+import ru.hse.fandomatch.ui.myprofile.ProfileScreen
 import ru.hse.fandomatch.ui.registration.RegistrationScreen
 import ru.hse.fandomatch.ui.utils.orFalse
 
 sealed class Route(val route: String) {
     data object Authorization : Route("authorization")
     data object Chat : Route("chat/{chat_id}") {
-        fun createRoute(chatId: Long): String {
+        fun createRoute(chatId: Long?): String {
             return "chat/$chatId"
         }
     }
@@ -72,36 +75,67 @@ fun MainView() {
 
     // todo go back from the first screen??
 
-    Scaffold(
-        topBar = {
-            val screenTitle = when (currentRoute) {
-                Route.Authorization.route -> stringResource(id = R.string.authorization_title)
-                Route.MyProfile.route -> stringResource(id = R.string.my_profile_title)
-                Route.Matches.route -> stringResource(id = R.string.matches_title)
-                Route.ChatsList.route -> stringResource(id = R.string.chats_list_title)
-                Route.Filters.route -> stringResource(id = R.string.filters_title)
-                else -> null
+    val screenTitleId =
+        when (currentRoute) {
+            Route.Authorization.route -> R.string.authorization_title
+            Route.Matches.route -> R.string.matches_title
+            Route.ChatsList.route -> R.string.chats_list_title
+            Route.Filters.route -> R.string.filters_title
+            else -> null
+        }
+
+    val endIcons =
+        when (currentRoute) {
+            Route.Matches.route -> listOf(
+                EndIconState(
+                    iconId = R.drawable.ic_filters,
+                    onClick = { navigateToRoute(Route.Filters) },
+                    descriptionId = R.string.filters_icon_description
+                )
+            )
+
+            Route.ChatsList.route -> listOf(
+                EndIconState(
+                    iconId = R.drawable.ic_search,
+                    onClick = { /* TODO */ },
+                    descriptionId = R.string.search_icon_description
+                ),
+            )
+
+            else -> listOf()
+        }
+
+    val topBarState = remember(
+        screenTitleId,
+        endIcons
+    ) {
+        mutableStateOf(screenTitleId?.let {
+            TopBarState(
+                titleContent = { MyTitle(text = stringResource(screenTitleId)) },
+                endIcons = endIcons,
+            )
+        }
+        )
+    }
+
+    fun updateTopBar() {
+        val screenTitleId =
+            when (currentRoute) {
+                Route.Authorization.route -> R.string.authorization_title
+                Route.Matches.route -> R.string.matches_title
+                Route.ChatsList.route -> R.string.chats_list_title
+                Route.Filters.route -> R.string.filters_title
+                Route.Intro.route, Route.Registration.route, Route.Authorization.route -> null
+                else -> R.string.empty_string
             }
 
-            val endIcons = when (currentRoute) {
+        val endIcons =
+            when (currentRoute) {
                 Route.Matches.route -> listOf(
                     EndIconState(
                         iconId = R.drawable.ic_filters,
                         onClick = { navigateToRoute(Route.Filters) },
-                        description = stringResource(id = R.string.filters_icon_description)
-                    )
-                )
-
-                Route.MyProfile.route -> listOf(
-                    EndIconState(
-                        iconId = R.drawable.ic_edit,
-                        onClick = { /* TODO */ },
-                        description = stringResource(id = R.string.edit_profile_icon_description)
-                    ),
-                    EndIconState(
-                        iconId = R.drawable.ic_settings,
-                        onClick = { /* TODO */ },
-                        description = stringResource(id = R.string.settings_icon_description)
+                        descriptionId = R.string.filters_icon_description
                     )
                 )
 
@@ -109,19 +143,26 @@ fun MainView() {
                     EndIconState(
                         iconId = R.drawable.ic_search,
                         onClick = { /* TODO */ },
-                        description = stringResource(id = R.string.search_icon_description)
+                        descriptionId = R.string.search_icon_description
                     ),
                 )
 
                 else -> listOf()
             }
 
-            screenTitle?.let {
+        topBarState.value = screenTitleId?.let {
+            TopBarState(
+                titleContent = { MyTitle(text = stringResource(screenTitleId)) },
+                endIcons = endIcons,
+            )
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            topBarState.value?.let {
                 TopBar(
-                    state = TopBarState(
-                        title = screenTitle,
-                        endIcons = endIcons,
-                    ),
+                    state = it,
                     onBackClick = { navController.popBackStack() }
                 )
             }
@@ -142,6 +183,7 @@ fun MainView() {
         Box(modifier = Modifier.padding(paddingValues)) {
             NavHost(navController = navController, startDestination = Route.Intro.route) {
                 composable(Route.Intro.route) {
+                    updateTopBar()
                     IntroScreen(
                         navigateToMatches = { navigateToRoute(Route.Matches) },
                         navigateToLogin = { navigateToRoute(Route.Authorization) },
@@ -149,17 +191,20 @@ fun MainView() {
                     )
                 }
                 composable(Route.Authorization.route) {
+                    updateTopBar()
                     AuthorizationScreen(
                         navigateToMatches = { navigateToRoute(Route.Matches) }
                     )
                 }
                 composable(Route.Registration.route) {
+                    updateTopBar()
                     RegistrationScreen(
                         navigateToMatches = { navigateToRoute(Route.Matches) },
                         navigateBack = { navController.popBackStack() },
                     )
                 }
                 composable(Route.Matches.route) {
+                    updateTopBar()
                     MatchesScreen(
                         navigateToProfile = { profileId ->
                             Log.d("Navigation", "Navigate to profile $profileId")
@@ -170,9 +215,16 @@ fun MainView() {
                     )
                 }
                 composable(Route.MyProfile.route) {
-                    MyProfileScreen()
+                    ProfileScreen(
+                        userId = null,
+                        setTopBarState = { topBarState.value = it },
+                        goToMessages = { chatId ->
+                            navigateToRouteWithArgs(Route.Chat.createRoute(chatId = chatId))
+                        }
+                    )
                 }
                 composable(Route.ChatsList.route) {
+                    updateTopBar()
                     ChatsListScreen(
                         navigateToChat = { chatId ->
                             Log.d("Navigation", "Navigate to chat $chatId")
@@ -183,21 +235,25 @@ fun MainView() {
                     )
                 }
                 composable(Route.Profile.route) { backStackEntry ->
-                    val profileId = backStackEntry.arguments?.getString("profile_id")?.toIntOrNull()
-                    if (profileId != null) {
-                        Text("Profile $profileId TODO")
-                    } else {
-                        Text("Profile not found")
-                    }
+                    val profileId =
+                        backStackEntry.arguments?.getString("profile_id")?.toLongOrNull() ?: -1L
+                    ProfileScreen(
+                        userId = profileId,
+                        setTopBarState = { topBarState.value = it },
+                        goToMessages = { chatId ->
+                            navigateToRouteWithArgs(Route.Chat.createRoute(chatId = chatId))
+                        }
+                    )
                 }
                 composable(Route.Chat.route) { backStackEntry ->
                     val chatId = backStackEntry.arguments?.getString("chat_id")?.toLongOrNull()
                     ChatScreen(
-                        chatId = chatId,
-                        onBackClicked = { navController.popBackStack() }
+                        userId = chatId,
+                        setTopBarState = { topBarState.value = it },
                     )
                 }
                 composable(Route.Filters.route) {
+                    updateTopBar()
                     FiltersScreen(
                         navigateToMatches = {
                             navigateToRoute(Route.Matches)

@@ -28,7 +28,7 @@ sealed class ChatEvent {
         val timestamp: Long,
     ) : ChatEvent()
     data class LoadChat(
-        val chatId: Long?,
+        val userId: Long?,
     ) : ChatEvent()
     data object Clear : ChatEvent()
 }

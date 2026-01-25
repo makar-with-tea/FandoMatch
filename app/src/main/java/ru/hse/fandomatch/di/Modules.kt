@@ -7,6 +7,10 @@ import ru.hse.fandomatch.data.SharedPrefRepositoryImpl
 import ru.hse.fandomatch.data.mock.GlobalRepositoryMock
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
+import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
+import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
+import ru.hse.fandomatch.domain.usecase.chat.LoadMessagesUseCase
+import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.matches.DislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LoadSuggestedProfilesUseCase
@@ -14,7 +18,7 @@ import ru.hse.fandomatch.domain.usecase.user.GetPastLoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
 import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.RegisterUseCase
-import ru.hse.fandomatch.ui.myprofile.MyProfileViewModel
+import ru.hse.fandomatch.ui.myprofile.ProfileViewModel
 import ru.hse.fandomatch.ui.authorization.AuthorizationViewModel
 import ru.hse.fandomatch.ui.chat.ChatViewModel
 import ru.hse.fandomatch.ui.chatslist.ChatsListViewModel
@@ -35,9 +39,9 @@ val appModule = module {
             dislikeProfileUseCase = get()
         )
     }
-    viewModel<MyProfileViewModel> { MyProfileViewModel() }
-    viewModel<ChatsListViewModel> { ChatsListViewModel() }
-    viewModel<ChatViewModel> { ChatViewModel() }
+    viewModel<ProfileViewModel> { ProfileViewModel() }
+    viewModel<ChatsListViewModel> { ChatsListViewModel(get()) }
+    viewModel<ChatViewModel> { ChatViewModel(get(), get()) }
     viewModel<FiltersViewModel> { FiltersViewModel() }
 }
 
@@ -57,4 +61,8 @@ val domainModule = module {
     factory<LikeProfileUseCase> { LikeProfileUseCase(get()) }
     factory<DislikeProfileUseCase> { DislikeProfileUseCase(get()) }
 
+    factory<LoadMessagesUseCase> { LoadMessagesUseCase(get()) }
+    factory<SendMessageUseCase> { SendMessageUseCase(get()) }
+    factory<LoadChatInfoUseCase> { LoadChatInfoUseCase(get()) }
+    factory<SubscribeToChatPreviewsUseCase> { SubscribeToChatPreviewsUseCase(get()) }
 }

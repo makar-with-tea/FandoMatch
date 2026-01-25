@@ -212,7 +212,7 @@ private fun LoadingState() {
 }
 
 @Composable
-private fun IdleState() = LoadingBlock()
+private fun IdleState() = LoadingState()
 
 @Preview(showBackground = true)
 @Composable

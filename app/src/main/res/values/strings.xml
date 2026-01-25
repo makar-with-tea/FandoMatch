@@ -130,4 +130,8 @@
 
     <string name="type_a_message">Сообщение</string>
     <string name="send_message_button_description">Отправить сообщение</string>
+
+    <string name="login_hidden">Логин скрыт</string>
+    <string name="go_to_chat_button_description">Отправить сообщение</string>
+    <string name="empty_string"></string>
 </resources>

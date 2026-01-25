@@ -145,7 +145,7 @@ private fun MainState(
         }
 
         item {
-            val sliderPosition = remember {
+            val sliderPosition = remember(state.ageRange) {
                 mutableStateOf(
                     state.ageRange.first.toFloat()..state.ageRange.last.toFloat()
                 )

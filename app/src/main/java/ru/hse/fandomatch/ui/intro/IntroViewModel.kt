@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.time.delay
 import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.usecase.user.GetPastLoginUseCase
 
@@ -43,8 +45,11 @@ class IntroViewModel(
     }
 
     private fun clear() {
-        _state.value = IntroState.Idle
-        _action.value = null
+        viewModelScope.launch(dispatcherIO) {
+            delay(1000)
+            _state.value = IntroState.Idle
+            _action.value = null
+        }
     }
 
     private fun goToRegister() {
@@ -53,11 +58,10 @@ class IntroViewModel(
     }
 
     private fun checkPastLogin() {
-        _state.value = IntroState.Loading
         viewModelScope.launch(dispatcherIO) {
             val username = getPastLoginUseCase.execute()
             withContext(dispatcherMain) {
-                if (username != null) {
+                if (username == null) {
                     // todo поумнее проверка? получение инфы по пользователю? отдельный синглтон с этой инфой?
                     _action.value = IntroAction.NavigateToMatches
                 } else {

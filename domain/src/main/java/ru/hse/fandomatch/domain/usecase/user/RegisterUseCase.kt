@@ -18,7 +18,15 @@ class RegisterUseCase(
         password: String
     ) {
         // todo use all info
-        val res = globalRepository.register(name, email, login, password)
+        val res = globalRepository.register(
+            name = name,
+            email = email,
+            login = login,
+            dateOfBirthMillis = dateOfBirthMillis,
+            gender = gender,
+            avatarByteArray = avatarByteArray,
+            password = password
+        )
         sharedPrefRepository.saveUser(login)
         sharedPrefRepository.saveToken(res.accessToken)
         sharedPrefRepository.saveRefreshToken(res.refreshToken)

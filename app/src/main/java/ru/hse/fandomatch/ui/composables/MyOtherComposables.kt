@@ -186,7 +186,8 @@ fun AvatarWithBackground(
                 placeholderId = R.drawable.ic_account_placeholder, // todo replace
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(3f),
+                    .aspectRatio(3f)
+                    .background(backgroundColor),
             )
 
             RawImageOrPlaceholder(
@@ -198,6 +199,7 @@ fun AvatarWithBackground(
                     .aspectRatio(1f)
                     .offset(y = 30.dp)
                     .clip(CircleShape)
+                    .background(backgroundColor)
                     .border(4.dp, backgroundColor, CircleShape),
             )
         }
@@ -237,7 +239,7 @@ fun EndIcon(endIcon: EndIconState) {
     IconButton(onClick = endIcon.onClick) {
         Icon(
             imageVector = ImageVector.vectorResource(id = endIcon.iconId),
-            contentDescription = endIcon.description,
+            contentDescription = stringResource(endIcon.descriptionId),
             modifier = Modifier.size(24.dp)
         )
     }
