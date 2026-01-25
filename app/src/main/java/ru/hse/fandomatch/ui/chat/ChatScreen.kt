@@ -45,17 +45,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
-import ru.hse.fandomatch.data.mock.mockChat
 import ru.hse.fandomatch.ui.composables.Message
 import ru.hse.fandomatch.ui.composables.RawImageOrPlaceholder
 import ru.hse.fandomatch.ui.composables.SkeletonView
+import ru.hse.fandomatch.ui.navigation.TopBarState
 import java.time.LocalDateTime
 
 @Composable
 fun ChatScreen(
-    chatId: Long?,
+    userId: Long?,
     viewModel: ChatViewModel = koinViewModel(),
-    onBackClicked: () -> Unit,
+    setTopBarState: (TopBarState) -> Unit,
 ) {
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
@@ -70,7 +70,7 @@ fun ChatScreen(
     when (state.value) {
         is ChatState.Main -> MainState(
             state = state.value as ChatState.Main,
-            onBackClicked = onBackClicked,
+            setTopBarState = setTopBarState,
             onSendMessage = {
                 viewModel.obtainEvent(
                     ChatEvent.SendMessage(
@@ -83,7 +83,7 @@ fun ChatScreen(
 
         is ChatState.Idle -> {
             IdleState()
-            viewModel.obtainEvent(ChatEvent.LoadChat(chatId))
+            viewModel.obtainEvent(ChatEvent.LoadChat(userId))
         }
 
         is ChatState.Loading -> LoadingState()
@@ -95,50 +95,45 @@ fun ChatScreen(
 @Composable
 private fun MainState(
     state: ChatState.Main,
-    onBackClicked: () -> Unit,
+    setTopBarState: (TopBarState) -> Unit,
     onSendMessage: (String) -> Unit,
 ) {
+    setTopBarState(
+        TopBarState(
+        titleContent = @Composable{
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RawImageOrPlaceholder(
+                    modifier = Modifier
+                        .padding(start = 4.dp, top = 2.dp, bottom = 2.dp, end = 8.dp)
+                        .size(32.dp)
+                        .clip(CircleShape),
+                    url = state.participantAvatarUrl,
+                    placeholderId = R.drawable.ic_account_placeholder,
+                    context = LocalContext.current,
+                )
+
+                Text(
+                    text = state.participantName,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        },
+        endIcons = emptyList(),
+    )
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize(),
     ) {
-        // header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .background(MaterialTheme.colorScheme.secondaryContainer)
-                .padding(horizontal = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            IconButton(
-                onClick = onBackClicked,
-            ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_back),
-                    contentDescription = stringResource(R.string.arrow_back_description),
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            RawImageOrPlaceholder(
-                modifier = Modifier
-                    .padding(start = 4.dp, top = 2.dp, bottom = 2.dp, end = 8.dp)
-                    .size(32.dp)
-                    .clip(CircleShape),
-                url = state.participantAvatarUrl,
-                placeholderId = R.drawable.ic_account_placeholder,
-                context = LocalContext.current,
-            )
-
-            Text(
-                text = state.participantName,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-
         Spacer(
             modifier = Modifier
                 .height(1.dp)
@@ -261,30 +256,4 @@ private fun IdleState() {
 private fun ErrorState() {
     // todo
     Text("An error occurred while loading the chat.")
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MainStatePreview() {
-    val mockState = ChatState.Main(
-        chatId = mockChat.chatId,
-        participantId = mockChat.participantId,
-        participantName = mockChat.participantName,
-        participantAvatarUrl = null,
-        messages = mockChat.messages.mapIndexed { index, message ->
-            val needsTail = if (index == mockChat.messages.size - 1) {
-                true
-            } else {
-                mockChat.messages[index + 1].isFromThisUser != message.isFromThisUser
-            }
-            Pair(message, needsTail)
-        },
-        error = ChatState.ChatError.IDLE
-    )
-
-    MainState(
-        state = mockState,
-        onBackClicked = { },
-        onSendMessage = { }
-    )
 }

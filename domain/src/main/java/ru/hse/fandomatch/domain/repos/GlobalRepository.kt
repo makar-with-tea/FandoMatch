@@ -1,5 +1,10 @@
 package ru.hse.fandomatch.domain.repos
 
+import kotlinx.coroutines.flow.StateFlow
+import ru.hse.fandomatch.domain.model.Chat
+import ru.hse.fandomatch.domain.model.ChatPreview
+import ru.hse.fandomatch.domain.model.Gender
+import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.Token
 import ru.hse.fandomatch.domain.model.User
@@ -11,6 +16,9 @@ interface GlobalRepository {
         name: String,
         email: String,
         login: String,
+        dateOfBirthMillis: Long,
+        gender: Gender,
+        avatarByteArray: ByteArray?,
         password: String
     ): Token // todo
 
@@ -28,4 +36,19 @@ interface GlobalRepository {
     suspend fun getSuggestedProfiles(userId: Long, size: Int): List<ProfileCard>
     suspend fun likeProfile(userId: Long, profileId: Long)
     suspend fun dislikeProfile(userId: Long, profileId: Long)
+    suspend fun subscribeToChatPreviews(
+        beforeTimestamp: Long?,
+        size: Int,
+    ): StateFlow<List<ChatPreview>>
+    suspend fun loadChatMessages(
+        userId: Long,
+        beforeTimestamp: Long?,
+        size: Int,
+    ): List<Message>
+    suspend fun loadChatInfo(userId: Long): Chat
+    suspend fun sendMessage(
+        receiverId: Long,
+        content: String,
+        timestamp: Long,
+    )
 }

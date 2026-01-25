@@ -34,8 +34,8 @@ fun MatchesScreen(
 
         when (val action = action.value) {
             is MatchesAction.NavigateToProfile -> {
-                navigateToProfile(action.profileId)
                 viewModel.obtainEvent(MatchesEvent.Clear)
+                navigateToProfile(action.profileId)
             }
             null -> {}
         }

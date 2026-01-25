@@ -83,7 +83,7 @@ fun FandomPlate(
                 ) {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = endIcon.iconId),
-                        contentDescription = endIcon.description,
+                        contentDescription = stringResource(endIcon.descriptionId),
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -288,7 +288,7 @@ fun FandomInput(
             endIcon = EndIconState(
                 iconId = R.drawable.ic_close,
                 onClick = {},
-                description = stringResource(R.string.fandom_filter_delete_fandom_icon_description)
+                descriptionId = R.string.fandom_filter_delete_fandom_icon_description
             ),
             endIconAction = { fandom -> onFandomRemoved(fandom) }
         )

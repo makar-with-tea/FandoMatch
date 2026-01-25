@@ -38,7 +38,7 @@ fun rawResId(name: String, context: Context): Int {
     return context.resources.getIdentifier(name, "raw", context.packageName)
 }
 
-fun nameAndAgeString(name: String, age: Int?): String = "$name${age?.let { ", $it" }.orEmpty()}"
+fun nameAndAgeString(name: String, age: Int): String = "$name, $age"
 
 fun timestampToTimeAgo(timestamp: Long, context: Context) : String {
     val dateTime = LocalDateTime.ofEpochSecond(timestamp / 1000, 0, java.time.ZoneOffset.UTC)

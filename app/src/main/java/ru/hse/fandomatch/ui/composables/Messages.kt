@@ -46,12 +46,12 @@ fun Message(
             Text(
                 text = message.content,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onTertiaryContainer
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
         } else IncomingMessageBox(
             modifier = Modifier.padding(end = otherSidePadding),
             needsTail = needsTail,
-            backgroundColor = MaterialTheme.colorScheme.secondaryContainer,
+            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
             paddingValues = PaddingValues(vertical = 4.dp, horizontal = 8.dp)
         ) {
             Text(

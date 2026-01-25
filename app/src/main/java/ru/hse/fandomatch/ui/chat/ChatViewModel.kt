@@ -5,20 +5,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import ru.hse.fandomatch.data.mock.mockChat
-import ru.hse.fandomatch.data.mock.mockUser
 import ru.hse.fandomatch.domain.model.Message
-import java.sql.Timestamp
+import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
+import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 
 class ChatViewModel(
+    private val sendMessageUseCase: SendMessageUseCase,
+    private val loadChatInfoUseCase: LoadChatInfoUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
-
     private val _state: MutableStateFlow<ChatState> = MutableStateFlow(ChatState.Idle)
     val state: StateFlow<ChatState> get() = _state
     private val _action = MutableStateFlow<ChatAction?>(null)
@@ -28,26 +29,31 @@ class ChatViewModel(
         Log.i("ChatViewModel", "Obtained event: $event")
         when (event) {
             ChatEvent.Clear -> clear()
-            is ChatEvent.LoadChat -> loadChat(event.chatId)
+            is ChatEvent.LoadChat -> loadChat(event.userId)
             is ChatEvent.SendMessage -> sendMessage(event.message, event.timestamp)
         }
     }
 
-    private fun loadChat(chatId: Long?) {
+    private fun loadChat(userId: Long?) {
         _state.value = ChatState.Loading
         // todo
+        if (userId == null) {
+            _state.value = ChatState.Error
+            return
+        }
         viewModelScope.launch(dispatcherIO) {
             delay(1000)
+            val chat = loadChatInfoUseCase.execute(userId = userId)
             _state.value = ChatState.Main(
-                chatId = mockChat.chatId,
-                participantId = mockChat.participantId,
-                participantName = mockChat.participantName,
-                participantAvatarUrl = mockChat.participantAvatarUrl,
-                messages = mockChat.messages.mapIndexed { index, message ->
-                    val needsTail = if (index == mockChat.messages.size - 1) {
+                chatId = chat.chatId,
+                participantId = chat.participantId,
+                participantName = chat.participantName,
+                participantAvatarUrl = chat.participantAvatarUrl,
+                messages = chat.messages.mapIndexed { index, message ->
+                    val needsTail = if (index == chat.messages.size - 1) {
                         true
                     } else {
-                        mockChat.messages[index + 1].isFromThisUser != message.isFromThisUser
+                        chat.messages[index + 1].isFromThisUser != message.isFromThisUser
                     }
                     Pair(message, needsTail)
                 }.reversed(),
@@ -64,8 +70,15 @@ class ChatViewModel(
                     messageId = currentState.messages.size.toLong() + 1, // todo normal id
                     isFromThisUser = true,
                     content = message,
-                    timestamp = timestamp, // todo что там с миллисекундами?
+                    timestamp = timestamp * 1000, // todo что там с миллисекундами?
                 )
+                viewModelScope.launch(dispatcherIO) {
+                    sendMessageUseCase.execute(
+                        userId = currentState.participantId,
+                        content = message,
+                        timestamp = timestamp * 1000,
+                    )
+                }
                 val updatedMessages = listOf(newMessage to true) + if (currentState.messages.isNotEmpty()) {
                     // update previous message to not have tail
                     val (lastMessage, _) = currentState.messages[0]
@@ -78,6 +91,8 @@ class ChatViewModel(
             else -> currentState
         }
     }
+
+    // todo polling for new messages
 
     private fun clear() {
         _state.value = ChatState.Idle

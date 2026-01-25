@@ -5,13 +5,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import ru.hse.fandomatch.data.mock.mockChatPreviews
+import ru.hse.fandomatch.domain.model.ChatPreview
+import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
 
 class ChatsListViewModel(
+    private val subscribeToChatPreviewsUseCase: SubscribeToChatPreviewsUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -38,11 +42,15 @@ class ChatsListViewModel(
 
     private fun loadChats() {
         // todo
-        _state.value = ChatsListState.Loading
         viewModelScope.launch(dispatcherIO) {
             delay(1000) // simulate loading
 
-            _state.value = ChatsListState.Main(chats = mockChatPreviews)
+            // todo error handling + how to dispose?..
+            val pollingFlow = subscribeToChatPreviewsUseCase.execute()
+            pollingFlow.collect {
+                Log.d("ChatsListViewModel", "Loaded chat previews: $it")
+                _state.value = ChatsListState.Main(chats = it)
+            }
         }
     }
 

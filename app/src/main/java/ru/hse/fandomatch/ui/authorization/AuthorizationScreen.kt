@@ -86,7 +86,6 @@ fun MainState(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            MyTitle(stringResource(id = R.string.authorization_title))
             MyTextField(
                 value = login.value,
                 label = stringResource(id = R.string.login_label),

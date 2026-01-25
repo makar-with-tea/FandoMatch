@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -148,9 +149,12 @@ class MatchesViewModel(
     }
 
     private fun clear() {
-        buffer.clear()
-        _action.value = null
-        isLoadingNext = false
-        _state.value = MatchesState.Idle
+        viewModelScope.launch(dispatcherIO) {
+            delay(1000) // todo fix??
+            _state.value = MatchesState.Idle
+            buffer.clear()
+            _action.value = null
+            isLoadingNext = false
+        }
     }
 }

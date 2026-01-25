@@ -4,7 +4,6 @@ import java.time.LocalDate
 
 data class User(
     val id: Long,
-    val nickname: String,
     val login: String,
     val email: String,
     val phone: String? = null,
@@ -12,7 +11,6 @@ data class User(
     val description: String? = null,
     val name: String,
     val gender: Gender? = null,
-    val passwordHash: String,
     val birthDate: LocalDate,
     val avatarUrl: String? = null,
     val backgroundUrl: String? = null,

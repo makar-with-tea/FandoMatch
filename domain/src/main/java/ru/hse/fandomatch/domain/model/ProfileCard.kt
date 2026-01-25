@@ -7,6 +7,6 @@ data class ProfileCard(
     val name: String,
     val gender: Gender? = null,
     val avatarUrl: String? = null,
-    val age: Int? = null,
+    val age: Int,
     val compatibilityPercentage: Int,
 )
