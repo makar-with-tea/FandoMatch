@@ -61,7 +61,7 @@ class IntroViewModel(
         viewModelScope.launch(dispatcherIO) {
             val username = getPastLoginUseCase.execute()
             withContext(dispatcherMain) {
-                if (username == null) {
+                if (username != null) {
                     // todo поумнее проверка? получение инфы по пользователю? отдельный синглтон с этой инфой?
                     _action.value = IntroAction.NavigateToMatches
                 } else {

@@ -3,6 +3,7 @@ package ru.hse.fandomatch.ui.utils
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ru.hse.fandomatch.R
@@ -116,3 +117,9 @@ fun FandomCategory.getColor(): Color {
     }
 }
 
+fun getBytesFromUri(context: Context, uri: Uri): ByteArray? {
+    context.contentResolver.openInputStream(uri)?.use { inputStream ->
+        return inputStream.readBytes()
+    }
+    return null
+}

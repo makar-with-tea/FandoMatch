@@ -1,19 +1,14 @@
 package ru.hse.fandomatch.data.mock
 
-import ru.hse.fandomatch.domain.model.Chat
-import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Filters
 import ru.hse.fandomatch.domain.model.Gender
-import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.Token
 import ru.hse.fandomatch.domain.model.User
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneOffset
 
 val mockFandoms = listOf(
     Fandom(

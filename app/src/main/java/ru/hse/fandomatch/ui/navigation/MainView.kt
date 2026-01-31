@@ -1,10 +1,10 @@
 package ru.hse.fandomatch.ui.navigation
 
 import android.util.Log
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -79,7 +79,6 @@ fun MainView() {
         when (currentRoute) {
             Route.Authorization.route -> R.string.authorization_title
             Route.Matches.route -> R.string.matches_title
-            Route.ChatsList.route -> R.string.chats_list_title
             Route.Filters.route -> R.string.filters_title
             else -> null
         }
@@ -92,14 +91,6 @@ fun MainView() {
                     onClick = { navigateToRoute(Route.Filters) },
                     descriptionId = R.string.filters_icon_description
                 )
-            )
-
-            Route.ChatsList.route -> listOf(
-                EndIconState(
-                    iconId = R.drawable.ic_search,
-                    onClick = { /* TODO */ },
-                    descriptionId = R.string.search_icon_description
-                ),
             )
 
             else -> listOf()
@@ -123,7 +114,6 @@ fun MainView() {
             when (currentRoute) {
                 Route.Authorization.route -> R.string.authorization_title
                 Route.Matches.route -> R.string.matches_title
-                Route.ChatsList.route -> R.string.chats_list_title
                 Route.Filters.route -> R.string.filters_title
                 Route.Intro.route, Route.Registration.route, Route.Authorization.route -> null
                 else -> R.string.empty_string
@@ -139,14 +129,6 @@ fun MainView() {
                     )
                 )
 
-                Route.ChatsList.route -> listOf(
-                    EndIconState(
-                        iconId = R.drawable.ic_search,
-                        onClick = { /* TODO */ },
-                        descriptionId = R.string.search_icon_description
-                    ),
-                )
-
                 else -> listOf()
             }
 
@@ -158,12 +140,13 @@ fun MainView() {
         }
     }
 
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     Scaffold(
         topBar = {
             topBarState.value?.let {
                 TopBar(
                     state = it,
-                    onBackClick = { navController.popBackStack() }
+                    onBackClick = { backDispatcher?.onBackPressed() }
                 )
             }
         },
@@ -224,14 +207,14 @@ fun MainView() {
                     )
                 }
                 composable(Route.ChatsList.route) {
-                    updateTopBar()
                     ChatsListScreen(
                         navigateToChat = { chatId ->
                             Log.d("Navigation", "Navigate to chat $chatId")
                             navigateToRouteWithArgs(
                                 Route.Chat.createRoute(chatId)
                             )
-                        }
+                        },
+                        setTopBarState = { topBarState.value = it },
                     )
                 }
                 composable(Route.Profile.route) { backStackEntry ->

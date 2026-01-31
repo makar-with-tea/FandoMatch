@@ -2,6 +2,7 @@ package ru.hse.fandomatch.ui.composables
 
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -140,7 +141,8 @@ fun LoadingBlock() {
 @Composable
 fun RawImageOrPlaceholder(
     url: String?,
-    @DrawableRes placeholderId: Int,
+    @DrawableRes placeholderId: Int = R.drawable.ic_account_placeholder,
+    contentScale: ContentScale = ContentScale.Crop,
     context: Context,
     modifier: Modifier = Modifier
 ) {
@@ -148,8 +150,13 @@ fun RawImageOrPlaceholder(
         val rawResId = rawResId(url, LocalContext.current)
         val imageBitmap by remember(rawResId) {
             mutableStateOf(
-                BitmapFactory.decodeStream(context.resources.openRawResource(rawResId))
-                    ?.asImageBitmap()
+                try {
+                    BitmapFactory.decodeStream(context.resources.openRawResource(rawResId))
+                        ?.asImageBitmap()
+                } catch (e: Exception) {
+                    Log.i("RawImageOrPlaceholder", "Error loading image from raw resource: $url", e)
+                    null
+                }
             )
         }
         imageBitmap?.let {
@@ -157,7 +164,7 @@ fun RawImageOrPlaceholder(
                 bitmap = it,
                 contentDescription = null,
                 modifier = modifier,
-                contentScale = ContentScale.Crop
+                contentScale = contentScale,
             )
         }
     } else {
@@ -165,7 +172,7 @@ fun RawImageOrPlaceholder(
             painter = painterResource(id = placeholderId),
             contentDescription = null,
             modifier = modifier,
-            contentScale = ContentScale.Crop
+            contentScale = contentScale,
         )
     }
 }

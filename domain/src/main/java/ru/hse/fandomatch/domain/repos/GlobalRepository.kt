@@ -49,6 +49,7 @@ interface GlobalRepository {
     suspend fun sendMessage(
         receiverId: Long,
         content: String,
+        images: List<ByteArray>,
         timestamp: Long,
     )
 }

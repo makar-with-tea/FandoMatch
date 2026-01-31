@@ -83,6 +83,7 @@ class GlobalRepositoryMock: GlobalRepository {
                 content = "Но хочу пересмотреть когда-нибудь заново)",
                 timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
                     .toEpochSecond(ZoneOffset.UTC) * 1000,
+                imageUrls = listOf("dzimbei", "luffy")
             ),
             Message(
                 messageId = 10L,
@@ -292,12 +293,18 @@ class GlobalRepositoryMock: GlobalRepository {
         return mockChat
     }
 
-    override suspend fun sendMessage(receiverId: Long, content: String, timestamp: Long) {
+    override suspend fun sendMessage(
+        receiverId: Long,
+        content: String,
+        images: List<ByteArray>,
+        timestamp: Long
+    ) {
         mockChat = mockChat.copy(
             messages = mockChat.messages + Message(
                 messageId = mockChat.messages.size.toLong() + 1,
                 isFromThisUser = true,
                 content = content,
+                imageUrls = images.map { "luffy" }, // todo upload images and get urls
                 timestamp = timestamp,
             )
         )
