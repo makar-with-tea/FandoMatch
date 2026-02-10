@@ -39,6 +39,7 @@ import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.registration.RegistrationState
 import ru.hse.fandomatch.ui.utils.BitmapHelper
+import ru.hse.fandomatch.ui.utils.getBytesFromUri
 
 @Composable
 internal fun AvatarStep(
@@ -115,11 +116,4 @@ internal fun AvatarStep(
             onClick = { onNext(avatarByteArray) },
         ) { Text(stringResource(R.string.next_step)) }
     }
-}
-
-fun getBytesFromUri(context: Context, uri: Uri): ByteArray? {
-    context.contentResolver.openInputStream(uri)?.use { inputStream ->
-        return inputStream.readBytes()
-    }
-    return null
 }

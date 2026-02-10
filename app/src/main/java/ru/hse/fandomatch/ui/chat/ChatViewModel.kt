@@ -30,7 +30,7 @@ class ChatViewModel(
         when (event) {
             ChatEvent.Clear -> clear()
             is ChatEvent.LoadChat -> loadChat(event.userId)
-            is ChatEvent.SendMessage -> sendMessage(event.message, event.timestamp)
+            is ChatEvent.SendMessage -> sendMessage(event.message, event.images, event.timestamp)
         }
     }
 
@@ -61,7 +61,7 @@ class ChatViewModel(
         }
     }
 
-    private fun sendMessage(message: String, timestamp: Long) {
+    private fun sendMessage(message: String, images: List<ByteArray>, timestamp: Long) {
         // todo
         Log.i("ChatViewModel", "Sending message: $message at $timestamp")
         _state.value = when (val currentState = _state.value) {
@@ -70,12 +70,14 @@ class ChatViewModel(
                     messageId = currentState.messages.size.toLong() + 1, // todo normal id
                     isFromThisUser = true,
                     content = message,
+                    imageUrls = images.map { "luffy"}, // todo upload images and get urls
                     timestamp = timestamp * 1000, // todo что там с миллисекундами?
                 )
                 viewModelScope.launch(dispatcherIO) {
                     sendMessageUseCase.execute(
                         userId = currentState.participantId,
                         content = message,
+                        images = images,
                         timestamp = timestamp * 1000,
                     )
                 }
@@ -88,6 +90,7 @@ class ChatViewModel(
                 }
                 currentState.copy(messages = updatedMessages)
             }
+
             else -> currentState
         }
     }

@@ -1,6 +1,7 @@
 package ru.hse.fandomatch.ui.chatslist
 
 import ru.hse.fandomatch.domain.model.ChatPreview
+import java.util.AbstractQueue
 
 sealed class ChatsListState {
     enum class ChatsListError {
@@ -9,6 +10,7 @@ sealed class ChatsListState {
     }
     data class Main(
         val chats: List<ChatPreview>,
+        val filteredByQuery: String? = null,
     ) : ChatsListState()
 
     data object Loading : ChatsListState()
@@ -21,6 +23,7 @@ sealed class ChatsListEvent {
     ): ChatsListEvent()
     // todo other events: delete, mute, etc.
     data object LoadChats: ChatsListEvent()
+    data class SearchChats(val query: String?): ChatsListEvent()
     data object Clear: ChatsListEvent()
 }
 

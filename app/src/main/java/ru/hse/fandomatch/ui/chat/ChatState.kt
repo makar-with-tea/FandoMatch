@@ -25,6 +25,7 @@ sealed class ChatState {
 sealed class ChatEvent {
     data class SendMessage(
         val message: String,
+        val images: List<ByteArray>,
         val timestamp: Long,
     ) : ChatEvent()
     data class LoadChat(

@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -40,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -207,30 +210,23 @@ fun FandomInput(
     ) {
         TextField(
             value = fandomInput,
-            onValueChange = { input ->
-                fandomInput = input
-                showDropdown = false
-                onSearch(null)
-            },
+            onValueChange = { input -> fandomInput = input },
+            keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(
+                onSearch = {
+                    showDropdown = true
+                    onSearch(fandomInput)
+                }
+            ),
             placeholder = { Text(stringResource(R.string.fandom_filter_input_fandom_name)) },
             trailingIcon = {
+                if (showDropdown || fandomInput.isNotBlank())
                     IconButton(
-                        enabled = fandomInput.isNotBlank(),
-                        onClick = {
-                            if (showDropdown) {
-                                clear()
-                            } else {
-                                showDropdown = true
-                                onSearch(fandomInput)
-                            }
-                        }
+                        onClick = { clear() }
                     ) {
                         Icon(
-                            imageVector = ImageVector.vectorResource(id = if (!showDropdown) R.drawable.ic_search
-                                    else R.drawable.ic_close),
-                            contentDescription = if (!showDropdown)
-                                stringResource(R.string.search_icon_description)
-                            else stringResource(R.string.fandom_filter_close_suggested_icon_description),
+                            imageVector = ImageVector.vectorResource(R.drawable.ic_close),
+                            contentDescription = stringResource(R.string.clear_search_icon_description),
                             modifier = Modifier.size(24.dp)
                         )
                     }

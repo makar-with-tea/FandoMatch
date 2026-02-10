@@ -27,11 +27,14 @@ class ChatsListViewModel(
     val action: StateFlow<ChatsListAction?>
         get() = _action
 
+    private var _allChats: StateFlow<List<ChatPreview>> = MutableStateFlow(emptyList())
+
     fun obtainEvent(event: ChatsListEvent) {
         Log.d("ChatsListViewModel", "Obtained event: $event")
         when (event) {
             is ChatsListEvent.ChatClicked -> goToChat(event.chatId)
             is ChatsListEvent.LoadChats -> loadChats()
+            is ChatsListEvent.SearchChats -> searchChats(event.query)
             is ChatsListEvent.Clear -> clear()
         }
     }
@@ -46,11 +49,30 @@ class ChatsListViewModel(
             delay(1000) // simulate loading
 
             // todo error handling + how to dispose?..
-            val pollingFlow = subscribeToChatPreviewsUseCase.execute()
-            pollingFlow.collect {
+            _allChats = subscribeToChatPreviewsUseCase.execute()
+            _allChats.collect {
                 Log.d("ChatsListViewModel", "Loaded chat previews: $it")
-                _state.value = ChatsListState.Main(chats = it)
+                val query = when (val currentState = _state.value) {
+                    is ChatsListState.Main -> currentState.filteredByQuery
+                    else -> null
+                }
+                searchChats(query)
             }
+        }
+    }
+
+    private fun searchChats(query: String?) {
+        val allChats = _allChats.value
+        if (query.isNullOrBlank()) {
+            _state.value = ChatsListState.Main(chats = allChats)
+        } else {
+            val filtered = allChats.filter { chatPreview ->
+                chatPreview.participantName.contains(query, ignoreCase = true)
+            }
+            _state.value = ChatsListState.Main(
+                filteredByQuery = query,
+                chats = filtered,
+            )
         }
     }
 

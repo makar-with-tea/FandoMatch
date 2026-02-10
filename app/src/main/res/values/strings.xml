@@ -111,8 +111,8 @@
     <string name="age_filter_no_age">Возраст не указан</string>
     <string name="fandom_category_filter_label">Категории фандомов</string>
     <string name="fandom_filter_label">Фандомы</string>
-    <string name="fandom_filter_input_fandom_name">Название фандома</string>
-    <string name="fandom_filter_close_suggested_icon_description">Скрыть предложенные фандомы</string>
+    <string name="fandom_filter_input_fandom_name">Введите фандом...</string>
+    <string name="clear_search_icon_description">Очистить поиск</string>
     <string name="fandom_filter_no_fandoms_found">Фандомы не найдены</string>
     <string name="fandom_filter_delete_fandom_icon_description">Удалить фандом</string>
     <string name="city_filter_label">Ваш город: %1$s</string>
@@ -122,14 +122,18 @@
     <string name="apply_filters_button">Применить</string>
 
     <string name="chats_list_title">Чаты</string>
-    <string name="search_icon_description">Поиск контактов</string>
+    <string name="search_icon_description">Поиск</string>
     <string name="last_message_time_years">г.</string>
     <string name="last_message_time_months">мес.</string>
     <string name="last_message_time_weeks">нед.</string>
     <string name="last_message_time_days">дн.</string>
+    <string name="search_name_input">Введите имя...</string>
 
     <string name="type_a_message">Сообщение</string>
     <string name="send_message_button_description">Отправить сообщение</string>
+    <string name="attach_file_button_description">Прикрепить вложение</string>
+    <string name="detach_file_button_description">Удалить вложение</string>
+    <string name="download_media_button_description">Скачать фото или видео</string>
 
     <string name="login_hidden">Логин скрыт</string>
     <string name="go_to_chat_button_description">Отправить сообщение</string>
