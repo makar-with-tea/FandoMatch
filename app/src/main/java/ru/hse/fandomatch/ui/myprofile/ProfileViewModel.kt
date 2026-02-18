@@ -6,7 +6,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import ru.hse.fandomatch.data.mock.mockPosts
 import ru.hse.fandomatch.data.mock.mockUser
+import ru.hse.fandomatch.data.mock.mockUserPosts
 import ru.hse.fandomatch.data.mock.mockUsers
 
 class ProfileViewModel(
@@ -67,6 +69,13 @@ class ProfileViewModel(
             backgroundUrl = user.backgroundUrl,
             city = user.city,
             type = type,
+            posts = when (type) {
+                ProfileType.OWN -> mockUserPosts
+                ProfileType.FRIEND -> mockPosts.filter { it.authorId == user.id }
+                ProfileType.OTHER -> mockPosts
+                    .filter { it.authorId == user.id }
+                    .map { it.copy(authorLogin = null) }
+            }
         )
     }
 

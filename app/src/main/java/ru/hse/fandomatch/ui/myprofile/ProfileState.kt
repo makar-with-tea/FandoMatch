@@ -3,6 +3,7 @@ package ru.hse.fandomatch.ui.myprofile
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.Gender
+import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.User
 import java.time.LocalDate
 
@@ -24,6 +25,7 @@ sealed class ProfileState {
         val backgroundUrl: String? = null,
         val city: City? = null,
         val type: ProfileType,
+        val posts: List<Post> = emptyList(), // todo pagination
     ) : ProfileState()
 
     data object Loading : ProfileState()

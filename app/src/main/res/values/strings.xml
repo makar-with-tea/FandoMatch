@@ -147,4 +147,7 @@
     <string name="notification_title_new_match">Новый мэтч</string>
     <string name="notification_message_new_message">Вам пишет %1$s!</string>
     <string name="notification_message_new_match">Посмотрите, сколько у вас общего с %1$s!</string>
+
+    <string name="like_button_description">Поставить или убрать лайк</string>
+    <string name="comment_button_description">Оставить комментарий</string>
 </resources>

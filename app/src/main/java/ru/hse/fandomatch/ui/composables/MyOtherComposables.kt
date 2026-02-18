@@ -48,6 +48,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.hse.fandomatch.R
@@ -271,5 +272,51 @@ fun MyCheckBox(
             onCheckedChange = null,
         )
         Text(label)
+    }
+}
+
+@Composable
+fun AvatarAndNameBlock(
+    avatarUrl: String?,
+    name: String,
+    login: String?,
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(backgroundColor),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RawImageOrPlaceholder(
+            modifier = Modifier
+                .padding(start = 4.dp, top = 2.dp, bottom = 2.dp, end = 8.dp)
+                .size(32.dp)
+                .clip(CircleShape),
+            url = avatarUrl,
+            placeholderId = R.drawable.ic_account_placeholder,
+            context = LocalContext.current,
+        )
+
+        Column {
+            Text(
+                text = name,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            login?.let {
+                Text(
+                    text = it,
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
     }
 }
