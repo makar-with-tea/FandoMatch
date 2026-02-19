@@ -155,6 +155,7 @@ private fun MessageContent(
                 imageUrls = message.imageUrls,
                 modifier = Modifier.padding(bottom = 4.dp),
                 onImageClicked = onImageClicked,
+                maxHeight = 300.dp
             )
         }
         if (message.content.isNotEmpty()) {

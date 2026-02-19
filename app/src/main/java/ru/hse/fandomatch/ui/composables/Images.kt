@@ -2,8 +2,10 @@ package ru.hse.fandomatch.ui.composables
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,11 +20,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.hse.fandomatch.R
@@ -34,26 +43,36 @@ fun ImagesGrid(
     imageUrls: List<String>,
     modifier: Modifier = Modifier,
     onImageClicked: (List<String>, Int) -> Unit,
-    maxHeight: Dp = 300.dp,
-    minHeight: Dp = 0.dp,
+    maxHeight: Dp? = null,
+    minHeight: Dp? = null,
 ) {
     val maxImages = imageUrls.take(5)
+    val context = LocalContext.current
+
+    val modifierWithHeight = when {
+        minHeight != null && maxHeight != null -> modifier.heightIn(min = minHeight, max = maxHeight)
+        minHeight != null -> modifier.heightIn(min = minHeight)
+        maxHeight != null -> modifier.heightIn(max = maxHeight)
+        else -> modifier
+    }
     val imageModifier = Modifier
         .padding(2.dp)
         .clip(RoundedCornerShape(8.dp))
+    val smallImageModifier = Modifier
+        .clip(RoundedCornerShape(8.dp))
 
-    val context = LocalContext.current
+    var firstImageHeight by remember { mutableStateOf<Dp?>(null) }
+    val density = LocalDensity.current
 
     when (maxImages.size) {
         1 -> {
-            Box(modifier = modifier) {
+            Box(modifier = modifierWithHeight) {
                 RawImageOrPlaceholder(
                     url = maxImages[0],
                     placeholderId = R.drawable.ic_account_placeholder, // todo
                     context = context,
                     contentScale = ContentScale.FillWidth,
                     modifier = imageModifier
-                        .heightIn(minHeight, maxHeight)
                         .fillMaxWidth()
                         .clickable {
                             onImageClicked(imageUrls, 0)
@@ -64,16 +83,18 @@ fun ImagesGrid(
 
         2 -> {
             Row(
-                modifier = Modifier
-                    .heightIn(minHeight, maxHeight)
+                modifier = modifierWithHeight
             ) {
                 RawImageOrPlaceholder(
                     url = maxImages[0],
                     placeholderId = R.drawable.ic_account_placeholder, // todo
                     context = context,
-                    contentScale = ContentScale.FillWidth,
+                    contentScale = ContentScale.Crop,
                     modifier = imageModifier
                         .fillMaxHeight()
+                        .onGloballyPositioned { coordinates ->
+                            firstImageHeight = with(density) { coordinates.size.height.toDp() }
+                        }
                         .weight(1f)
                         .clickable {
                             onImageClicked(imageUrls, 0)
@@ -84,9 +105,12 @@ fun ImagesGrid(
                     url = maxImages[1],
                     placeholderId = R.drawable.ic_account_placeholder, // todo
                     context = context,
-                    contentScale = ContentScale.FillWidth,
+                    contentScale = ContentScale.Crop,
                     modifier = imageModifier
                         .weight(1f)
+                        .then(
+                            if (firstImageHeight != null) Modifier.height(firstImageHeight!!) else Modifier
+                        )
                         .clickable {
                             onImageClicked(imageUrls, 1)
                         }
@@ -96,17 +120,19 @@ fun ImagesGrid(
 
         3 -> {
             Row(
-                modifier = Modifier
-                    .heightIn(minHeight, maxHeight)
+                modifier = modifierWithHeight
             ) {
                 RawImageOrPlaceholder(
                     url = maxImages[0],
                     placeholderId = R.drawable.ic_account_placeholder, // todo
                     context = context,
-                    contentScale = ContentScale.FillWidth,
+                    contentScale = ContentScale.Crop,
                     modifier = imageModifier
-                        .weight(1f)
                         .fillMaxHeight()
+                        .onGloballyPositioned { coordinates ->
+                            firstImageHeight = with(density) { coordinates.size.height.toDp() }
+                        }
+                        .weight(1f)
                         .clickable {
                             onImageClicked(imageUrls, 0)
                         }
@@ -114,14 +140,18 @@ fun ImagesGrid(
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
+                        .padding(top = 2.dp, end = 2.dp)
+                        .then(
+                            if (firstImageHeight != null) Modifier.height(firstImageHeight!!) else Modifier.fillMaxHeight()
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     RawImageOrPlaceholder(
                         url = maxImages[1],
                         placeholderId = R.drawable.ic_account_placeholder, // todo
                         context = context,
-                        contentScale = ContentScale.FillWidth,
-                        modifier = imageModifier
+                        contentScale = ContentScale.Crop,
+                        modifier = smallImageModifier
                             .weight(1f)
                             .clickable {
                                 onImageClicked(imageUrls, 1)
@@ -132,8 +162,8 @@ fun ImagesGrid(
                         url = maxImages[2],
                         placeholderId = R.drawable.ic_account_placeholder, // todo
                         context = context,
-                        contentScale = ContentScale.FillWidth,
-                        modifier = imageModifier
+                        contentScale = ContentScale.Crop,
+                        modifier = smallImageModifier
                             .weight(1f)
                             .clickable {
                                 onImageClicked(imageUrls, 2)
@@ -145,17 +175,19 @@ fun ImagesGrid(
 
         4 -> {
             Row(
-                modifier = Modifier
-                    .heightIn(minHeight, maxHeight)
+                modifier = modifierWithHeight
             ) {
                 RawImageOrPlaceholder(
                     url = maxImages[0],
                     placeholderId = R.drawable.ic_account_placeholder, // todo
                     context = context,
-                    contentScale = ContentScale.FillWidth,
+                    contentScale = ContentScale.Crop,
                     modifier = imageModifier
-                        .weight(1f)
                         .fillMaxHeight()
+                        .onGloballyPositioned { coordinates ->
+                            firstImageHeight = with(density) { coordinates.size.height.toDp() }
+                        }
+                        .weight(1f)
                         .clickable {
                             onImageClicked(imageUrls, 0)
                         }
@@ -163,14 +195,18 @@ fun ImagesGrid(
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
+                        .padding(top = 2.dp, end = 2.dp)
+                        .then(
+                            if (firstImageHeight != null) Modifier.height(firstImageHeight!!) else Modifier.fillMaxHeight()
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     RawImageOrPlaceholder(
                         url = maxImages[1],
                         placeholderId = R.drawable.ic_account_placeholder, // todo
                         context = context,
-                        contentScale = ContentScale.FillWidth,
-                        modifier = imageModifier
+                        contentScale = ContentScale.Crop,
+                        modifier = smallImageModifier
                             .weight(1f)
                             .fillMaxWidth()
                             .clickable {
@@ -179,14 +215,15 @@ fun ImagesGrid(
                     )
 
                     Row(
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         RawImageOrPlaceholder(
                             url = maxImages[2],
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
-                            contentScale = ContentScale.FillWidth,
-                            modifier = imageModifier
+                            contentScale = ContentScale.Crop,
+                            modifier = smallImageModifier
                                 .weight(1f)
                                 .fillMaxWidth()
                                 .clickable {
@@ -198,8 +235,8 @@ fun ImagesGrid(
                             url = maxImages[3],
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
-                            contentScale = ContentScale.FillWidth,
-                            modifier = imageModifier
+                            contentScale = ContentScale.Crop,
+                            modifier = smallImageModifier
                                 .weight(1f)
                                 .fillMaxWidth()
                                 .clickable {
@@ -213,17 +250,19 @@ fun ImagesGrid(
 
         5 -> {
             Row(
-                modifier = Modifier
-                    .heightIn(minHeight, maxHeight)
+                modifier = modifierWithHeight
             ) {
                 RawImageOrPlaceholder(
                     url = maxImages[0],
                     placeholderId = R.drawable.ic_account_placeholder, // todo
                     context = context,
-                    contentScale = ContentScale.FillWidth,
+                    contentScale = ContentScale.Crop,
                     modifier = imageModifier
-                        .weight(1f)
                         .fillMaxHeight()
+                        .onGloballyPositioned { coordinates ->
+                            firstImageHeight = with(density) { coordinates.size.height.toDp() }
+                        }
+                        .weight(1f)
                         .clickable {
                             onImageClicked(imageUrls, 0)
                         }
@@ -231,17 +270,22 @@ fun ImagesGrid(
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
+                        .padding(top = 2.dp, end = 2.dp)
+                        .then(
+                            if (firstImageHeight != null) Modifier.height(firstImageHeight!!) else Modifier.fillMaxHeight()
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Row(
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         RawImageOrPlaceholder(
                             url = maxImages[1],
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
                             contentScale = ContentScale.FillWidth,
-                            modifier = imageModifier
+                            modifier = smallImageModifier
                                 .weight(1f)
                                 .clickable {
                                     onImageClicked(imageUrls, 1)
@@ -253,7 +297,7 @@ fun ImagesGrid(
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
                             contentScale = ContentScale.FillWidth,
-                            modifier = imageModifier
+                            modifier = smallImageModifier
                                 .weight(1f)
                                 .clickable {
                                     onImageClicked(imageUrls, 2)
@@ -261,14 +305,15 @@ fun ImagesGrid(
                         )
                     }
                     Row(
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         RawImageOrPlaceholder(
                             url = maxImages[3],
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
                             contentScale = ContentScale.FillWidth,
-                            modifier = imageModifier
+                            modifier = smallImageModifier
                                 .weight(1f)
                                 .fillMaxWidth()
                                 .clickable {
@@ -281,7 +326,7 @@ fun ImagesGrid(
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
                             contentScale = ContentScale.FillWidth,
-                            modifier = imageModifier
+                            modifier = smallImageModifier
                                 .weight(1f)
                                 .fillMaxWidth()
                                 .clickable {

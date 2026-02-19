@@ -8,6 +8,7 @@ import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.Message
+import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.Token
 import ru.hse.fandomatch.domain.model.User
@@ -170,6 +171,62 @@ class GlobalRepositoryMock: GlobalRepository {
         )
     )
 
+    val mockPosts = listOf(
+        Post(
+            id = 1,
+            authorId = 12345,
+            authorName = "Алиса",
+            authorLogin = "alice",
+            authorAvatarUrl = "luffy",
+            content = "Привет! Я только что зарегистрировалась и хочу поделиться своей любовью к аниме и музыке!",
+            imageUrls = listOf("luffy", "peace_was_never_an_option"),
+            likeCount = 10,
+            commentCount = 5,
+            isLikedByCurrentUser = false,
+            timestamp = System.currentTimeMillis() - 3600_000, // 1 hour ago
+        ),
+        Post(
+            id = 2,
+            authorId = 67890,
+            authorName = "Пользователь_123",
+            authorLogin = "pirate_123",
+            authorAvatarUrl = "peace_was_never_an_option",
+            content = "Приветствую всех! Я пират в поисках своего личного приключения. Кто еще здесь любит аниме? Давайте обмениваться рекомендациями и обсуждать любимые серии! А может, даже устроим совместный просмотр? :)",
+            imageUrls = listOf("peace_was_never_an_option"),
+            likeCount = 20,
+            commentCount = 10,
+            isLikedByCurrentUser = true,
+            timestamp = System.currentTimeMillis() - 7200_000, // 2 hours ago
+        ),
+        Post(
+            id = 3,
+            authorId = 11223,
+            authorName = "Лесное нечто",
+            authorLogin = "forest_entity",
+            authorAvatarUrl = "pet_the_forbidden_dog",
+            content = "Хочется на концерт брингов...",
+            imageUrls = listOf(),
+            likeCount = 5,
+            commentCount = 2,
+            isLikedByCurrentUser = false,
+            timestamp = System.currentTimeMillis() - 10800_000, // 3 hours ago
+        ),
+        Post(
+            id = 4,
+            authorId = 44556,
+            authorName = "Дана",
+            authorLogin = "dana",
+            authorAvatarUrl = "ne_poluchaetsya",
+            content = "Просто загадочный человек.",
+            imageUrls = listOf("what_is_written_here"),
+            likeCount = 0,
+            commentCount = 0,
+            isLikedByCurrentUser = false,
+            timestamp = System.currentTimeMillis() - 14400_000, // 4 hours ago
+        )
+    )
+
+
     override suspend fun getUserInfo(login: String): User? {
         val result = (mockUsers + mockUser).find { it.login == login }
         return result.also {
@@ -282,7 +339,7 @@ class GlobalRepositoryMock: GlobalRepository {
             .also {
                 Log.d(
                     "GlobalRepositoryMock",
-                    "loadChatMessages: returned ${it.size} messages for userId $userId before $beforeTimestamp"
+                    "loadChatMessages: returned <= ${it.size} messages for userId $userId before $beforeTimestamp"
                 )
             }
         return result
@@ -321,5 +378,23 @@ class GlobalRepositoryMock: GlobalRepository {
             .sortedBy {
                 -it.lastMessageTimestamp
             }
+    }
+
+    override suspend fun getFeedPosts(beforeTimestamp: Long?, size: Int): List<Post> {
+        val posts = if (beforeTimestamp == null) {
+            mockPosts
+        } else {
+            mockPosts.filter { it.timestamp < beforeTimestamp }
+        }
+        val result = posts
+            .sortedByDescending { it.timestamp }
+            .take(size)
+            .also {
+                Log.d(
+                    "GlobalRepositoryMock",
+                    "loadPosts: returned <= ${it.size} posts before $beforeTimestamp"
+                )
+            }
+        return result
     }
 }

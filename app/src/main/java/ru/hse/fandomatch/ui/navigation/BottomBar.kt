@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemColors
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -33,6 +34,10 @@ fun BottomBar(
         containerColor = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
     ) {
+        val colors = NavigationBarItemDefaults.colors(
+            selectedIconColor = MaterialTheme.colorScheme.tertiary,
+            unselectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer
+        )
         NavigationBarItem(
             modifier = Modifier.size(28.dp),
             selected = currentRoute == Route.Matches.route,
@@ -43,7 +48,7 @@ fun BottomBar(
                     contentDescription = stringResource(R.string.matches_icon_description)
                 )
             },
-            // todo play with colors
+            colors = colors,
             onClick = {
                 navigateToMatches()
                 Log.d("Navigation", "BottomNav to Matches from $currentRoute")
@@ -59,6 +64,7 @@ fun BottomBar(
                     contentDescription = stringResource(R.string.feed_icon_description)
                 )
             },
+            colors = colors,
             onClick = {
                 navigateToFeed()
                 Log.d("Navigation", "BottomNav to Feed from $currentRoute")
@@ -74,6 +80,7 @@ fun BottomBar(
                     contentDescription = stringResource(R.string.chats_list_icon_description)
                 )
             },
+            colors = colors,
             onClick = {
                 navigateToChats()
                 Log.d("Navigation", "BottomNav to ChatsList from $currentRoute")
@@ -89,6 +96,7 @@ fun BottomBar(
                     contentDescription = stringResource(R.string.my_profile_icon_description)
                 )
             },
+            colors = colors,
             onClick = {
                 navigateToMyProfile()
                 Log.d("Navigation", "BottomNav to Account from $currentRoute")

@@ -1,12 +1,8 @@
 package ru.hse.fandomatch.ui.myprofile
 
 import android.util.Log
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,14 +15,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -39,7 +31,6 @@ import ru.hse.fandomatch.ui.composables.FandomCarouselWithDropdown
 import ru.hse.fandomatch.ui.composables.FeedPost
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyTitle
-import ru.hse.fandomatch.ui.composables.SkeletonView
 import ru.hse.fandomatch.ui.navigation.EndIconState
 import ru.hse.fandomatch.ui.navigation.TopBarState
 import ru.hse.fandomatch.ui.utils.timestampToDateString
@@ -184,7 +175,7 @@ private fun MainState(
         items(state.posts) { post ->
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth(),
             ) {
                 FeedPost(
                     userName = post.authorName,
@@ -193,7 +184,7 @@ private fun MainState(
                     postDate = post.timestamp.timestampToDateString(),
                     postText = post.content,
                     imageUrls = post.imageUrls,
-                    areCommentsAvailable = true, // todo
+                    areReactionsAvailable = true, // todo
                     likeCount = post.likeCount,
                     commentCount = post.commentCount,
                     isLiked = post.isLikedByCurrentUser,
@@ -208,53 +199,6 @@ private fun MainState(
                         .fillMaxWidth()
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun LoadingPosts() {
-    val animatable = remember { Animatable(0f) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            animatable.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(1200, 0, LinearEasing)
-            )
-            animatable.snapTo(0f)
-        }
-    }
-
-    val tan = remember { 0.26795f } // tan(15 degrees)
-    val screenHeight = with (LocalDensity.current) {
-        LocalConfiguration.current.screenHeightDp.dp.toPx()
-    }
-    val globalY = screenHeight * animatable.value
-    val globalX = tan * globalY
-
-    val endY = screenHeight + globalY
-    val endX = tan * endY
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top,
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 16.dp, bottom = 0.dp, start = 16.dp, end = 16.dp)
-    ) {
-        repeat(5) {
-            SkeletonView(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(80.dp)
-                    .padding(vertical = 8.dp)
-                    .clip(shape = RoundedCornerShape(14.dp)),
-                globalX = globalX,
-                globalY = globalY,
-                endX = endX,
-                endY = endY,
-            )
         }
     }
 }

@@ -49,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.hse.fandomatch.R
@@ -282,6 +283,7 @@ fun AvatarAndNameBlock(
     login: String?,
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    avatarSize: Dp = 44.dp,
 ) {
     Row(
         modifier = modifier
@@ -292,7 +294,7 @@ fun AvatarAndNameBlock(
         RawImageOrPlaceholder(
             modifier = Modifier
                 .padding(start = 4.dp, top = 2.dp, bottom = 2.dp, end = 8.dp)
-                .size(32.dp)
+                .size(avatarSize)
                 .clip(CircleShape),
             url = avatarUrl,
             placeholderId = R.drawable.ic_account_placeholder,

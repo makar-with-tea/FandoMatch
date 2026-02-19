@@ -150,4 +150,6 @@
 
     <string name="like_button_description">Поставить или убрать лайк</string>
     <string name="comment_button_description">Оставить комментарий</string>
+
+    <string name="feed_title">Лента</string>
 </resources>

@@ -1,6 +1,7 @@
 package ru.hse.fandomatch.ui.navigation
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -10,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -20,6 +22,7 @@ import ru.hse.fandomatch.ui.authorization.AuthorizationScreen
 import ru.hse.fandomatch.ui.chat.ChatScreen
 import ru.hse.fandomatch.ui.chatslist.ChatsListScreen
 import ru.hse.fandomatch.ui.composables.MyTitle
+import ru.hse.fandomatch.ui.feed.FeedScreen
 import ru.hse.fandomatch.ui.filters.FiltersScreen
 import ru.hse.fandomatch.ui.intro.IntroScreen
 import ru.hse.fandomatch.ui.matches.MatchesScreen
@@ -80,6 +83,7 @@ fun MainView() {
             Route.Authorization.route -> R.string.authorization_title
             Route.Matches.route -> R.string.matches_title
             Route.Filters.route -> R.string.filters_title
+            Route.Feed.route -> R.string.feed_title
             else -> null
         }
 
@@ -115,6 +119,7 @@ fun MainView() {
                 Route.Authorization.route -> R.string.authorization_title
                 Route.Matches.route -> R.string.matches_title
                 Route.Filters.route -> R.string.filters_title
+                Route.Feed.route -> R.string.feed_title
                 Route.Intro.route, Route.Registration.route, Route.Authorization.route -> null
                 else -> R.string.empty_string
             }
@@ -157,7 +162,7 @@ fun MainView() {
                     navigateToMatches = { navigateToRoute(Route.Matches) },
                     navigateToMyProfile = { navigateToRoute(Route.MyProfile) },
                     navigateToChats = { navigateToRoute(Route.ChatsList) },
-                    navigateToFeed = { /* TODO */ },
+                    navigateToFeed = { navigateToRoute(Route.Feed) },
                     currentRoute = currentRoute
                 )
             }
@@ -241,6 +246,20 @@ fun MainView() {
                         navigateToMatches = {
                             navigateToRoute(Route.Matches)
                         },
+                    )
+                }
+                composable(Route.Feed.route) {
+                    updateTopBar()
+                    val context = LocalContext.current
+                    FeedScreen(
+                        navigateToPost = { postId ->
+                            // todo
+                            Toast.makeText(
+                                context,
+                                "Clicked post $postId",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     )
                 }
             }
