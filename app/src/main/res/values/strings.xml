@@ -138,4 +138,13 @@
     <string name="login_hidden">Логин скрыт</string>
     <string name="go_to_chat_button_description">Отправить сообщение</string>
     <string name="empty_string"></string>
+
+    <string name="notification_allow_popup_name">Разрешение на уведомления</string>
+    <string name="notification_allow_popup_description">Разрешите уведомления, чтобы получать оповещения о новых сообщениях и мэтчах.</string>
+    <string name="ok">OK</string>
+    <string name="no_thanks">Нет, спасибо</string>
+    <string name="notification_title_new_message">Новое сообщение</string>
+    <string name="notification_title_new_match">Новый мэтч</string>
+    <string name="notification_message_new_message">Вам пишет %1$s!</string>
+    <string name="notification_message_new_match">Посмотрите, сколько у вас общего с %1$s!</string>
 </resources>
