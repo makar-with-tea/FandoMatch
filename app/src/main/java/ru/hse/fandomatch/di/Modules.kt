@@ -11,6 +11,7 @@ import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
 import ru.hse.fandomatch.domain.usecase.chat.LoadMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
+import ru.hse.fandomatch.domain.usecase.feed.GetFeedUseCase
 import ru.hse.fandomatch.domain.usecase.matches.DislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LoadSuggestedProfilesUseCase
@@ -22,6 +23,7 @@ import ru.hse.fandomatch.ui.myprofile.ProfileViewModel
 import ru.hse.fandomatch.ui.authorization.AuthorizationViewModel
 import ru.hse.fandomatch.ui.chat.ChatViewModel
 import ru.hse.fandomatch.ui.chatslist.ChatsListViewModel
+import ru.hse.fandomatch.ui.feed.FeedViewModel
 import ru.hse.fandomatch.ui.filters.FiltersViewModel
 import ru.hse.fandomatch.ui.intro.IntroViewModel
 import ru.hse.fandomatch.ui.matches.MatchesViewModel
@@ -43,6 +45,7 @@ val appModule = module {
     viewModel<ChatsListViewModel> { ChatsListViewModel(get()) }
     viewModel<ChatViewModel> { ChatViewModel(get(), get()) }
     viewModel<FiltersViewModel> { FiltersViewModel() }
+    viewModel<FeedViewModel> { FeedViewModel(get()) }
 }
 
 val dataModule = module {
@@ -65,4 +68,6 @@ val domainModule = module {
     factory<SendMessageUseCase> { SendMessageUseCase(get()) }
     factory<LoadChatInfoUseCase> { LoadChatInfoUseCase(get()) }
     factory<SubscribeToChatPreviewsUseCase> { SubscribeToChatPreviewsUseCase(get()) }
+
+    factory<GetFeedUseCase> { GetFeedUseCase(get()) }
 }

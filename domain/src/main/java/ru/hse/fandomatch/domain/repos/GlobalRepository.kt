@@ -5,6 +5,7 @@ import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.Message
+import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.Token
 import ru.hse.fandomatch.domain.model.User
@@ -52,4 +53,9 @@ interface GlobalRepository {
         images: List<ByteArray>,
         timestamp: Long,
     )
+
+    suspend fun getFeedPosts(
+        beforeTimestamp: Long?,
+        size: Int
+    ): List<Post>
 }

@@ -1,211 +1,79 @@
-package ru.hse.fandomatch.ui.chat
+package ru.hse.fandomatch.ui.composables
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.GenericShape
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathOperation
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ru.hse.fandomatch.R
-import ru.hse.fandomatch.domain.model.Message
-import ru.hse.fandomatch.ui.composables.RawImageOrPlaceholder
+import ru.hse.fandomatch.ui.navigation.EndIconState
+import ru.hse.fandomatch.ui.navigation.TopBarState
 
 @Composable
-internal fun Message(
-    modifier: Modifier,
-    message: Message,
-    needsTail: Boolean,
-    onImageClicked: (List<String>, Int) -> Unit,
-    otherSidePadding: Dp = 40.dp,
-) {
-    Box(
-        contentAlignment = if (message.isFromThisUser) Alignment.CenterEnd else Alignment.CenterStart,
-        modifier = modifier
-            .fillMaxWidth()
-    ) {
-        if (message.isFromThisUser) OutgoingMessageBox(
-            modifier = Modifier.padding(start = otherSidePadding),
-            needsTail = needsTail,
-            backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-        ) { MessageContent(message, onImageClicked) }
-        else IncomingMessageBox(
-            modifier = Modifier.padding(end = otherSidePadding),
-            needsTail = needsTail,
-            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
-        ) { MessageContent(message, onImageClicked) }
-    }
-}
-
-@Composable
-private fun IncomingMessageBox(
-    modifier: Modifier = Modifier,
-    triangleSize: Dp = 10.dp,
-    needsTail: Boolean,
-    cornerRadius: Dp = 8.dp,
-    backgroundColor: Color = MaterialTheme.colorScheme.secondaryContainer,
-    content: @Composable BoxScope.() -> Unit,
-) {
-    val triangleSizePx = LocalDensity.current.run { triangleSize.toPx() }
-    val cornerRadiusPx = LocalDensity.current.run { cornerRadius.toPx() }
-
-    val shape = remember(triangleSize, cornerRadius, needsTail) {
-        GenericShape { size, _ ->
-            val tail = Path().apply {
-                if (!needsTail) return@apply
-                moveTo(0f, size.height)
-                lineTo(triangleSizePx * 2, size.height)
-                lineTo(triangleSizePx * 2, size.height - triangleSizePx * 2)
-                lineTo(0f, size.height)
-                close()
-            }
-
-            val body = Path().apply {
-                val rect = Rect(Offset(triangleSizePx, 0f), Offset(size.width, size.height))
-                addRoundRect(RoundRect(rect, cornerRadiusPx, cornerRadiusPx))
-            }
-
-            val path = Path().apply {
-                op(body, tail, PathOperation.Union)
-            }
-
-            addPath(path)
-        }
-    }
-
-    Box(
-        modifier = modifier
-            .clip(shape)
-            .background(backgroundColor)
-            .padding(start = triangleSize),
-        content = content
-    )
-}
-
-@Composable
-private fun OutgoingMessageBox(
-    modifier: Modifier = Modifier,
-    triangleSize: Dp = 10.dp,
-    needsTail: Boolean,
-    cornerRadius: Dp = 8.dp,
-    backgroundColor: Color = MaterialTheme.colorScheme.secondaryContainer,
-    paddingValues: PaddingValues = PaddingValues(),
-    content: @Composable BoxScope.() -> Unit,
-) {
-    val triangleSizePx = LocalDensity.current.run { triangleSize.toPx() }
-    val cornerRadiusPx = LocalDensity.current.run { cornerRadius.toPx() }
-
-    val shape = remember(triangleSize, cornerRadius) {
-        GenericShape { size, _ ->
-            val tail = Path().apply {
-                if (!needsTail) return@apply
-                moveTo(size.width, size.height)
-                lineTo(size.width - triangleSizePx * 2, size.height)
-                lineTo(size.width - triangleSizePx * 2, size.height - triangleSizePx * 2)
-                lineTo(size.width, size.height)
-                close()
-            }
-
-            val body = Path().apply {
-                val rect = Rect(Offset(0f, 0f), Offset(size.width - triangleSizePx, size.height))
-                addRoundRect(RoundRect(rect, cornerRadiusPx, cornerRadiusPx))
-            }
-
-            val path = Path().apply {
-                op(body, tail, PathOperation.Union)
-            }
-
-            addPath(path)
-        }
-    }
-
-    Box(
-        modifier = modifier
-            .clip(shape)
-            .background(backgroundColor)
-            .padding(end = triangleSize)
-            .padding(paddingValues),
-        content = content
-    )
-}
-
-@Composable
-private fun MessageContent(
-    message: Message,
-    onImageClicked: (List<String>, Int) -> Unit,
-) {
-    Column {
-        if (message.imageUrls.isNotEmpty()) {
-            MessageImagesGrid(
-                imageUrls = message.imageUrls,
-                modifier = Modifier.padding(bottom = 4.dp),
-                onImageClicked = onImageClicked,
-            )
-        }
-        if (message.content.isNotEmpty()) {
-            Text(
-                text = message.content,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.padding(
-                    start = 8.dp,
-                    end = 8.dp,
-                    top = if (message.imageUrls.isEmpty()) 4.dp else 0.dp,
-                    bottom = 4.dp
-                )
-            )
-        }
-    }
-}
-
-@Composable
-private fun MessageImagesGrid(
+fun ImagesGrid(
     imageUrls: List<String>,
     modifier: Modifier = Modifier,
     onImageClicked: (List<String>, Int) -> Unit,
-    height: Dp = 300.dp
+    maxHeight: Dp? = null,
+    minHeight: Dp? = null,
 ) {
     val maxImages = imageUrls.take(5)
+    val context = LocalContext.current
+
+    val modifierWithHeight = when {
+        minHeight != null && maxHeight != null -> modifier.heightIn(min = minHeight, max = maxHeight)
+        minHeight != null -> modifier.heightIn(min = minHeight)
+        maxHeight != null -> modifier.heightIn(max = maxHeight)
+        else -> modifier
+    }
     val imageModifier = Modifier
         .padding(2.dp)
         .clip(RoundedCornerShape(8.dp))
+    val smallImageModifier = Modifier
+        .clip(RoundedCornerShape(8.dp))
 
-    val context = LocalContext.current
+    var firstImageHeight by remember { mutableStateOf<Dp?>(null) }
+    val density = LocalDensity.current
 
     when (maxImages.size) {
         1 -> {
-            Box(modifier = modifier) {
+            Box(modifier = modifierWithHeight) {
                 RawImageOrPlaceholder(
                     url = maxImages[0],
                     placeholderId = R.drawable.ic_account_placeholder, // todo
                     context = context,
-                    contentScale = ContentScale.Fit,
+                    contentScale = ContentScale.FillWidth,
                     modifier = imageModifier
-                        .height(height)
+                        .fillMaxWidth()
                         .clickable {
                             onImageClicked(imageUrls, 0)
                         }
@@ -215,7 +83,7 @@ private fun MessageImagesGrid(
 
         2 -> {
             Row(
-                modifier = Modifier.height(height)
+                modifier = modifierWithHeight
             ) {
                 RawImageOrPlaceholder(
                     url = maxImages[0],
@@ -224,6 +92,9 @@ private fun MessageImagesGrid(
                     contentScale = ContentScale.Crop,
                     modifier = imageModifier
                         .fillMaxHeight()
+                        .onGloballyPositioned { coordinates ->
+                            firstImageHeight = with(density) { coordinates.size.height.toDp() }
+                        }
                         .weight(1f)
                         .clickable {
                             onImageClicked(imageUrls, 0)
@@ -237,6 +108,9 @@ private fun MessageImagesGrid(
                     contentScale = ContentScale.Crop,
                     modifier = imageModifier
                         .weight(1f)
+                        .then(
+                            if (firstImageHeight != null) Modifier.height(firstImageHeight!!) else Modifier
+                        )
                         .clickable {
                             onImageClicked(imageUrls, 1)
                         }
@@ -246,15 +120,19 @@ private fun MessageImagesGrid(
 
         3 -> {
             Row(
-                modifier = Modifier.height(height)
+                modifier = modifierWithHeight
             ) {
                 RawImageOrPlaceholder(
                     url = maxImages[0],
                     placeholderId = R.drawable.ic_account_placeholder, // todo
                     context = context,
+                    contentScale = ContentScale.Crop,
                     modifier = imageModifier
-                        .weight(1f)
                         .fillMaxHeight()
+                        .onGloballyPositioned { coordinates ->
+                            firstImageHeight = with(density) { coordinates.size.height.toDp() }
+                        }
+                        .weight(1f)
                         .clickable {
                             onImageClicked(imageUrls, 0)
                         }
@@ -262,13 +140,18 @@ private fun MessageImagesGrid(
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
+                        .padding(top = 2.dp, end = 2.dp)
+                        .then(
+                            if (firstImageHeight != null) Modifier.height(firstImageHeight!!) else Modifier.fillMaxHeight()
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     RawImageOrPlaceholder(
                         url = maxImages[1],
                         placeholderId = R.drawable.ic_account_placeholder, // todo
                         context = context,
-                        modifier = imageModifier
+                        contentScale = ContentScale.Crop,
+                        modifier = smallImageModifier
                             .weight(1f)
                             .clickable {
                                 onImageClicked(imageUrls, 1)
@@ -279,7 +162,8 @@ private fun MessageImagesGrid(
                         url = maxImages[2],
                         placeholderId = R.drawable.ic_account_placeholder, // todo
                         context = context,
-                        modifier = imageModifier
+                        contentScale = ContentScale.Crop,
+                        modifier = smallImageModifier
                             .weight(1f)
                             .clickable {
                                 onImageClicked(imageUrls, 2)
@@ -291,15 +175,19 @@ private fun MessageImagesGrid(
 
         4 -> {
             Row(
-                modifier = Modifier.height(200.dp)
+                modifier = modifierWithHeight
             ) {
                 RawImageOrPlaceholder(
                     url = maxImages[0],
                     placeholderId = R.drawable.ic_account_placeholder, // todo
                     context = context,
+                    contentScale = ContentScale.Crop,
                     modifier = imageModifier
-                        .weight(1f)
                         .fillMaxHeight()
+                        .onGloballyPositioned { coordinates ->
+                            firstImageHeight = with(density) { coordinates.size.height.toDp() }
+                        }
+                        .weight(1f)
                         .clickable {
                             onImageClicked(imageUrls, 0)
                         }
@@ -307,13 +195,18 @@ private fun MessageImagesGrid(
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
+                        .padding(top = 2.dp, end = 2.dp)
+                        .then(
+                            if (firstImageHeight != null) Modifier.height(firstImageHeight!!) else Modifier.fillMaxHeight()
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     RawImageOrPlaceholder(
                         url = maxImages[1],
                         placeholderId = R.drawable.ic_account_placeholder, // todo
                         context = context,
-                        modifier = imageModifier
+                        contentScale = ContentScale.Crop,
+                        modifier = smallImageModifier
                             .weight(1f)
                             .fillMaxWidth()
                             .clickable {
@@ -322,13 +215,15 @@ private fun MessageImagesGrid(
                     )
 
                     Row(
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         RawImageOrPlaceholder(
                             url = maxImages[2],
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
-                            modifier = imageModifier
+                            contentScale = ContentScale.Crop,
+                            modifier = smallImageModifier
                                 .weight(1f)
                                 .fillMaxWidth()
                                 .clickable {
@@ -340,7 +235,8 @@ private fun MessageImagesGrid(
                             url = maxImages[3],
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
-                            modifier = imageModifier
+                            contentScale = ContentScale.Crop,
+                            modifier = smallImageModifier
                                 .weight(1f)
                                 .fillMaxWidth()
                                 .clickable {
@@ -354,15 +250,19 @@ private fun MessageImagesGrid(
 
         5 -> {
             Row(
-                modifier = Modifier.height(200.dp)
+                modifier = modifierWithHeight
             ) {
                 RawImageOrPlaceholder(
                     url = maxImages[0],
                     placeholderId = R.drawable.ic_account_placeholder, // todo
                     context = context,
+                    contentScale = ContentScale.Crop,
                     modifier = imageModifier
-                        .weight(1f)
                         .fillMaxHeight()
+                        .onGloballyPositioned { coordinates ->
+                            firstImageHeight = with(density) { coordinates.size.height.toDp() }
+                        }
+                        .weight(1f)
                         .clickable {
                             onImageClicked(imageUrls, 0)
                         }
@@ -370,16 +270,22 @@ private fun MessageImagesGrid(
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
+                        .padding(top = 2.dp, end = 2.dp)
+                        .then(
+                            if (firstImageHeight != null) Modifier.height(firstImageHeight!!) else Modifier.fillMaxHeight()
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Row(
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         RawImageOrPlaceholder(
                             url = maxImages[1],
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
-                            modifier = imageModifier
+                            contentScale = ContentScale.FillWidth,
+                            modifier = smallImageModifier
                                 .weight(1f)
                                 .clickable {
                                     onImageClicked(imageUrls, 1)
@@ -390,7 +296,8 @@ private fun MessageImagesGrid(
                             url = maxImages[2],
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
-                            modifier = imageModifier
+                            contentScale = ContentScale.FillWidth,
+                            modifier = smallImageModifier
                                 .weight(1f)
                                 .clickable {
                                     onImageClicked(imageUrls, 2)
@@ -398,13 +305,15 @@ private fun MessageImagesGrid(
                         )
                     }
                     Row(
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         RawImageOrPlaceholder(
                             url = maxImages[3],
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
-                            modifier = imageModifier
+                            contentScale = ContentScale.FillWidth,
+                            modifier = smallImageModifier
                                 .weight(1f)
                                 .fillMaxWidth()
                                 .clickable {
@@ -416,7 +325,8 @@ private fun MessageImagesGrid(
                             url = maxImages[4],
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
-                            modifier = imageModifier
+                            contentScale = ContentScale.FillWidth,
+                            modifier = smallImageModifier
                                 .weight(1f)
                                 .fillMaxWidth()
                                 .clickable {
@@ -427,5 +337,65 @@ private fun MessageImagesGrid(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ImagesScreen(
+    urls: List<String>,
+    initialPage: Int = 0,
+    titleContent: @Composable () -> Unit,
+    setTopBarState: (TopBarState?) -> Unit,
+) {
+    setTopBarState(
+        TopBarState(
+            titleContent = titleContent,
+            endIcons = listOf(
+                EndIconState(
+                    iconId = R.drawable.ic_download,
+                    onClick = { /* TODO download current image */ },
+                    descriptionId = R.string.download_media_button_description,
+                )
+            )
+        )
+    )
+
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { urls.size }
+    )
+    val context = LocalContext.current
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+        ) { page ->
+            RawImageOrPlaceholder(
+                url = urls[page],
+                placeholderId = R.drawable.ic_account_placeholder, // todo
+                contentScale = ContentScale.Fit,
+                context = context,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+
+        Text(
+            text = "${pagerState.currentPage + 1} / ${urls.size}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier
+                .padding(8.dp)
+                .clip(CircleShape)
+                .align(Alignment.BottomCenter)
+                .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
+                .padding(8.dp)
+        )
     }
 }

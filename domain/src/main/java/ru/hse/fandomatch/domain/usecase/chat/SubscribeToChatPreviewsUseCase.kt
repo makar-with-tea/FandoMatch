@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.domain.usecase.chat
 
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.repos.GlobalRepository

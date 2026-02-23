@@ -54,7 +54,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.ImagesScreen
+import ru.hse.fandomatch.ui.composables.Message
 import ru.hse.fandomatch.ui.composables.RawImageOrPlaceholder
 import ru.hse.fandomatch.ui.composables.SkeletonView
 import ru.hse.fandomatch.ui.navigation.EndIconState
@@ -114,30 +116,11 @@ private fun MainState(
     setTopBarState(
         TopBarState(
             titleContent = @Composable {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.secondaryContainer),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RawImageOrPlaceholder(
-                        modifier = Modifier
-                            .padding(start = 4.dp, top = 2.dp, bottom = 2.dp, end = 8.dp)
-                            .size(32.dp)
-                            .clip(CircleShape),
-                        url = state.participantAvatarUrl,
-                        placeholderId = R.drawable.ic_account_placeholder,
-                        context = LocalContext.current,
-                    )
-
-                    Text(
-                        text = state.participantName,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+                AvatarAndNameBlock(
+                    name = state.participantName,
+                    avatarUrl = state.participantAvatarUrl,
+                    login = null,
+                )
             },
             endIcons = listOf(
                 EndIconState(

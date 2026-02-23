@@ -60,6 +60,11 @@ fun timestampToTimeAgo(timestamp: Long, context: Context) : String {
     }
 }
 
+fun Long.timestampToDateString(): String {
+    val dateTime = LocalDateTime.ofEpochSecond(this / 1000, 0, java.time.ZoneOffset.UTC)
+    return String.format("%02d.%02d.%04d", dateTime.dayOfMonth, dateTime.monthValue, dateTime.year)
+}
+
 fun Gender.stringId(): Int = when (this) {
     Gender.MALE -> R.string.male_gender
     Gender.FEMALE -> R.string.female_gender
