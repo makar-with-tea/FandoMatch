@@ -24,7 +24,6 @@
 
     <string name="registration_title">Регистрация</string>
     <string name="name_label">Имя</string>
-    <string name="surname_label">Фамилия</string>
     <string name="email_label">Электронная почта</string>
     <string name="repeat_password_label">Повторите пароль</string>
     <string name="already_have_account">Уже есть аккаунт?</string>
@@ -147,6 +146,16 @@
     <string name="notification_title_new_match">Новый мэтч</string>
     <string name="notification_message_new_message">Вам пишет %1$s!</string>
     <string name="notification_message_new_match">Посмотрите, сколько у вас общего с %1$s!</string>
+
+    <string name="edit_profile_title">Редактировать профиль</string>
+    <string name="edit_avatar_icon_description">Изменить аватар</string>
+    <string name="edit_background_icon_description">Изменить фон профиля</string>
+    <string name="description_label">Описание профиля</string>
+    <string name="description_length_error">Описание должно быть не длиннее 500 символов</string>
+    <string name="description_content_error">Описание содержит недопустимые символы</string>
+    <string name="city_label">Ваш город</string>
+    <string name="save_profile_button">Сохранить</string>
+    <string name="city_not_found_error">Город не найден</string>
 
     <string name="like_button_description">Поставить или убрать лайк</string>
     <string name="comment_button_description">Оставить комментарий</string>

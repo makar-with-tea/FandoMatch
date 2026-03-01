@@ -22,6 +22,7 @@ import ru.hse.fandomatch.ui.authorization.AuthorizationScreen
 import ru.hse.fandomatch.ui.chat.ChatScreen
 import ru.hse.fandomatch.ui.chatslist.ChatsListScreen
 import ru.hse.fandomatch.ui.composables.MyTitle
+import ru.hse.fandomatch.ui.editprofile.EditProfileScreen
 import ru.hse.fandomatch.ui.feed.FeedScreen
 import ru.hse.fandomatch.ui.filters.FiltersScreen
 import ru.hse.fandomatch.ui.intro.IntroScreen
@@ -51,6 +52,7 @@ sealed class Route(val route: String) {
     }
 
     data object Registration : Route("registration")
+    data object EditProfile : Route("edit_profile")
 }
 
 @Composable
@@ -207,7 +209,11 @@ fun MainView() {
                         userId = null,
                         setTopBarState = { topBarState.value = it },
                         goToMessages = { chatId ->
-                            navigateToRouteWithArgs(Route.Chat.createRoute(chatId = chatId))
+                            /* do nothing */
+                            Log.d("Navigation", "Impossible: go to messages with chatId $chatId from MyProfile")
+                        },
+                        goToEditProfile = {
+                            navigateToRoute(Route.EditProfile)
                         }
                     )
                 }
@@ -230,6 +236,10 @@ fun MainView() {
                         setTopBarState = { topBarState.value = it },
                         goToMessages = { chatId ->
                             navigateToRouteWithArgs(Route.Chat.createRoute(chatId = chatId))
+                        },
+                        goToEditProfile = {
+                            /* do nothing */
+                            Log.d("Navigation", "Impossible: go to edit profile from other user's profile")
                         }
                     )
                 }
@@ -260,6 +270,12 @@ fun MainView() {
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
+                    )
+                }
+                composable(Route.EditProfile.route) {
+                    EditProfileScreen(
+                        navigateToAddFandom = { /* todo */ },
+                        setTopBarState = { topBarState.value = it },
                     )
                 }
             }

@@ -11,11 +11,14 @@ import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.exception.LoginAlreadyInUseException
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.usecase.user.RegisterUseCase
+import ru.hse.fandomatch.ui.utils.checkEmailContent
+import ru.hse.fandomatch.ui.utils.checkLoginContent
+import ru.hse.fandomatch.ui.utils.checkLoginLength
+import ru.hse.fandomatch.ui.utils.checkNameContent
+import ru.hse.fandomatch.ui.utils.checkNameLength
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-
-private const val LATIN = "abcdefghijklmnopqrstuvwxyz"
 
 class RegistrationViewModel(
     private val registerUseCase: RegisterUseCase,
@@ -107,23 +110,22 @@ class RegistrationViewModel(
         var loginErr = RegistrationState.RegistrationError.IDLE
         var hasError = false
 
-        if (name.length !in 2..20){
+        if (!name.checkNameLength()){
             nameErr = RegistrationState.RegistrationError.NAME_LENGTH
             hasError = true
         }
-        if (!name.all { it.isLetter() || it == ' ' || it == '\'' }) {
+        if (!name.checkNameContent()) {
             nameErr = RegistrationState.RegistrationError.NAME_CONTENT
             hasError = true
         }
-        val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex()
-        if (!emailRegex.matches(email)) {
+        if (!email.checkEmailContent()) {
             emailErr = RegistrationState.RegistrationError.EMAIL_CONTENT
             hasError = true
         }
-        if (login.length !in 5..15) {
+        if (!login.checkLoginLength()) {
             loginErr = RegistrationState.RegistrationError.LOGIN_LENGTH
             hasError = true
-        } else if (login.any { !it.isDigit() && !LATIN.contains(it.lowercase()) }) {
+        } else if (!login.checkLoginContent()) {
             loginErr = RegistrationState.RegistrationError.LOGIN_CONTENT
             hasError = true
         }

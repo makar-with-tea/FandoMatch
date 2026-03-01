@@ -85,7 +85,10 @@ var mockUser = User(
     birthDate = LocalDate.of(1990, 5, 20),
     avatarUrl = "dzimbei",
     backgroundUrl = "peace_was_never_an_option",
-    city = City.MOSCOW,
+    city = City(
+        nameRussian = "Москва",
+        nameEnglish = "Moscow",
+    ),
 )
 
 val mockPassword = "qwerty123!"
@@ -168,7 +171,10 @@ val mockUsers = mockProfileCards.map {
         birthDate = LocalDate.now().minusYears((it.age).toLong()),
         avatarUrl = it.avatarUrl,
         backgroundUrl = "what_is_written_here",
-        city = City.MOSCOW,
+        city = City(
+            nameRussian = "Москва",
+            nameEnglish = "Moscow",
+        )
     )
 }
 
@@ -178,7 +184,10 @@ val mockFilters = Filters(
     maxAge = 30,
     categories = listOf(FandomCategory.ANIME_MANGA, FandomCategory.GAMES),
     fandoms = listOf(),
-    userCity = City.MOSCOW,
+    userCity = City(
+        nameRussian = "Москва",
+        nameEnglish = "Moscow",
+    ),
     onlyInUserCity = true,
 )
 
@@ -278,3 +287,26 @@ val mockUserPosts = listOf(
         timestamp = System.currentTimeMillis() - 10800_000, // 3 hours ago
     )
 )
+
+val mockCities = listOf(
+    City(
+        nameRussian = "Москва",
+        nameEnglish = "Moscow",
+    ),
+    City(
+        nameRussian = "Санкт-Петербург",
+        nameEnglish = "Saint Petersburg",
+    ),
+    City(
+        nameRussian = "Новосибирск",
+        nameEnglish = "Novosibirsk",
+    ),
+    City(
+        nameRussian = "Екатеринбург",
+        nameEnglish = "Yekaterinburg",
+    ),
+    City(
+        nameRussian = "Казань",
+        nameEnglish = "Kazan",
+    ),
+) // todo the same with categories

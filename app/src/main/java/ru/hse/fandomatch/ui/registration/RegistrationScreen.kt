@@ -211,8 +211,6 @@ internal fun RegistrationState.RegistrationError.getText(): String {
     return when (this) {
         RegistrationState.RegistrationError.NAME_LENGTH -> stringResource(R.string.name_length_error)
         RegistrationState.RegistrationError.NAME_CONTENT -> stringResource(R.string.name_content_error)
-        RegistrationState.RegistrationError.SURNAME_LENGTH -> stringResource(R.string.surname_length_error)
-        RegistrationState.RegistrationError.SURNAME_CONTENT -> stringResource(R.string.surname_content_error)
         RegistrationState.RegistrationError.LOGIN_LENGTH -> stringResource(R.string.login_length_error)
         RegistrationState.RegistrationError.LOGIN_CONTENT -> stringResource(R.string.login_content_error)
         RegistrationState.RegistrationError.PASSWORD_LENGTH -> stringResource(R.string.password_length_error)
