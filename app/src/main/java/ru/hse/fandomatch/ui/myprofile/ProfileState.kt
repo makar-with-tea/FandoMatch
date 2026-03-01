@@ -4,8 +4,6 @@ import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.Post
-import ru.hse.fandomatch.domain.model.User
-import java.time.LocalDate
 
 sealed class ProfileState {
     enum class ProfileError {
@@ -38,11 +36,13 @@ sealed class ProfileState {
 sealed class ProfileEvent {
     data class LoadProfile(val userId: Long?) : ProfileEvent()
     data class MessageButtonClicked(val userId: Long?) : ProfileEvent()
+    data object EditProfileButtonClicked : ProfileEvent()
     data object Clear : ProfileEvent()
 }
 
 sealed class ProfileAction {
     data class GoToMessages(val userId: Long?) : ProfileAction()
+    data object GoToEditProfile : ProfileAction()
 }
 
 enum class ProfileType {

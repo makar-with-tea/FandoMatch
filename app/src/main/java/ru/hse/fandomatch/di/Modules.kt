@@ -23,6 +23,7 @@ import ru.hse.fandomatch.ui.myprofile.ProfileViewModel
 import ru.hse.fandomatch.ui.authorization.AuthorizationViewModel
 import ru.hse.fandomatch.ui.chat.ChatViewModel
 import ru.hse.fandomatch.ui.chatslist.ChatsListViewModel
+import ru.hse.fandomatch.ui.editprofile.EditProfileViewModel
 import ru.hse.fandomatch.ui.feed.FeedViewModel
 import ru.hse.fandomatch.ui.filters.FiltersViewModel
 import ru.hse.fandomatch.ui.intro.IntroViewModel
@@ -46,6 +47,7 @@ val appModule = module {
     viewModel<ChatViewModel> { ChatViewModel(get(), get()) }
     viewModel<FiltersViewModel> { FiltersViewModel() }
     viewModel<FeedViewModel> { FeedViewModel(get()) }
+    viewModel<EditProfileViewModel> { EditProfileViewModel() }
 }
 
 val dataModule = module {

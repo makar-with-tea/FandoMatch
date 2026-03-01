@@ -183,34 +183,72 @@ fun RawImageOrPlaceholder(
 fun AvatarWithBackground(
     backgroundUrl: String?,
     avatarUrl: String?,
+    onEditAvatar: (() -> Unit)? = null,
+    onEditBackground: (() -> Unit)? = null,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
 ) {
     Column {
         Box(
             contentAlignment = Alignment.BottomCenter
         ) {
-            RawImageOrPlaceholder(
-                url = backgroundUrl,
-                context = LocalContext.current,
-                placeholderId = R.drawable.ic_account_placeholder, // todo replace
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(3f)
-                    .background(backgroundColor),
-            )
+            Box {
+                RawImageOrPlaceholder(
+                    url = backgroundUrl,
+                    context = LocalContext.current,
+                    placeholderId = R.drawable.ic_account_placeholder, // todo replace
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(3f)
+                        .background(backgroundColor),
+                )
+                if (onEditBackground != null) {
+                    IconButton(
+                        onClick = onEditBackground,
+                        modifier = Modifier
+                            .padding(20.dp)
+                            .size(24.dp)
+                            .align(Alignment.BottomEnd)
+                            .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f), shape = CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.ic_edit),
+                            contentDescription = stringResource(R.string.edit_background_icon_description),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
 
-            RawImageOrPlaceholder(
-                url = avatarUrl,
-                context = LocalContext.current,
-                placeholderId = R.drawable.ic_account_placeholder,
-                modifier = Modifier
-                    .size(120.dp)
-                    .aspectRatio(1f)
-                    .offset(y = 30.dp)
-                    .clip(CircleShape)
-                    .background(backgroundColor)
-                    .border(4.dp, backgroundColor, CircleShape),
-            )
+            Box {
+                RawImageOrPlaceholder(
+                    url = avatarUrl,
+                    context = LocalContext.current,
+                    placeholderId = R.drawable.ic_account_placeholder,
+                    modifier = Modifier
+                        .size(120.dp)
+                        .aspectRatio(1f)
+                        .offset(y = 30.dp)
+                        .clip(CircleShape)
+                        .background(backgroundColor)
+                        .border(4.dp, backgroundColor, CircleShape),
+                )
+                if (onEditAvatar != null) {
+                    IconButton(
+                        onClick = onEditAvatar,
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .offset(y = 30.dp)
+                            .size(24.dp)
+                            .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f), shape = CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.ic_edit),
+                            contentDescription = stringResource(R.string.edit_avatar_icon_description),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
         }
         Spacer(
             modifier = Modifier.height(30.dp)

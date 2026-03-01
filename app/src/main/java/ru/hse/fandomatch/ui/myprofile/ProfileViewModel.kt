@@ -30,6 +30,9 @@ class ProfileViewModel(
             is ProfileEvent.MessageButtonClicked -> {
                 _action.value = ProfileAction.GoToMessages(event.userId)
             }
+            ProfileEvent.EditProfileButtonClicked -> {
+                _action.value = ProfileAction.GoToEditProfile
+            }
             ProfileEvent.Clear -> {
                 clear()
             }

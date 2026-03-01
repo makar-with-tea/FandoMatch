@@ -6,8 +6,6 @@ sealed interface RegistrationState {
     enum class RegistrationError {
         NAME_LENGTH,
         NAME_CONTENT,
-        SURNAME_LENGTH,
-        SURNAME_CONTENT,
         LOGIN_LENGTH,
         LOGIN_CONTENT,
         PASSWORD_LENGTH,

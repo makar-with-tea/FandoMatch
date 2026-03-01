@@ -23,11 +23,7 @@ enum class Gender {
     NOT_SPECIFIED
 }
 
-enum class City {
-    // todo real cities
-    MOSCOW,
-    SAINT_PETERSBURG,
-    NOVOSIBIRSK,
-    YEKATERINBURG,
-    OTHER
-}
+data class City(
+    val nameRussian: String,
+    val nameEnglish: String,
+)

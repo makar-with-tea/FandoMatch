@@ -40,6 +40,7 @@ fun ProfileScreen(
     userId: Long? = null,
     setTopBarState: (TopBarState) -> Unit,
     goToMessages: (Long?) -> Unit,
+    goToEditProfile: () -> Unit,
     viewModel: ProfileViewModel = koinViewModel()
 ) {
     val state = viewModel.state.collectAsState()
@@ -51,6 +52,12 @@ fun ProfileScreen(
             goToMessages(action.userId)
             viewModel.obtainEvent(ProfileEvent.Clear)
         }
+
+        ProfileAction.GoToEditProfile -> {
+            goToEditProfile()
+            viewModel.obtainEvent(ProfileEvent.Clear)
+        }
+
         null -> {}
     }
 
@@ -64,6 +71,9 @@ fun ProfileScreen(
                 viewModel.obtainEvent(
                     ProfileEvent.MessageButtonClicked(state.id)
                 )
+            },
+            onEditProfileClicked = {
+                viewModel.obtainEvent(ProfileEvent.EditProfileButtonClicked)
             }
         )
 
@@ -85,6 +95,7 @@ private fun MainState(
     state: ProfileState.Main,
     setTopBarState: (TopBarState) -> Unit,
     onMessagesClicked: (Long?) -> Unit,
+    onEditProfileClicked: () -> Unit,
 ) {
     setTopBarState(
         TopBarState(
@@ -96,7 +107,7 @@ private fun MainState(
                 ProfileType.OWN -> listOf(
                     EndIconState(
                         iconId = R.drawable.ic_edit,
-                        onClick = { /* TODO */ },
+                        onClick = { onEditProfileClicked() },
                         descriptionId = R.string.edit_profile_icon_description
                     ),
                     EndIconState(
@@ -148,7 +159,7 @@ private fun MainState(
                 AvatarWithBackground(
                     state.backgroundUrl,
                     state.avatarUrl,
-                    MaterialTheme.colorScheme.tertiaryContainer
+                    backgroundColor = MaterialTheme.colorScheme.tertiaryContainer
                 )
 
                 Column(
@@ -241,5 +252,6 @@ fun MainStatePreview() {
         state = mockState,
         setTopBarState = { },
         onMessagesClicked = { },
+        onEditProfileClicked = { },
     )
 }

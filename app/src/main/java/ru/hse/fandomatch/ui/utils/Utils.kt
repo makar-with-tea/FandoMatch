@@ -91,13 +91,22 @@ fun FandomCategory.toStringId(): Int = when (this) {
     FandomCategory.OTHER -> R.string.fandom_category_other
 }
 
-fun City.toStringId(): Int = when (this) {
-    City.MOSCOW -> R.string.city_moscow
-    City.SAINT_PETERSBURG -> R.string.city_saint_petersburg
-    City.NOVOSIBIRSK -> R.string.city_novosibirsk
-    City.YEKATERINBURG -> R.string.city_yekaterinburg
-    City.OTHER -> R.string.city_other
+fun City.getName(): String {
+    val locale = java.util.Locale.getDefault().language
+    return when (locale) {
+        "ru" -> this.nameRussian
+        else -> this.nameEnglish
+    }
 }
+
+private const val LATIN = "abcdefghijklmnopqrstuvwxyz"
+fun String.checkNameLength() = this.length in 2..20
+fun String.checkNameContent() = this.all { it.isLetter() || it == ' ' || it == '\'' }
+fun String.checkEmailContent() = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex().matches(this)
+fun String.checkLoginLength() = this.length in 5..15
+fun String.checkLoginContent() = this.all { it.isDigit() || LATIN.contains(it.lowercase()) }
+fun String.checkDescriptionLength() = this.length <= 500
+fun String.checkDescriptionContent() = this.all { it.isLetterOrDigit() || it.isWhitespace() || it in setOf('.', ',', '!', '?', '-', '_', '(', ')', '[', ']', '{', '}', '\'', '"') }
 
 @Composable
 fun FandomCategory.getColor(): Color {

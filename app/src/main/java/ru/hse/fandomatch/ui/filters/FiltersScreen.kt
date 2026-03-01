@@ -43,6 +43,7 @@ import ru.hse.fandomatch.ui.composables.MyCheckBox
 import ru.hse.fandomatch.ui.intro.IntroAction
 import ru.hse.fandomatch.ui.intro.IntroEvent
 import ru.hse.fandomatch.ui.utils.getColor
+import ru.hse.fandomatch.ui.utils.getName
 import ru.hse.fandomatch.ui.utils.stringId
 import ru.hse.fandomatch.ui.utils.toStringId
 
@@ -230,7 +231,7 @@ private fun MainState(
         }
 
         item {
-            val userCityText = stringResource(state.userCity?.toStringId() ?: R.string.city_filter_no_city)
+            val userCityText = state.userCity?.getName() ?: stringResource(R.string.city_filter_no_city)
             Text(
                 text = stringResource(R.string.city_filter_label, userCityText),
                 style = MaterialTheme.typography.titleMedium

@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
@@ -187,9 +188,11 @@ fun FandomInput(
     onFandomRemoved: (Fandom) -> Unit,
     onSearch: (String?) -> Unit,
     areFandomsLoading: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     var fandomInput by remember { mutableStateOf("") }
     var showDropdown by remember { mutableStateOf(foundFandoms.isNotEmpty()) }
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     fun clear() {
         fandomInput = ""
@@ -204,7 +207,7 @@ fun FandomInput(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth(),
         verticalArrangement = Arrangement.Top
     ) {
@@ -215,6 +218,7 @@ fun FandomInput(
             keyboardActions = KeyboardActions(
                 onSearch = {
                     showDropdown = true
+                    keyboardController?.hide()
                     onSearch(fandomInput)
                 }
             ),
