@@ -186,6 +186,14 @@ class EditProfileViewModel(
         if (currentState is EditProfileState.Main) {
             viewModelScope.launch(dispatcherIO) {
                 _state.value = EditProfileState.Loading
+                mockUser = mockUser.copy(
+                    name = currentState.name,
+                    description = currentState.description,
+                    avatarUrl = currentState.avatarUrl,
+                    backgroundUrl = currentState.backgroundUrl,
+                    fandoms = currentState.fandoms,
+                    city = currentState.city?.let { City(it, it) },
+                )
                 delay(1000)
                 // todo save data + handle error (do not navigate back if error occurred)
                 _state.value = currentState
