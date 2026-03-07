@@ -20,7 +20,6 @@ sealed class EditProfileState {
         val name: String,
         val nameError: EditProfileError = EditProfileError.IDLE,
         val login: String,
-        val loginError: EditProfileError = EditProfileError.IDLE,
         val description: String?,
         val descriptionError: EditProfileError = EditProfileError.IDLE,
         val avatarUrl: String?,

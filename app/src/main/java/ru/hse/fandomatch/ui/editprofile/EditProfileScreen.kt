@@ -245,7 +245,8 @@ private fun MainState(
                 onValueChange = {
                     description = it
                     onDescriptionChanged(it)
-                }
+                },
+                hideOnDone = false,
             )
         }
 

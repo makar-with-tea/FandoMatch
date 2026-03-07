@@ -33,6 +33,9 @@ class ProfileViewModel(
             ProfileEvent.EditProfileButtonClicked -> {
                 _action.value = ProfileAction.GoToEditProfile
             }
+            ProfileEvent.SettingsButtonClicked -> {
+                _action.value = ProfileAction.GoToSettings
+            }
             ProfileEvent.Clear -> {
                 clear()
             }

@@ -5,6 +5,7 @@ import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Filters
 import ru.hse.fandomatch.domain.model.Gender
+import ru.hse.fandomatch.domain.model.UserPreferences
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.Token
@@ -310,3 +311,9 @@ val mockCities = listOf(
         nameEnglish = "Kazan",
     ),
 ) // todo the same with categories
+
+val mockUserPreferences = UserPreferences(
+    matchesEnabled = true,
+    messagesEnabled = false,
+    hideMyPostsFromNonMatches = true,
+)

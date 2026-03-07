@@ -21,13 +21,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActionScope
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -42,10 +50,13 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
@@ -77,8 +88,13 @@ fun MyTextField(
     isError: Boolean,
     enabled: Boolean = true,
     errorText: String? = null,
+    hideOnDone: Boolean = true,
     onValueChange: (String) -> Unit,
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val onDone: (KeyboardActionScope.() -> Unit)? = if (hideOnDone) {
+        { keyboardController?.hide() }
+    } else null
     TextField(
         modifier = modifier.padding(8.dp),
         value = value,
@@ -86,6 +102,10 @@ fun MyTextField(
         isError = isError,
         enabled = enabled,
         onValueChange = onValueChange,
+        keyboardOptions = KeyboardOptions.Default.copy(imeAction = if (hideOnDone) ImeAction.Done else ImeAction.Default),
+        keyboardActions = KeyboardActions(
+            onDone = onDone
+        ),
         supportingText = { errorText?.let { Text(it) } }
     )
 }
@@ -101,6 +121,8 @@ fun MyPasswordField(
     passwordVisibility: Boolean,
     errorText: String? = null
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     TextField(
         modifier = modifier.padding(8.dp),
         value = value,
@@ -108,6 +130,15 @@ fun MyPasswordField(
         isError = isError,
         supportingText = { errorText?.let { Text(it) } },
         onValueChange = onValueChange,
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = ImeAction.Done,
+            keyboardType = KeyboardType.Password,
+        ),
+        keyboardActions = KeyboardActions(
+            onDone = {
+                keyboardController?.hide()
+            }
+        ),
         trailingIcon = {
             IconButton(onClick = onIconClick) {
                 Icon(
@@ -358,5 +389,56 @@ fun AvatarAndNameBlock(
                 )
             }
         }
+    }
+}
+
+
+@Composable
+fun MyAlertDialog(
+    title: String,
+    text: String,
+    onConfirm: () -> Unit,
+    confirmButtonText: String,
+    onDismissRequest: () -> Unit = onConfirm,
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text(text = title) },
+        text = { Text(text = text) },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                ),
+            ) {
+                Text(text = confirmButtonText)
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+        titleContentColor = MaterialTheme.colorScheme.error,
+        textContentColor = MaterialTheme.colorScheme.onErrorContainer,
+    )
+}
+
+@Composable
+fun MySwitch(
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    label: String
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Switch(
+            checked = isChecked,
+            onCheckedChange = { onCheckedChange(it) },
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(label)
     }
 }

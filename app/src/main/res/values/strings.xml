@@ -50,7 +50,7 @@
     <string name="login_length_error">Логин должен быть длиной от 5 до 15 символов</string>
     <string name="login_content_error">Логин должен содержать только латинские буквы и цифры</string>
     <string name="password_length_error">Пароль должен быть длиной не менее 8 символов</string>
-    <string name="password_content_error">Пароль должен содержать латинские буквы и цифры</string>
+    <string name="password_content_error">Пароль должен содержать латинские буквы, цифры и спец. символы из списка !@#$%^*()-_</string>
     <string name="password_mismatch_error">Пароли не совпадают</string>
     <string name="login_taken_error">Данный логин уже занят</string>
     <string name="registration_failed_error">Ошибка регистрации</string>
@@ -64,6 +64,7 @@
     <string name="empty_password_error">Пароль не может быть пустым</string>
     <string name="invalid_credentials_error">Неверный логин или пароль</string>
     <string name="network_error">Ошибка сети</string>
+    <string name="network_error_long">Не удалось соединиться с сервером. Проверьте подключение к интернету.</string>
 
     <string name="password_incorrect_error">Неверный пароль</string>
     <string name="turn_visibility_off_description">Сделать пароль невидимым</string>
@@ -156,6 +157,31 @@
     <string name="city_label">Ваш город</string>
     <string name="save_profile_button">Сохранить</string>
     <string name="city_not_found_error">Город не найден</string>
+
+    <string name="settings_title">Настройки</string>
+    <string name="change_email_title">Смена почты</string>
+    <string name="change_email_button">Сменить почту</string>
+    <string name="change_password_title">Смена пароля</string>
+    <string name="change_password_button">Сменить пароль</string>
+    <string name="delete_account_button">Удалить аккаунт</string>
+    <string name="delete_account_title">Удаление аккаунта</string>
+    <string name="delete_account_confirmation">Вы уверены, что хотите удалить аккаунт?</string>
+    <string name="logout_button">Выйти</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    <string name="old_password_label">Старый пароль</string>
+    <string name="new_password_label">Новый пароль</string>
+    <string name="save_button">Сохранить</string>
+    <string name="loading_error">Ошибка загрузки</string>
+    <string name="unknown_error">Неизвестная ошибка</string>
+    <string name="retry_button_text">Попробовать снова</string>
+    <string name="account_not_found_error">Аккаунт не найден</string>
+    <string name="account_delete_error">Не удалось удалить аккаунт</string>
+    <string name="notification_settings_title">Push-уведомления</string>
+    <string name="match_notifications_label">Уведомлять о новых мэтчах</string>
+    <string name="message_notifications_label">Уведомлять о новых сообщениях</string>
+    <string name="privacy_settings_title">Приватность</string>
+    <string name="hide_my_posts_from_non_matches">Скрыть мои посты от всех, кроме друзей</string>
 
     <string name="like_button_description">Поставить или убрать лайк</string>
     <string name="comment_button_description">Оставить комментарий</string>
