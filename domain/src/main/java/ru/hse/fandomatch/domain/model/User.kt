@@ -27,3 +27,9 @@ data class City(
     val nameRussian: String,
     val nameEnglish: String,
 )
+
+data class UserPreferences(
+    val matchesEnabled: Boolean,
+    val messagesEnabled: Boolean,
+    val hideMyPostsFromNonMatches: Boolean,
+)

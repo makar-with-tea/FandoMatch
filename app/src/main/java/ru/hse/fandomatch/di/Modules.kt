@@ -29,6 +29,7 @@ import ru.hse.fandomatch.ui.filters.FiltersViewModel
 import ru.hse.fandomatch.ui.intro.IntroViewModel
 import ru.hse.fandomatch.ui.matches.MatchesViewModel
 import ru.hse.fandomatch.ui.registration.RegistrationViewModel
+import ru.hse.fandomatch.ui.settings.SettingsViewModel
 
 val appModule = module {
     viewModel<AuthorizationViewModel> { AuthorizationViewModel(loginUseCase = get()) }
@@ -48,6 +49,7 @@ val appModule = module {
     viewModel<FiltersViewModel> { FiltersViewModel() }
     viewModel<FeedViewModel> { FeedViewModel(get()) }
     viewModel<EditProfileViewModel> { EditProfileViewModel() }
+    viewModel<SettingsViewModel> { SettingsViewModel() }
 }
 
 val dataModule = module {

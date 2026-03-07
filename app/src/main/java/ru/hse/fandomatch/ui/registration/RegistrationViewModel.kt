@@ -16,6 +16,8 @@ import ru.hse.fandomatch.ui.utils.checkLoginContent
 import ru.hse.fandomatch.ui.utils.checkLoginLength
 import ru.hse.fandomatch.ui.utils.checkNameContent
 import ru.hse.fandomatch.ui.utils.checkNameLength
+import ru.hse.fandomatch.ui.utils.checkPasswordContent
+import ru.hse.fandomatch.ui.utils.checkPasswordLength
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -194,13 +196,11 @@ class RegistrationViewModel(
         var repeatErr = RegistrationState.RegistrationError.IDLE
         var hasError = false
 
-        if (password.length < 8) {
+        if (!password.checkPasswordLength()) {
             passErr = RegistrationState.RegistrationError.PASSWORD_LENGTH
             hasError = true
         } else {
-            val hasLetter = password.any { it.isLetter() }
-            val hasDigit = password.any { it.isDigit() }
-            if (!hasLetter || !hasDigit) {
+            if (!password.checkPasswordContent()) {
                 passErr = RegistrationState.RegistrationError.PASSWORD_CONTENT
                 hasError = true
             }

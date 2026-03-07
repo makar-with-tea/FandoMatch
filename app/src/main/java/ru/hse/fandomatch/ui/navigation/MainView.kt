@@ -29,6 +29,7 @@ import ru.hse.fandomatch.ui.intro.IntroScreen
 import ru.hse.fandomatch.ui.matches.MatchesScreen
 import ru.hse.fandomatch.ui.myprofile.ProfileScreen
 import ru.hse.fandomatch.ui.registration.RegistrationScreen
+import ru.hse.fandomatch.ui.settings.SettingsScreen
 import ru.hse.fandomatch.ui.utils.orFalse
 
 sealed class Route(val route: String) {
@@ -53,6 +54,7 @@ sealed class Route(val route: String) {
 
     data object Registration : Route("registration")
     data object EditProfile : Route("edit_profile")
+    data object Settings : Route("settings")
 }
 
 @Composable
@@ -210,11 +212,17 @@ fun MainView() {
                         setTopBarState = { topBarState.value = it },
                         goToMessages = { chatId ->
                             /* do nothing */
-                            Log.d("Navigation", "Impossible: go to messages with chatId $chatId from MyProfile")
+                            Log.d(
+                                "Navigation",
+                                "Impossible: go to messages with chatId $chatId from MyProfile"
+                            )
                         },
                         goToEditProfile = {
                             navigateToRoute(Route.EditProfile)
-                        }
+                        },
+                        goToSettings = {
+                            navigateToRoute(Route.Settings)
+                        },
                     )
                 }
                 composable(Route.ChatsList.route) {
@@ -239,8 +247,18 @@ fun MainView() {
                         },
                         goToEditProfile = {
                             /* do nothing */
-                            Log.d("Navigation", "Impossible: go to edit profile from other user's profile")
-                        }
+                            Log.d(
+                                "Navigation",
+                                "Impossible: go to edit profile from other user's profile"
+                            )
+                        },
+                        goToSettings = {
+                            /* do nothing */
+                            Log.d(
+                                "Navigation",
+                                "Impossible: go to settings from other user's profile"
+                            )
+                        },
                     )
                 }
                 composable(Route.Chat.route) { backStackEntry ->
@@ -274,8 +292,14 @@ fun MainView() {
                 }
                 composable(Route.EditProfile.route) {
                     EditProfileScreen(
-                        navigateToAddFandom = { /* todo */ },
                         setTopBarState = { topBarState.value = it },
+                        navigateToAddFandom = { /* todo */ },
+                    )
+                }
+                composable(Route.Settings.route) {
+                    SettingsScreen(
+                        setTopBarState = { topBarState.value = it },
+                        navigateToIntro = { navigateToRoute(Route.Intro) },
                     )
                 }
             }

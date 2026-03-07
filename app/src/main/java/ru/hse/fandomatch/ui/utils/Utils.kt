@@ -100,13 +100,21 @@ fun City.getName(): String {
 }
 
 private const val LATIN = "abcdefghijklmnopqrstuvwxyz"
+private const val LOGIN_SPECIAL_SYMBOLS = "_-"
+private const val SPECIAL_SYMBOLS = "!@#$%^*()-_"
+private const val DESCRIPTION_SPECIAL_SYMBOLS = ".!,?-_()[]{}'\""
 fun String.checkNameLength() = this.length in 2..20
 fun String.checkNameContent() = this.all { it.isLetter() || it == ' ' || it == '\'' }
 fun String.checkEmailContent() = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex().matches(this)
 fun String.checkLoginLength() = this.length in 5..15
-fun String.checkLoginContent() = this.all { it.isDigit() || LATIN.contains(it.lowercase()) }
+fun String.checkLoginContent() = this.all { it.isDigit() || it.lowercase() in LATIN || it in LOGIN_SPECIAL_SYMBOLS }
 fun String.checkDescriptionLength() = this.length <= 500
-fun String.checkDescriptionContent() = this.all { it.isLetterOrDigit() || it.isWhitespace() || it in setOf('.', ',', '!', '?', '-', '_', '(', ')', '[', ']', '{', '}', '\'', '"') }
+fun String.checkDescriptionContent() = this.all { it.isLetterOrDigit() || it.isWhitespace() || it in DESCRIPTION_SPECIAL_SYMBOLS || it in SPECIAL_SYMBOLS }
+fun String.checkPasswordLength() = this.length >= 8
+fun String.checkPasswordContent() = this.any { it.isDigit() }
+        && this.any { it.lowercase() in LATIN }
+        && this.any { it !in LATIN && !it.isDigit() }
+        && this.all { it.isLetterOrDigit() || it in SPECIAL_SYMBOLS }
 
 @Composable
 fun FandomCategory.getColor(): Color {

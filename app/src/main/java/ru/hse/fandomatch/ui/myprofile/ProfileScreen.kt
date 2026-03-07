@@ -41,6 +41,7 @@ fun ProfileScreen(
     setTopBarState: (TopBarState) -> Unit,
     goToMessages: (Long?) -> Unit,
     goToEditProfile: () -> Unit,
+    goToSettings: () -> Unit,
     viewModel: ProfileViewModel = koinViewModel()
 ) {
     val state = viewModel.state.collectAsState()
@@ -55,6 +56,11 @@ fun ProfileScreen(
 
         ProfileAction.GoToEditProfile -> {
             goToEditProfile()
+            viewModel.obtainEvent(ProfileEvent.Clear)
+        }
+
+        ProfileAction.GoToSettings -> {
+            goToSettings()
             viewModel.obtainEvent(ProfileEvent.Clear)
         }
 
@@ -74,6 +80,9 @@ fun ProfileScreen(
             },
             onEditProfileClicked = {
                 viewModel.obtainEvent(ProfileEvent.EditProfileButtonClicked)
+            },
+            onSettingsClicked = {
+                viewModel.obtainEvent(ProfileEvent.SettingsButtonClicked)
             }
         )
 
@@ -96,6 +105,7 @@ private fun MainState(
     setTopBarState: (TopBarState) -> Unit,
     onMessagesClicked: (Long?) -> Unit,
     onEditProfileClicked: () -> Unit,
+    onSettingsClicked: () -> Unit,
 ) {
     setTopBarState(
         TopBarState(
@@ -112,7 +122,7 @@ private fun MainState(
                     ),
                     EndIconState(
                         iconId = R.drawable.ic_settings,
-                        onClick = { /* TODO */ },
+                        onClick = { onSettingsClicked() },
                         descriptionId = R.string.settings_icon_description
                     )
                 )
@@ -253,5 +263,6 @@ fun MainStatePreview() {
         setTopBarState = { },
         onMessagesClicked = { },
         onEditProfileClicked = { },
+        onSettingsClicked = { },
     )
 }
