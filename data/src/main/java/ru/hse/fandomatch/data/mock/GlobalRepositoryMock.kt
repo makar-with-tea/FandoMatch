@@ -171,62 +171,6 @@ class GlobalRepositoryMock: GlobalRepository {
         )
     )
 
-    val mockPosts = listOf(
-        Post(
-            id = 1,
-            authorId = 12345,
-            authorName = "Алиса",
-            authorLogin = "alice",
-            authorAvatarUrl = "luffy",
-            content = "Привет! Я только что зарегистрировалась и хочу поделиться своей любовью к аниме и музыке!",
-            imageUrls = listOf("luffy", "peace_was_never_an_option"),
-            likeCount = 10,
-            commentCount = 5,
-            isLikedByCurrentUser = false,
-            timestamp = System.currentTimeMillis() - 3600_000, // 1 hour ago
-        ),
-        Post(
-            id = 2,
-            authorId = 67890,
-            authorName = "Пользователь_123",
-            authorLogin = "pirate_123",
-            authorAvatarUrl = "peace_was_never_an_option",
-            content = "Приветствую всех! Я пират в поисках своего личного приключения. Кто еще здесь любит аниме? Давайте обмениваться рекомендациями и обсуждать любимые серии! А может, даже устроим совместный просмотр? :)",
-            imageUrls = listOf("peace_was_never_an_option"),
-            likeCount = 20,
-            commentCount = 10,
-            isLikedByCurrentUser = true,
-            timestamp = System.currentTimeMillis() - 7200_000, // 2 hours ago
-        ),
-        Post(
-            id = 3,
-            authorId = 11223,
-            authorName = "Лесное нечто",
-            authorLogin = "forest_entity",
-            authorAvatarUrl = "pet_the_forbidden_dog",
-            content = "Хочется на концерт брингов...",
-            imageUrls = listOf(),
-            likeCount = 5,
-            commentCount = 2,
-            isLikedByCurrentUser = false,
-            timestamp = System.currentTimeMillis() - 10800_000, // 3 hours ago
-        ),
-        Post(
-            id = 4,
-            authorId = 44556,
-            authorName = "Дана",
-            authorLogin = "dana",
-            authorAvatarUrl = "ne_poluchaetsya",
-            content = "Просто загадочный человек.",
-            imageUrls = listOf("what_is_written_here"),
-            likeCount = 0,
-            commentCount = 0,
-            isLikedByCurrentUser = false,
-            timestamp = System.currentTimeMillis() - 14400_000, // 4 hours ago
-        )
-    )
-
-
     override suspend fun getUserInfo(login: String): User? {
         val result = (mockUsers + mockUser).find { it.login == login }
         return result.also {

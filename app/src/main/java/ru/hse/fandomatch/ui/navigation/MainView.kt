@@ -294,6 +294,9 @@ fun MainView() {
                     EditProfileScreen(
                         setTopBarState = { topBarState.value = it },
                         navigateToAddFandom = { /* todo */ },
+                        navigateToMyProfile = {
+                            navigateToRoute(Route.MyProfile)
+                        },
                     )
                 }
                 composable(Route.Settings.route) {
