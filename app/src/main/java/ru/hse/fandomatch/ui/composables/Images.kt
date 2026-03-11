@@ -153,6 +153,7 @@ fun ImagesGrid(
                         contentScale = ContentScale.Crop,
                         modifier = smallImageModifier
                             .weight(1f)
+                            .fillMaxSize()
                             .clickable {
                                 onImageClicked(imageUrls, 1)
                             }
@@ -165,6 +166,7 @@ fun ImagesGrid(
                         contentScale = ContentScale.Crop,
                         modifier = smallImageModifier
                             .weight(1f)
+                            .fillMaxSize()
                             .clickable {
                                 onImageClicked(imageUrls, 2)
                             }
@@ -208,7 +210,7 @@ fun ImagesGrid(
                         contentScale = ContentScale.Crop,
                         modifier = smallImageModifier
                             .weight(1f)
-                            .fillMaxWidth()
+                            .fillMaxSize()
                             .clickable {
                                 onImageClicked(imageUrls, 1)
                             }
@@ -225,7 +227,7 @@ fun ImagesGrid(
                             contentScale = ContentScale.Crop,
                             modifier = smallImageModifier
                                 .weight(1f)
-                                .fillMaxWidth()
+                                .fillMaxSize()
                                 .clickable {
                                     onImageClicked(imageUrls, 2)
                                 }
@@ -238,7 +240,7 @@ fun ImagesGrid(
                             contentScale = ContentScale.Crop,
                             modifier = smallImageModifier
                                 .weight(1f)
-                                .fillMaxWidth()
+                                .fillMaxSize()
                                 .clickable {
                                     onImageClicked(imageUrls, 3)
                                 }
@@ -284,9 +286,10 @@ fun ImagesGrid(
                             url = maxImages[1],
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
-                            contentScale = ContentScale.FillWidth,
+                            contentScale = ContentScale.Crop,
                             modifier = smallImageModifier
                                 .weight(1f)
+                                .fillMaxSize()
                                 .clickable {
                                     onImageClicked(imageUrls, 1)
                                 }
@@ -296,9 +299,10 @@ fun ImagesGrid(
                             url = maxImages[2],
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
-                            contentScale = ContentScale.FillWidth,
+                            contentScale = ContentScale.Crop,
                             modifier = smallImageModifier
                                 .weight(1f)
+                                .fillMaxSize()
                                 .clickable {
                                     onImageClicked(imageUrls, 2)
                                 }
@@ -312,9 +316,10 @@ fun ImagesGrid(
                             url = maxImages[3],
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
-                            contentScale = ContentScale.FillWidth,
+                            contentScale = ContentScale.Crop,
                             modifier = smallImageModifier
                                 .weight(1f)
+                                .fillMaxSize()
                                 .fillMaxWidth()
                                 .clickable {
                                     onImageClicked(imageUrls, 3)
@@ -325,10 +330,10 @@ fun ImagesGrid(
                             url = maxImages[4],
                             placeholderId = R.drawable.ic_account_placeholder, // todo
                             context = context,
-                            contentScale = ContentScale.FillWidth,
+                            contentScale = ContentScale.Crop,
                             modifier = smallImageModifier
                                 .weight(1f)
-                                .fillMaxWidth()
+                                .fillMaxSize()
                                 .clickable {
                                     onImageClicked(imageUrls, 4)
                                 }

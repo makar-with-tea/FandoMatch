@@ -19,7 +19,7 @@ import ru.hse.fandomatch.domain.usecase.user.GetPastLoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
 import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.RegisterUseCase
-import ru.hse.fandomatch.ui.myprofile.ProfileViewModel
+import ru.hse.fandomatch.ui.profile.ProfileViewModel
 import ru.hse.fandomatch.ui.authorization.AuthorizationViewModel
 import ru.hse.fandomatch.ui.chat.ChatViewModel
 import ru.hse.fandomatch.ui.chatslist.ChatsListViewModel

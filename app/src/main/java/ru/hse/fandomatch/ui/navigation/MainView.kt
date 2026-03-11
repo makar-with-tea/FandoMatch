@@ -27,7 +27,7 @@ import ru.hse.fandomatch.ui.feed.FeedScreen
 import ru.hse.fandomatch.ui.filters.FiltersScreen
 import ru.hse.fandomatch.ui.intro.IntroScreen
 import ru.hse.fandomatch.ui.matches.MatchesScreen
-import ru.hse.fandomatch.ui.myprofile.ProfileScreen
+import ru.hse.fandomatch.ui.profile.ProfileScreen
 import ru.hse.fandomatch.ui.registration.RegistrationScreen
 import ru.hse.fandomatch.ui.settings.SettingsScreen
 import ru.hse.fandomatch.ui.utils.orFalse
@@ -294,6 +294,9 @@ fun MainView() {
                     EditProfileScreen(
                         setTopBarState = { topBarState.value = it },
                         navigateToAddFandom = { /* todo */ },
+                        navigateToMyProfile = {
+                            navigateToRoute(Route.MyProfile)
+                        },
                     )
                 }
                 composable(Route.Settings.route) {

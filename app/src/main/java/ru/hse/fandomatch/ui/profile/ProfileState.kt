@@ -1,4 +1,4 @@
-package ru.hse.fandomatch.ui.myprofile
+package ru.hse.fandomatch.ui.profile
 
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom

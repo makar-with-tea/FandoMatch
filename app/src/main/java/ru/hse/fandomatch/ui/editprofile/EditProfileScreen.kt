@@ -2,7 +2,6 @@ package ru.hse.fandomatch.ui.editprofile
 
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -42,12 +41,12 @@ import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.navigation.TopBarState
 import ru.hse.fandomatch.ui.utils.getBytesFromUri
-import ru.hse.fandomatch.ui.utils.toStringId
 
 
 @Composable
 fun EditProfileScreen(
     navigateToAddFandom: () -> Unit,
+    navigateToMyProfile: () -> Unit,
     setTopBarState: (TopBarState) -> Unit,
     viewModel: EditProfileViewModel = koinViewModel()
 ) {
@@ -61,9 +60,8 @@ fun EditProfileScreen(
             viewModel.obtainEvent(EditProfileEvent.Clear)
         }
 
-        is EditProfileAction.NavigateBack -> {
-            val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-            backDispatcher?.onBackPressed()
+        is EditProfileAction.NavigateToMyProfile -> {
+            navigateToMyProfile()
             viewModel.obtainEvent(EditProfileEvent.Clear)
         }
 

@@ -1,4 +1,4 @@
-package ru.hse.fandomatch.ui.myprofile
+package ru.hse.fandomatch.ui.profile
 
 import android.util.Log
 import androidx.compose.foundation.background
@@ -46,7 +46,7 @@ fun ProfileScreen(
 ) {
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
-    Log.i("ProfileScreen", "Rendering MyProfileScreen with state: ${state.value}")
+    Log.i("ProfileScreen", "Rendering ProfileScreen with state: ${state.value}")
 
     when (val action = action.value) {
         is ProfileAction.GoToMessages -> {

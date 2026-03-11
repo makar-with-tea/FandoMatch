@@ -17,6 +17,7 @@ sealed class EditProfileState {
     object Idle : EditProfileState()
     object Loading : EditProfileState()
     data class Main(
+        val id: Long,
         val name: String,
         val nameError: EditProfileError = EditProfileError.IDLE,
         val login: String,
@@ -81,5 +82,5 @@ sealed class EditProfileEvent {
 
 sealed class EditProfileAction {
     object NavigateToAddFandom : EditProfileAction()
-    object NavigateBack : EditProfileAction()
+    object NavigateToMyProfile : EditProfileAction()
 }

@@ -1,4 +1,4 @@
-package ru.hse.fandomatch.ui.myprofile
+package ru.hse.fandomatch.ui.profile
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
