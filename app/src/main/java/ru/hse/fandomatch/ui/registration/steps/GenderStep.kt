@@ -26,7 +26,7 @@ import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.registration.RegistrationState
 import ru.hse.fandomatch.ui.registration.getText
 import ru.hse.fandomatch.ui.registration.isFieldError
-import ru.hse.fandomatch.ui.utils.stringId
+import ru.hse.fandomatch.stringId
 
 @Composable
 internal fun GenderStep(

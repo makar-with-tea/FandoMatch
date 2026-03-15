@@ -11,11 +11,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MultiChoiceSegmentedButtonRow
 import androidx.compose.material3.RangeSlider
@@ -40,12 +38,10 @@ import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.ui.composables.FandomInput
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyCheckBox
-import ru.hse.fandomatch.ui.intro.IntroAction
-import ru.hse.fandomatch.ui.intro.IntroEvent
-import ru.hse.fandomatch.ui.utils.getColor
-import ru.hse.fandomatch.ui.utils.getName
-import ru.hse.fandomatch.ui.utils.stringId
-import ru.hse.fandomatch.ui.utils.toStringId
+import ru.hse.fandomatch.getColor
+import ru.hse.fandomatch.getName
+import ru.hse.fandomatch.stringId
+import ru.hse.fandomatch.toStringId
 
 
 @Composable

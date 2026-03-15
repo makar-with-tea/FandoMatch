@@ -64,8 +64,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.hse.fandomatch.R
-import ru.hse.fandomatch.ui.navigation.EndIconState
-import ru.hse.fandomatch.ui.utils.rawResId
+import ru.hse.fandomatch.navigation.EndIconState
+import ru.hse.fandomatch.rawResId
 
 @Composable
 fun MyTitle(

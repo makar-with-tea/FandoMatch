@@ -14,11 +14,10 @@ import ru.hse.fandomatch.data.mock.mockFandoms
 import ru.hse.fandomatch.data.mock.mockUser
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
-import ru.hse.fandomatch.ui.utils.checkDescriptionContent
-import ru.hse.fandomatch.ui.utils.checkDescriptionLength
-import ru.hse.fandomatch.ui.utils.checkNameContent
-import ru.hse.fandomatch.ui.utils.checkNameLength
-import ru.hse.fandomatch.ui.utils.getName
+import ru.hse.fandomatch.checkDescriptionLength
+import ru.hse.fandomatch.checkNameContent
+import ru.hse.fandomatch.checkNameLength
+import ru.hse.fandomatch.getName
 import kotlin.collections.plus
 
 class EditProfileViewModel(
@@ -103,7 +102,6 @@ class EditProfileViewModel(
         val currentState = _state.value
         val descriptionErr = when {
             description != null && !description.checkDescriptionLength() -> EditProfileState.EditProfileError.DESCRIPTION_LENGTH
-            description != null && !description.checkDescriptionContent() -> EditProfileState.EditProfileError.DESCRIPTION_CONTENT
             else -> EditProfileState.EditProfileError.IDLE
         }
 

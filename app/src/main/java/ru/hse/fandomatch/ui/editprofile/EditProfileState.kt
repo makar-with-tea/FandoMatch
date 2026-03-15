@@ -7,7 +7,6 @@ sealed class EditProfileState {
         NAME_LENGTH,
         NAME_CONTENT,
         DESCRIPTION_LENGTH,
-        DESCRIPTION_CONTENT,
         PHOTO_UPLOAD,
         CITY_NOT_FOUND,
         NETWORK,

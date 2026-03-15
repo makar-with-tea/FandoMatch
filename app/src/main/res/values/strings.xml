@@ -137,7 +137,6 @@
 
     <string name="login_hidden">Логин скрыт</string>
     <string name="go_to_chat_button_description">Отправить сообщение</string>
-    <string name="empty_string"></string>
 
     <string name="notification_allow_popup_name">Разрешение на уведомления</string>
     <string name="notification_allow_popup_description">Разрешите уведомления, чтобы получать оповещения о новых сообщениях и мэтчах.</string>
@@ -153,10 +152,11 @@
     <string name="edit_background_icon_description">Изменить фон профиля</string>
     <string name="description_label">Описание профиля</string>
     <string name="description_length_error">Описание должно быть не длиннее 500 символов</string>
-    <string name="description_content_error">Описание содержит недопустимые символы</string>
     <string name="city_label">Ваш город</string>
     <string name="save_profile_button">Сохранить</string>
     <string name="city_not_found_error">Город не найден</string>
+    <string name="did_not_found_fandom_label">Не нашли фандом?</string>
+    <string name="here_you_go_button">Вам сюда!</string>
 
     <string name="settings_title">Настройки</string>
     <string name="change_email_title">Смена почты</string>
@@ -187,4 +187,15 @@
     <string name="comment_button_description">Оставить комментарий</string>
 
     <string name="feed_title">Лента</string>
+
+    <string name="add_fandom_title">Добавить фандом</string>
+    <string name="add_fandom_description">Если вы не нашли свой любимый фандом в списке, вы можете отправить запрос на его добавление. Пожалуйста, укажите название, категорию и краткое описание фандома. Мы рассмотрим ваш запрос и добавим фандом в ближайшее время!</string>
+    <string name="add_fandom_success">Запрос на добавление фандома успешно отправлен</string>
+    <string name="add_fandom_error">Запрос не был отправлен, попробуйте снова!</string>
+    <string name="fandom_name_label">Название фандома</string>
+    <string name="fandom_category_label">Категория фандома</string>
+    <string name="fandom_description_label">Описание фандома</string>
+    <string name="fandom_name_length_error">Название должно быть длиной от 2 до 100 символов</string>
+    <string name="fandom_description_length_error">Описание должно быть не длиннее 3000 символов</string>
+    <string name="send_request_button">Отправить запрос</string>
 </resources>

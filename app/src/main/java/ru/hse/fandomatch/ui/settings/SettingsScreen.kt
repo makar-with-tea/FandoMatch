@@ -37,7 +37,7 @@ import ru.hse.fandomatch.ui.composables.MyPasswordField
 import ru.hse.fandomatch.ui.composables.MySwitch
 import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
-import ru.hse.fandomatch.ui.navigation.TopBarState
+import ru.hse.fandomatch.navigation.TopBarState
 
 @Composable
 fun SettingsScreen(

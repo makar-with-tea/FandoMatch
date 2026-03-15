@@ -8,16 +8,20 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,8 +43,8 @@ import ru.hse.fandomatch.ui.composables.FandomInput
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
-import ru.hse.fandomatch.ui.navigation.TopBarState
-import ru.hse.fandomatch.ui.utils.getBytesFromUri
+import ru.hse.fandomatch.navigation.TopBarState
+import ru.hse.fandomatch.getBytesFromUri
 
 
 @Composable
@@ -99,6 +103,9 @@ fun EditProfileScreen(
                 },
                 onSave = {
                     viewModel.obtainEvent(EditProfileEvent.SaveButtonClicked)
+                },
+                onSuggestFandomButtonClicked = {
+                    viewModel.obtainEvent(EditProfileEvent.AddFandomButtonClicked)
                 }
             )
         }
@@ -124,6 +131,7 @@ private fun MainState(
     onFandomRemoved: (Fandom) -> Unit,
     onFandomSearch: (String?) -> Unit,
     onCityChanged: (String) -> Unit,
+    onSuggestFandomButtonClicked: () -> Unit,
     onSave: () -> Unit,
 ) {
     setTopBarState(
@@ -219,7 +227,6 @@ private fun MainState(
                     else -> null
                 },
                 onValueChange = {
-                    name = it
                     onNameChanged(it)
                 }
             )
@@ -237,11 +244,9 @@ private fun MainState(
                 enabled = true,
                 errorText = when (state.descriptionError) {
                     EditProfileState.EditProfileError.DESCRIPTION_LENGTH -> stringResource(R.string.description_length_error)
-                    EditProfileState.EditProfileError.DESCRIPTION_CONTENT -> stringResource(R.string.description_content_error)
                     else -> null
                 },
                 onValueChange = {
-                    description = it
                     onDescriptionChanged(it)
                 },
                 hideOnDone = false,
@@ -264,24 +269,49 @@ private fun MainState(
                     else -> null
                 },
                 onValueChange = {
-                    city = it
                     onCityChanged(it)
                 }
             )
         }
 
         item {
-            FandomInput(
-                foundFandoms = state.foundFandoms,
-                selectedFandoms = state.fandoms,
-                onFandomAdded = onFandomAdded,
-                onFandomRemoved = onFandomRemoved,
-                onSearch = onFandomSearch,
-                areFandomsLoading = state.areFandomsLoading,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-            )
+            Column {
+                FandomInput(
+                    foundFandoms = state.foundFandoms,
+                    selectedFandoms = state.fandoms,
+                    onFandomAdded = onFandomAdded,
+                    onFandomRemoved = onFandomRemoved,
+                    onSearch = onFandomSearch,
+                    areFandomsLoading = state.areFandomsLoading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                ) {
+
+                    Text(
+                        text = stringResource(R.string.did_not_found_fandom_label),
+                        fontSize = 14.sp
+                    )
+                    TextButton(
+                        onClick = {
+                            onSuggestFandomButtonClicked()
+                        },
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.here_you_go_button),
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
         }
 
         item {

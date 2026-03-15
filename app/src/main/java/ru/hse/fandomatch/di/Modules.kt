@@ -19,6 +19,7 @@ import ru.hse.fandomatch.domain.usecase.user.GetPastLoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
 import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.RegisterUseCase
+import ru.hse.fandomatch.ui.addfandom.AddFandomViewModel
 import ru.hse.fandomatch.ui.profile.ProfileViewModel
 import ru.hse.fandomatch.ui.authorization.AuthorizationViewModel
 import ru.hse.fandomatch.ui.chat.ChatViewModel
@@ -50,6 +51,7 @@ val appModule = module {
     viewModel<FeedViewModel> { FeedViewModel(get()) }
     viewModel<EditProfileViewModel> { EditProfileViewModel() }
     viewModel<SettingsViewModel> { SettingsViewModel() }
+    viewModel<AddFandomViewModel> { AddFandomViewModel() }
 }
 
 val dataModule = module {
