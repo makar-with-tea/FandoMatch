@@ -1,4 +1,4 @@
-package ru.hse.fandomatch.ui.navigation
+package ru.hse.fandomatch.navigation
 
 import android.util.Log
 import android.widget.Toast
@@ -18,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.ui.addfandom.AddFandomScreen
 import ru.hse.fandomatch.ui.authorization.AuthorizationScreen
 import ru.hse.fandomatch.ui.chat.ChatScreen
 import ru.hse.fandomatch.ui.chatslist.ChatsListScreen
@@ -30,7 +31,7 @@ import ru.hse.fandomatch.ui.matches.MatchesScreen
 import ru.hse.fandomatch.ui.profile.ProfileScreen
 import ru.hse.fandomatch.ui.registration.RegistrationScreen
 import ru.hse.fandomatch.ui.settings.SettingsScreen
-import ru.hse.fandomatch.ui.utils.orFalse
+import ru.hse.fandomatch.orFalse
 
 sealed class Route(val route: String) {
     data object Authorization : Route("authorization")
@@ -55,6 +56,7 @@ sealed class Route(val route: String) {
     data object Registration : Route("registration")
     data object EditProfile : Route("edit_profile")
     data object Settings : Route("settings")
+    data object AddFandom : Route("add_fandom")
 }
 
 @Composable
@@ -88,6 +90,7 @@ fun MainView() {
             Route.Matches.route -> R.string.matches_title
             Route.Filters.route -> R.string.filters_title
             Route.Feed.route -> R.string.feed_title
+            Route.AddFandom.route -> R.string.add_fandom_title
             else -> null
         }
 
@@ -124,8 +127,10 @@ fun MainView() {
                 Route.Matches.route -> R.string.matches_title
                 Route.Filters.route -> R.string.filters_title
                 Route.Feed.route -> R.string.feed_title
+                Route.AddFandom.route -> R.string.add_fandom_title
+                Route.AddFandom.route -> R.string.add_fandom_title
                 Route.Intro.route, Route.Registration.route, Route.Authorization.route -> null
-                else -> R.string.empty_string
+                else -> null
             }
 
         val endIcons =
@@ -141,12 +146,11 @@ fun MainView() {
                 else -> listOf()
             }
 
-        topBarState.value = screenTitleId?.let {
+        topBarState.value =
             TopBarState(
-                titleContent = { MyTitle(text = stringResource(screenTitleId)) },
+                titleContent = { screenTitleId?.let { MyTitle(text = stringResource(it)) } },
                 endIcons = endIcons,
             )
-        }
     }
 
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
@@ -293,7 +297,9 @@ fun MainView() {
                 composable(Route.EditProfile.route) {
                     EditProfileScreen(
                         setTopBarState = { topBarState.value = it },
-                        navigateToAddFandom = { /* todo */ },
+                        navigateToAddFandom = {
+                            navigateToRoute(Route.AddFandom)
+                        },
                         navigateToMyProfile = {
                             navigateToRoute(Route.MyProfile)
                         },
@@ -303,6 +309,12 @@ fun MainView() {
                     SettingsScreen(
                         setTopBarState = { topBarState.value = it },
                         navigateToIntro = { navigateToRoute(Route.Intro) },
+                    )
+                }
+                composable(Route.AddFandom.route) {
+                    updateTopBar()
+                    AddFandomScreen(
+                        navigateBack = { navController.popBackStack() },
                     )
                 }
             }

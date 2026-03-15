@@ -1,4 +1,4 @@
-package ru.hse.fandomatch.ui.utils
+package ru.hse.fandomatch
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -6,13 +6,14 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.ui.theme.CustomColors
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.util.Locale
 
 fun Boolean?.orFalse(): Boolean = this ?: false
 
@@ -42,7 +43,7 @@ fun rawResId(name: String, context: Context): Int {
 fun nameAndAgeString(name: String, age: Int): String = "$name, $age"
 
 fun timestampToTimeAgo(timestamp: Long, context: Context) : String {
-    val dateTime = LocalDateTime.ofEpochSecond(timestamp / 1000, 0, java.time.ZoneOffset.UTC)
+    val dateTime = LocalDateTime.ofEpochSecond(timestamp / 1000, 0, ZoneOffset.UTC)
     val secondsAgo = (System.currentTimeMillis() - timestamp) / 1000
     val minutesAgo = secondsAgo / 60
     val hoursAgo = minutesAgo / 60
@@ -61,7 +62,7 @@ fun timestampToTimeAgo(timestamp: Long, context: Context) : String {
 }
 
 fun Long.timestampToDateString(): String {
-    val dateTime = LocalDateTime.ofEpochSecond(this / 1000, 0, java.time.ZoneOffset.UTC)
+    val dateTime = LocalDateTime.ofEpochSecond(this / 1000, 0, ZoneOffset.UTC)
     return String.format("%02d.%02d.%04d", dateTime.dayOfMonth, dateTime.monthValue, dateTime.year)
 }
 
@@ -92,7 +93,7 @@ fun FandomCategory.toStringId(): Int = when (this) {
 }
 
 fun City.getName(): String {
-    val locale = java.util.Locale.getDefault().language
+    val locale = Locale.getDefault().language
     return when (locale) {
         "ru" -> this.nameRussian
         else -> this.nameEnglish
@@ -102,19 +103,18 @@ fun City.getName(): String {
 private const val LATIN = "abcdefghijklmnopqrstuvwxyz"
 private const val LOGIN_SPECIAL_SYMBOLS = "_-"
 private const val SPECIAL_SYMBOLS = "!@#$%^*()-_"
-private const val DESCRIPTION_SPECIAL_SYMBOLS = ".!,?-_()[]{}'\""
 fun String.checkNameLength() = this.length in 2..20
 fun String.checkNameContent() = this.all { it.isLetter() || it == ' ' || it == '\'' }
 fun String.checkEmailContent() = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex().matches(this)
 fun String.checkLoginLength() = this.length in 5..15
 fun String.checkLoginContent() = this.all { it.isDigit() || it.lowercase() in LATIN || it in LOGIN_SPECIAL_SYMBOLS }
 fun String.checkDescriptionLength() = this.length <= 500
-fun String.checkDescriptionContent() = this.all { it.isLetterOrDigit() || it.isWhitespace() || it in DESCRIPTION_SPECIAL_SYMBOLS || it in SPECIAL_SYMBOLS }
 fun String.checkPasswordLength() = this.length >= 8
 fun String.checkPasswordContent() = this.any { it.isDigit() }
         && this.any { it.lowercase() in LATIN }
         && this.any { it !in LATIN && !it.isDigit() }
         && this.all { it.isLetterOrDigit() || it in SPECIAL_SYMBOLS }
+fun String.checkFandomNameLength() = this.length in 2..100
 
 @Composable
 fun FandomCategory.getColor(): Color {

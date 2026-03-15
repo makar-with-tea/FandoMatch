@@ -56,9 +56,9 @@ import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.composables.NewMessagesIndicator
 import ru.hse.fandomatch.ui.composables.RawImageOrPlaceholder
 import ru.hse.fandomatch.ui.composables.SkeletonView
-import ru.hse.fandomatch.ui.navigation.EndIconState
-import ru.hse.fandomatch.ui.navigation.TopBarState
-import ru.hse.fandomatch.ui.utils.timestampToTimeAgo
+import ru.hse.fandomatch.navigation.EndIconState
+import ru.hse.fandomatch.navigation.TopBarState
+import ru.hse.fandomatch.timestampToTimeAgo
 
 @Composable
 fun ChatsListScreen(

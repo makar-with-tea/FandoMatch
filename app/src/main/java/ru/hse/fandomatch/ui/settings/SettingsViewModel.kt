@@ -9,9 +9,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.data.mock.mockUserPreferences
 import ru.hse.fandomatch.data.mock.mockUser
-import ru.hse.fandomatch.ui.utils.checkEmailContent
-import ru.hse.fandomatch.ui.utils.checkPasswordContent
-import ru.hse.fandomatch.ui.utils.checkPasswordLength
+import ru.hse.fandomatch.checkEmailContent
+import ru.hse.fandomatch.checkPasswordContent
+import ru.hse.fandomatch.checkPasswordLength
 
 class SettingsViewModel(
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,

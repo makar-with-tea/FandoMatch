@@ -31,9 +31,9 @@ import ru.hse.fandomatch.ui.composables.FandomCarouselWithDropdown
 import ru.hse.fandomatch.ui.composables.FeedPost
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyTitle
-import ru.hse.fandomatch.ui.navigation.EndIconState
-import ru.hse.fandomatch.ui.navigation.TopBarState
-import ru.hse.fandomatch.ui.utils.timestampToDateString
+import ru.hse.fandomatch.navigation.EndIconState
+import ru.hse.fandomatch.navigation.TopBarState
+import ru.hse.fandomatch.timestampToDateString
 
 @Composable
 fun ProfileScreen(

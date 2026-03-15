@@ -52,8 +52,8 @@ import androidx.compose.ui.unit.sp
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
-import ru.hse.fandomatch.ui.navigation.EndIconState
-import ru.hse.fandomatch.ui.utils.getColor
+import ru.hse.fandomatch.navigation.EndIconState
+import ru.hse.fandomatch.getColor
 
 
 @Composable

@@ -1,7 +1,5 @@
 package ru.hse.fandomatch.ui.registration.steps
 
-import android.content.Context
-import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -38,8 +36,8 @@ import androidx.compose.ui.unit.dp
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.registration.RegistrationState
-import ru.hse.fandomatch.ui.utils.BitmapHelper
-import ru.hse.fandomatch.ui.utils.getBytesFromUri
+import ru.hse.fandomatch.BitmapHelper
+import ru.hse.fandomatch.getBytesFromUri
 
 @Composable
 internal fun AvatarStep(

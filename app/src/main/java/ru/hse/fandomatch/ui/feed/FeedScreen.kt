@@ -14,7 +14,7 @@ import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.ui.composables.FeedPost
 import ru.hse.fandomatch.ui.composables.LoadingPosts
-import ru.hse.fandomatch.ui.utils.timestampToDateString
+import ru.hse.fandomatch.timestampToDateString
 
 @Composable
 fun FeedScreen(
