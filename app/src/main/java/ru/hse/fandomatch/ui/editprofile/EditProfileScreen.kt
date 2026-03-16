@@ -227,6 +227,7 @@ private fun MainState(
                     else -> null
                 },
                 onValueChange = {
+                    name = it
                     onNameChanged(it)
                 }
             )
@@ -247,6 +248,7 @@ private fun MainState(
                     else -> null
                 },
                 onValueChange = {
+                    description = it
                     onDescriptionChanged(it)
                 },
                 hideOnDone = false,
@@ -269,6 +271,7 @@ private fun MainState(
                     else -> null
                 },
                 onValueChange = {
+                    city = it
                     onCityChanged(it)
                 }
             )

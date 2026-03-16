@@ -114,7 +114,7 @@ val mockProfileCards = listOf(
         id = 67890,
         fandoms = listOf(mockFandoms[0]),
         description = "Пират в поисках своего личного приключения.",
-        name = "Пользователь_123",
+        name = "Пользователь",
         gender = Gender.MALE,
         avatarUrl = "peace_was_never_an_option",
         age = 17,
@@ -209,7 +209,7 @@ val mockPosts = listOf(
     Post(
         id = 2,
         authorId = 67890,
-        authorName = "Пользователь_123",
+        authorName = "Пользователь",
         authorLogin = "pirate_123",
         authorAvatarUrl = "peace_was_never_an_option",
         content = "Приветствую всех! Я пират в поисках своего личного приключения. Кто еще здесь любит аниме? Давайте обмениваться рекомендациями и обсуждать любимые серии! А может, даже устроим совместный просмотр? :)",

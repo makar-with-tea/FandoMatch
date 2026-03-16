@@ -56,9 +56,10 @@ class EditProfileViewModel(
 
     private fun updateAvatar(avatar: ByteArray?) {
         val currentState = _state.value
+        if (avatar == null) return
         viewModelScope.launch(dispatcherIO) {
             delay(1000)
-            val avatarUrl = avatar?.let { "luffy" } // todo upload avatar and get url + handle error
+            val avatarUrl = "luffy" // todo upload avatar and get url + handle error
             if (currentState is EditProfileState.Main) {
                 _state.value = currentState.copy(
                     avatarUrl = avatarUrl,
@@ -69,9 +70,10 @@ class EditProfileViewModel(
 
     private fun updateBackground(background: ByteArray?) {
         val currentState = _state.value
+        if (background == null) return
         viewModelScope.launch(dispatcherIO) {
             delay(1000)
-            val backgroundUrl = background?.let { "i_may_be_stupid" } // todo upload background and get url + handle error
+            val backgroundUrl = "i_may_be_stupid" // todo upload background and get url + handle error
             if (currentState is EditProfileState.Main) {
                 _state.value = currentState.copy(
                     backgroundUrl = backgroundUrl,

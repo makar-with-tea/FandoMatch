@@ -105,7 +105,7 @@ fun MainState(
                 onValueChange = {
                     onPasswordChanged(it)
                     password.value = it
-                                },
+                },
                 onIconClick = {
                     onShowPasswordClick()
                 },

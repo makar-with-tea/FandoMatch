@@ -145,7 +145,7 @@
     <string name="notification_title_new_message">Новое сообщение</string>
     <string name="notification_title_new_match">Новый мэтч</string>
     <string name="notification_message_new_message">Вам пишет %1$s!</string>
-    <string name="notification_message_new_match">Посмотрите, сколько у вас общего с %1$s!</string>
+    <string name="notification_message_new_match">%1$s с Вами на одной волне!</string>
 
     <string name="edit_profile_title">Редактировать профиль</string>
     <string name="edit_avatar_icon_description">Изменить аватар</string>
