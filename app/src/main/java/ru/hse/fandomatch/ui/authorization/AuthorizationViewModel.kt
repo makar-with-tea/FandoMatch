@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.ui.authorization
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -9,7 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
-import ru.hse.fandomatch.domain.usecase.user.GetPastLoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
 
 class AuthorizationViewModel(
@@ -26,37 +26,52 @@ class AuthorizationViewModel(
         get() = _action
 
     fun obtainEvent(event: AuthorizationEvent) {
+        Log.d("AuthorizationViewModel", "Event: $event")
         when (event) {
-            is AuthorizationEvent.LoginButtonClicked -> {
-                login(event.login, event.password)
-            }
-
-            is AuthorizationEvent.ShowPasswordButtonClicked -> {
-                changeVisibilityState()
-            }
-
+            is AuthorizationEvent.LoginButtonClicked -> login()
+            is AuthorizationEvent.LoginChanged -> loginChanged(event.login)
+            is AuthorizationEvent.PasswordChanged -> passwordChanged(event.password)
+            is AuthorizationEvent.ShowPasswordButtonClicked -> changeVisibilityState()
             is AuthorizationEvent.Clear -> clear()
         }
     }
 
-    private fun login(login: String, password: String) {
-        _state.value = AuthorizationState.Main(
+    private fun loginChanged(login: String) {
+        val currentState = _state.value as? AuthorizationState.Main ?: return
+        val loginError = if (login.isEmpty()) AuthorizationState.AuthorizationError.EMPTY_LOGIN
+        else AuthorizationState.AuthorizationError.IDLE
+        _state.value = currentState.copy(
             login = login,
-            password = password,
-            isLoading = true
+            loginError = loginError,
         )
+    }
+
+    private fun passwordChanged(password: String) {
+        val currentState = _state.value as? AuthorizationState.Main ?: return
+        val passwordError =
+            if (password.isEmpty()) AuthorizationState.AuthorizationError.EMPTY_PASSWORD
+            else AuthorizationState.AuthorizationError.IDLE
+        _state.value = currentState.copy(
+            password = password,
+            passwordError = passwordError,
+        )
+    }
+
+    private fun login() {
+        var currentState = _state.value as? AuthorizationState.Main ?: return
+        _state.value = currentState.copy(isLoading = true)
         var isError = false
 
-        if (login.isEmpty()) {
-            _state.value = (_state.value as AuthorizationState.Main).copy(
+        if (currentState.login.isEmpty()) {
+            currentState = currentState.copy(
                 loginError = AuthorizationState.AuthorizationError.EMPTY_LOGIN,
-                isLoading = false
+                isLoading = false,
             )
             isError = true
         }
 
-        if (password.isEmpty()) {
-            _state.value = (_state.value as AuthorizationState.Main).copy(
+        if (currentState.password.isEmpty()) {
+            currentState = currentState.copy(
                 passwordError = AuthorizationState.AuthorizationError.EMPTY_PASSWORD,
                 isLoading = false
             )
@@ -64,31 +79,33 @@ class AuthorizationViewModel(
         }
 
         if (isError) {
+            _state.value = currentState.copy(
+                isLoading = false,
+            )
             return
         }
 
         viewModelScope.launch(dispatcherIO) {
             try {
-                loginUseCase.execute(login, password)
+                loginUseCase.execute(currentState.login, currentState.password)
                 withContext(dispatcherMain) {
                     _action.value = AuthorizationAction.NavigateToMatches
                 }
             } catch (e: Exception) {
                 withContext(dispatcherMain) {
                     if (e is InvalidCredentialsException) {
-                        _state.value = (_state.value as AuthorizationState.Main).copy(
+                        _state.value = currentState.copy(
                             loginError = AuthorizationState.AuthorizationError.IDLE,
                             passwordError = AuthorizationState.AuthorizationError.INVALID_CREDENTIALS,
-                            isLoading = false
+                            isLoading = false,
                         )
-                        return@withContext
+                    } else {
+                        _state.value = currentState.copy(
+                            passwordError = AuthorizationState.AuthorizationError.NETWORK,
+                            loginError = AuthorizationState.AuthorizationError.NETWORK,
+                            isLoading = false,
+                        )
                     }
-                    _state.value = (_state.value as AuthorizationState.Main).copy(
-                        passwordError =
-                            AuthorizationState.AuthorizationError.NETWORK,
-                        loginError = AuthorizationState.AuthorizationError.NETWORK,
-                        isLoading = false
-                    )
                 }
             }
         }

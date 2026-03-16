@@ -3,15 +3,11 @@ package ru.hse.fandomatch.ui.authorization
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -22,13 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyPasswordField
 import ru.hse.fandomatch.ui.composables.MyTextField
-import ru.hse.fandomatch.ui.composables.MyTitle
 
 @Composable
 fun AuthorizationScreen(
@@ -52,8 +46,14 @@ fun AuthorizationScreen(
         is AuthorizationState.Main -> {
             MainState(
                 state.value as AuthorizationState.Main,
-                onLoginClick = { login, password ->
-                    viewModel.obtainEvent(AuthorizationEvent.LoginButtonClicked(login, password))
+                onLoginChanged = {
+                    viewModel.obtainEvent(AuthorizationEvent.LoginChanged(it))
+                },
+                onPasswordChanged = {
+                    viewModel.obtainEvent(AuthorizationEvent.PasswordChanged(it))
+                },
+                onLoginClick = {
+                    viewModel.obtainEvent(AuthorizationEvent.LoginButtonClicked)
                 },
                 onShowPasswordClick = {
                     viewModel.obtainEvent(AuthorizationEvent.ShowPasswordButtonClicked)
@@ -69,7 +69,9 @@ fun AuthorizationScreen(
 @Composable
 fun MainState(
     state: AuthorizationState.Main,
-    onLoginClick: (String, String) -> Unit,
+    onLoginChanged: (String) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onLoginClick: () -> Unit,
     onShowPasswordClick: () -> Unit
 ) {
     val login: MutableState<String> = remember { mutableStateOf(state.login) }
@@ -93,22 +95,27 @@ fun MainState(
                 errorText = if (state.loginError != AuthorizationState.AuthorizationError.NETWORK)
                     state.loginError.toText() else null
             ) {
+                onLoginChanged(it)
                 login.value = it
             }
             MyPasswordField(
                 value = password.value,
                 label = stringResource(id = R.string.password_label),
                 isError = state.passwordError != AuthorizationState.AuthorizationError.IDLE,
-                onValueChange = { password.value = it },
+                onValueChange = {
+                    onPasswordChanged(it)
+                    password.value = it
+                                },
                 onIconClick = {
                     onShowPasswordClick()
                 },
                 passwordVisibility = state.passwordVisibility,
                 errorText = state.passwordError.toText()
             )
-            Button(onClick = {
-                onLoginClick(login.value, password.value)
-            }) {
+            Button(
+                enabled = !state.passwordError.isBlocking() && !state.loginError.isBlocking(),
+                onClick = { onLoginClick() }
+            ) {
                 Text(stringResource(id = R.string.login_button))
             }
         }

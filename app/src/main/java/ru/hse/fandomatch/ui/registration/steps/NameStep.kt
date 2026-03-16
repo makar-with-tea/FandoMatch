@@ -23,7 +23,10 @@ import ru.hse.fandomatch.ui.registration.isFieldError
 @Composable
 internal fun NameStep(
     state: RegistrationState.Name,
-    onNext: (String, String, String) -> Unit,
+    onNameChanged: (String) -> Unit,
+    onEmailChanged: (String) -> Unit,
+    onLoginChanged: (String) -> Unit,
+    onNext: () -> Unit,
 ) {
     val name = remember { mutableStateOf(state.name) }
     val email = remember { mutableStateOf(state.email) }
@@ -45,26 +48,35 @@ internal fun NameStep(
                 label = stringResource(R.string.name_label),
                 isError = state.nameError.isFieldError(),
                 errorText = state.nameError.getText()
-            ) { name.value = it }
+            ) {
+                onNameChanged(it)
+                name.value = it
+            }
             MyTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = email.value,
                 label = stringResource(R.string.email_label),
                 isError = state.emailError.isFieldError(),
                 errorText = state.emailError.getText()
-            ) { email.value = it }
+            ) {
+                onEmailChanged(it)
+                email.value = it
+            }
             MyTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = login.value,
                 label = stringResource(R.string.login_label),
                 isError = state.loginError.isFieldError(),
                 errorText = state.loginError.getText()
-            ) { login.value = it }
+            ) {
+                onLoginChanged(it)
+                login.value = it
+            }
         }
         Button(
             modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isLoading,
-            onClick = { onNext(name.value, email.value, login.value) }
+            enabled = !state.isLoading && !state.nameError.isFieldError() && !state.emailError.isFieldError() && !state.loginError.isFieldError(),
+            onClick = { onNext() }
         ) { Text(stringResource(R.string.next_step)) }
     }
 }

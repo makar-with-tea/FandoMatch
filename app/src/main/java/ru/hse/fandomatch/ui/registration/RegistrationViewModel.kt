@@ -82,19 +82,17 @@ class RegistrationViewModel(
 
     fun obtainEvent(event: RegistrationEvent) {
         when (event) {
-            is RegistrationEvent.NameSubmitted -> handlePersonal(
-                name = event.name,
-                email = event.email,
-                login = event.login
-            )
+            is RegistrationEvent.NameChanged -> onNameChanged(event.name)
+            is RegistrationEvent.EmailChanged -> onEmailChanged(event.email)
+            is RegistrationEvent.LoginChanged -> onLoginChanged(event.login)
+            RegistrationEvent.NameSubmitted -> handlePersonal()
             is RegistrationEvent.DateSelected -> handleDate(event.dateOfBirthMillis)
             is RegistrationEvent.GenderSelected -> handleGender(event.gender)
             is RegistrationEvent.AvatarSelected -> handleAvatar(event.avatarByteArray)
-            is RegistrationEvent.PasswordSubmit -> handlePassword(
-                password = event.password,
-                passwordRepeat = event.passwordRepeat,
-                agreed = event.agreedToTerms,
-            )
+            is RegistrationEvent.PasswordChanged -> onPasswordChanged(event.password)
+            is RegistrationEvent.PasswordRepeatChanged -> onPasswordRepeatChanged(event.passwordRepeat)
+            is RegistrationEvent.AgreedToTermsChanged -> onAgreedToTermsChanged(event.agreedToTerms)
+            RegistrationEvent.PasswordSubmit -> handlePassword()
             RegistrationEvent.PasswordVisibilityChanged -> togglePasswordVisibility()
             RegistrationEvent.PasswordRepeatVisibilityChanged -> togglePasswordRepeatVisibility()
             RegistrationEvent.Back -> back()
@@ -102,41 +100,65 @@ class RegistrationViewModel(
         }
     }
 
-    private fun handlePersonal(
-        name: String,
-        email: String,
-        login: String,
-    ) {
+    private fun onNameChanged(name: String) {
+        val currentState = _state.value as? RegistrationState.Name ?: return
+        val nameErr = when {
+            !name.checkNameLength() -> RegistrationState.RegistrationError.NAME_LENGTH
+            !name.checkNameContent() -> RegistrationState.RegistrationError.NAME_CONTENT
+            else -> RegistrationState.RegistrationError.IDLE
+        }
+        _state.value = currentState.copy(
+            name = name,
+            nameError = nameErr
+        )
+    }
+
+    private fun onEmailChanged(email: String) {
+        val currentState = _state.value as? RegistrationState.Name ?: return
+        val emailErr = if (!email.checkEmailContent())
+            RegistrationState.RegistrationError.EMAIL_CONTENT
+        else RegistrationState.RegistrationError.IDLE
+        _state.value = currentState.copy(
+            email = email,
+            emailError = emailErr
+        )
+    }
+
+    private fun onLoginChanged(login: String) {
+        val currentState = _state.value as? RegistrationState.Name ?: return
+        val loginErr = when {
+            !login.checkLoginLength() -> RegistrationState.RegistrationError.LOGIN_LENGTH
+            !login.checkLoginContent() -> RegistrationState.RegistrationError.LOGIN_CONTENT
+            else -> RegistrationState.RegistrationError.IDLE
+        }
+        _state.value = currentState.copy(
+            login = login,
+            loginError = loginErr
+        )
+    }
+
+    private fun handlePersonal() {
+        val currentState = _state.value as? RegistrationState.Name ?: return
         var nameErr = RegistrationState.RegistrationError.IDLE
         var emailErr = RegistrationState.RegistrationError.IDLE
         var loginErr = RegistrationState.RegistrationError.IDLE
         var hasError = false
 
-        if (!name.checkNameLength()){
+        if (!currentState.name.checkNameLength()){
             nameErr = RegistrationState.RegistrationError.NAME_LENGTH
             hasError = true
         }
-        if (!name.checkNameContent()) {
-            nameErr = RegistrationState.RegistrationError.NAME_CONTENT
-            hasError = true
-        }
-        if (!email.checkEmailContent()) {
+        if (!currentState.email.checkEmailContent()) {
             emailErr = RegistrationState.RegistrationError.EMAIL_CONTENT
             hasError = true
         }
-        if (!login.checkLoginLength()) {
+        if (!currentState.login.checkLoginLength()) {
             loginErr = RegistrationState.RegistrationError.LOGIN_LENGTH
-            hasError = true
-        } else if (!login.checkLoginContent()) {
-            loginErr = RegistrationState.RegistrationError.LOGIN_CONTENT
             hasError = true
         }
 
         if (hasError) {
-            _state.value = RegistrationState.Name(
-                name = name,
-                email = email,
-                login = login,
+            _state.value = currentState.copy(
                 nameError = nameErr,
                 emailError = emailErr,
                 loginError = loginErr
@@ -144,9 +166,9 @@ class RegistrationViewModel(
             return
         }
 
-        form.name = name
-        form.email = email
-        form.login = login
+        form.name = currentState.name
+        form.email = currentState.email
+        form.login = currentState.login
         _state.value = RegistrationState.DateOfBirth(form.dateOfBirthMillis)
     }
 
@@ -187,46 +209,71 @@ class RegistrationViewModel(
         _state.value = RegistrationState.Password(password = form.password, passwordRepeat = form.passwordRepeat)
     }
 
-    private fun handlePassword(
-        password: String,
-        passwordRepeat: String,
-        agreed: Boolean,
-    ) {
+    private fun onPasswordChanged(password: String) {
+        val currentState = _state.value as? RegistrationState.Password ?: return
+        val passErr = when {
+            !password.checkPasswordLength() -> RegistrationState.RegistrationError.PASSWORD_LENGTH
+            !password.checkPasswordContent() -> RegistrationState.RegistrationError.PASSWORD_CONTENT
+            else -> RegistrationState.RegistrationError.IDLE
+        }
+        _state.value = currentState.copy(
+            password = password,
+            passwordError = passErr
+        )
+    }
+
+    private fun onPasswordRepeatChanged(passwordRepeat: String) {
+        val currentState = _state.value as? RegistrationState.Password ?: return
+        val repeatErr = if (passwordRepeat != currentState.password)
+            RegistrationState.RegistrationError.PASSWORD_MISMATCH
+        else RegistrationState.RegistrationError.IDLE
+        _state.value = currentState.copy(
+            passwordRepeat = passwordRepeat,
+            passwordRepeatError = repeatErr
+        )
+    }
+
+    private fun onAgreedToTermsChanged(agreedToTerms: Boolean) {
+        val currentState = _state.value as? RegistrationState.Password ?: return
+        _state.value = currentState.copy(
+            agreedToTerms = agreedToTerms
+        )
+    }
+
+    private fun handlePassword() {
+        val currentState = _state.value as? RegistrationState.Password ?: return
         var passErr = RegistrationState.RegistrationError.IDLE
         var repeatErr = RegistrationState.RegistrationError.IDLE
         var hasError = false
 
-        if (!password.checkPasswordLength()) {
+        if (!currentState.password.checkPasswordLength()) {
             passErr = RegistrationState.RegistrationError.PASSWORD_LENGTH
             hasError = true
         } else {
-            if (!password.checkPasswordContent()) {
+            if (!currentState.password.checkPasswordContent()) {
                 passErr = RegistrationState.RegistrationError.PASSWORD_CONTENT
                 hasError = true
             }
         }
-        if (password != passwordRepeat) {
+        if (currentState.password != currentState.passwordRepeat) {
             repeatErr = RegistrationState.RegistrationError.PASSWORD_MISMATCH
             hasError = true
         }
-        if (hasError || !agreed) {
-            _state.value = RegistrationState.Password(
-                password = password,
-                passwordRepeat = passwordRepeat,
-                agreedToTerms = agreed,
+        if (hasError || !currentState.agreedToTerms) {
+            _state.value = currentState.copy(
                 passwordError = passErr,
                 passwordRepeatError = repeatErr,
             )
             return
         }
 
-        form.password = password
-        form.passwordRepeat = passwordRepeat
+        form.password = currentState.password
+        form.passwordRepeat = currentState.passwordRepeat
         form.agreed = true
 
         _state.value = RegistrationState.Password(
-            password = password,
-            passwordRepeat = passwordRepeat,
+            password = currentState.password,
+            passwordRepeat = currentState.passwordRepeat,
             agreedToTerms = true,
             isLoading = true
         )
@@ -234,8 +281,8 @@ class RegistrationViewModel(
         if (form.dateOfBirthMillis == null || form.gender == null) {
             // This should never happen
             _state.value = RegistrationState.Password(
-                password = password,
-                passwordRepeat = passwordRepeat,
+                password = currentState.password,
+                passwordRepeat = currentState.passwordRepeat,
                 agreedToTerms = true,
                 isLoading = false
             )

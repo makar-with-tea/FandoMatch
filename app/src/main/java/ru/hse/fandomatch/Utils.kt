@@ -105,7 +105,7 @@ private const val LOGIN_SPECIAL_SYMBOLS = "_-"
 private const val SPECIAL_SYMBOLS = "!@#$%^*()-_"
 fun String.checkNameLength() = this.length in 2..20
 fun String.checkNameContent() = this.all { it.isLetter() || it == ' ' || it == '\'' }
-fun String.checkEmailContent() = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex().matches(this)
+fun String.checkEmailContent() = this.isNotEmpty() && "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex().matches(this)
 fun String.checkLoginLength() = this.length in 5..15
 fun String.checkLoginContent() = this.all { it.isDigit() || it.lowercase() in LATIN || it in LOGIN_SPECIAL_SYMBOLS }
 fun String.checkDescriptionLength() = this.length <= 500

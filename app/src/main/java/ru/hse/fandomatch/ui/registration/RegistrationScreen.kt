@@ -100,15 +100,10 @@ fun RegistrationScreen(
                 RegistrationState.Loading -> LoadingBlock()
                 is RegistrationState.Main -> MainState(
                     state = state,
-                    saveName = { name, login, email ->
-                            viewModel.obtainEvent(
-                                RegistrationEvent.NameSubmitted(
-                                    name,
-                                    login,
-                                    email,
-                                )
-                            )
-                    },
+                    onNameChanged = { viewModel.obtainEvent(RegistrationEvent.NameChanged(it)) },
+                    onEmailChanged = { viewModel.obtainEvent(RegistrationEvent.EmailChanged(it)) },
+                    onLoginChanged = { viewModel.obtainEvent(RegistrationEvent.LoginChanged(it)) },
+                    saveName = { viewModel.obtainEvent(RegistrationEvent.NameSubmitted) },
                     saveDateOfBirth = { dobMillis ->
                         viewModel.obtainEvent(RegistrationEvent.DateSelected(dobMillis))
                     },
@@ -122,15 +117,22 @@ fun RegistrationScreen(
                             )
                         )
                     },
-                    savePassword = { password, passwordRepeat, agreedToTerms ->
+                    onPasswordChanged = { viewModel.obtainEvent(RegistrationEvent.PasswordChanged(it)) },
+                    onPasswordRepeatChanged = {
                         viewModel.obtainEvent(
-                            RegistrationEvent.PasswordSubmit(
-                                password,
-                                passwordRepeat,
-                                agreedToTerms,
+                            RegistrationEvent.PasswordRepeatChanged(
+                                it
                             )
                         )
                     },
+                    onAgreedToTermsChanged = {
+                        viewModel.obtainEvent(
+                            RegistrationEvent.AgreedToTermsChanged(
+                                it
+                            )
+                        )
+                    },
+                    savePassword = { viewModel.obtainEvent(RegistrationEvent.PasswordSubmit) },
                     onBackPressed = {
                         viewModel.obtainEvent(RegistrationEvent.Back)
                     },
@@ -149,11 +151,17 @@ fun RegistrationScreen(
 @Composable
 private fun MainState(
     state: RegistrationState.Main,
-    saveName: (String, String, String) -> Unit,
+    onNameChanged: (String) -> Unit,
+    onEmailChanged: (String) -> Unit,
+    onLoginChanged: (String) -> Unit,
+    saveName: () -> Unit,
     saveDateOfBirth: (Long?) -> Unit,
     saveGender: (Gender) -> Unit,
     saveAvatar: (ByteArray?) -> Unit,
-    savePassword: (String, String, Boolean) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onPasswordRepeatChanged: (String) -> Unit,
+    onAgreedToTermsChanged: (Boolean) -> Unit,
+    savePassword: () -> Unit,
     onBackPressed: () -> Unit,
     onPasswordVisibilityChanged: () -> Unit,
     onPasswordRepeatVisibilityChanged: () -> Unit,
@@ -170,6 +178,9 @@ private fun MainState(
                 is RegistrationState.Name -> {
                     NameStep(
                         state = state,
+                        onNameChanged = onNameChanged,
+                        onEmailChanged = onEmailChanged,
+                        onLoginChanged = onLoginChanged,
                         onNext = saveName,
                     )
                 }
@@ -196,6 +207,9 @@ private fun MainState(
 
                 is RegistrationState.Password -> PasswordStep(
                     state = state,
+                    onPasswordChanged = onPasswordChanged,
+                    onPasswordRepeatChanged = onPasswordRepeatChanged,
+                    onAgreedToTermsChanged = onAgreedToTermsChanged,
                     onCompleteRegistration = savePassword,
                     onBackPressed = onBackPressed,
                     onPasswordVisibilityChanged = onPasswordVisibilityChanged,
@@ -229,6 +243,7 @@ internal fun RegistrationState.RegistrationError.getText(): String {
 internal fun RegistrationState.RegistrationError.isFieldError(): Boolean {
     return when (this) {
         RegistrationState.RegistrationError.IDLE,
+        RegistrationState.RegistrationError.LOGIN_TAKEN,
         RegistrationState.RegistrationError.NETWORK -> false
         else -> true
     }

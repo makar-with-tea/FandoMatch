@@ -27,7 +27,10 @@ import ru.hse.fandomatch.ui.registration.isFieldError
 @Composable
 internal fun PasswordStep(
     state: RegistrationState.Password,
-    onCompleteRegistration: (String, String, Boolean) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onPasswordRepeatChanged: (String) -> Unit,
+    onAgreedToTermsChanged: (Boolean) -> Unit,
+    onCompleteRegistration: () -> Unit,
     onBackPressed: () -> Unit,
     onPasswordVisibilityChanged: () -> Unit,
     onPasswordRepeatVisibilityChanged: () -> Unit,
@@ -57,7 +60,10 @@ internal fun PasswordStep(
                 label = stringResource(R.string.password_label),
                 isError = state.passwordError.isFieldError(),
                 errorText = state.passwordError.getText(),
-                onValueChange = { password.value = it },
+                onValueChange = {
+                    onPasswordChanged(it)
+                    password.value = it
+                },
                 onIconClick = onPasswordVisibilityChanged,
                 passwordVisibility = state.passwordVisibility
             )
@@ -67,20 +73,26 @@ internal fun PasswordStep(
                 label = stringResource(R.string.repeat_password_label),
                 isError = state.passwordRepeatError.isFieldError(),
                 errorText = state.passwordRepeatError.getText(),
-                onValueChange = { repeat.value = it },
+                onValueChange = {
+                    onPasswordRepeatChanged(it)
+                    repeat.value = it
+                },
                 onIconClick = onPasswordRepeatVisibilityChanged,
                 passwordVisibility = state.passwordRepeatVisibility
             )
             MyCheckBox(
                 isChecked = agreed.value,
-                onCheckedChange = { agreed.value = it },
+                onCheckedChange = {
+                    onAgreedToTermsChanged(it)
+                    agreed.value = it
+                },
                 label = stringResource(R.string.agree_terms)
             )
         }
         Button(
             modifier = Modifier.fillMaxWidth(),
-            onClick = { onCompleteRegistration(password.value, repeat.value, agreed.value) },
-            enabled = agreed.value,
+            onClick = { onCompleteRegistration() },
+            enabled = agreed.value && !state.passwordError.isFieldError() && !state.passwordRepeatError.isFieldError()
         ) { Text(stringResource(R.string.complete_registration)) }
     }
 }

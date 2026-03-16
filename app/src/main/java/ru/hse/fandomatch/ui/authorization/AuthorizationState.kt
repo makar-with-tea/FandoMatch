@@ -6,7 +6,8 @@ sealed class AuthorizationState {
         EMPTY_PASSWORD,
         INVALID_CREDENTIALS,
         NETWORK,
-        IDLE
+        IDLE;
+        fun isBlocking() = this == EMPTY_LOGIN || this == EMPTY_PASSWORD
     }
     data class Main(
         val login: String = "",
@@ -21,10 +22,9 @@ sealed class AuthorizationState {
 }
 
 sealed class AuthorizationEvent {
-    data class LoginButtonClicked(
-        val login: String,
-        val password: String
-    ): AuthorizationEvent()
+    data object LoginButtonClicked: AuthorizationEvent()
+    data class LoginChanged(val login: String): AuthorizationEvent()
+    data class PasswordChanged(val password: String): AuthorizationEvent()
     data object ShowPasswordButtonClicked: AuthorizationEvent()
     data object Clear: AuthorizationEvent()
 }
