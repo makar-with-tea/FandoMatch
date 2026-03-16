@@ -1,5 +1,7 @@
-package ru.hse.fandomatch.ui.navigation
+package ru.hse.fandomatch.navigation
 
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -14,16 +16,34 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import ru.hse.fandomatch.R
-import ru.hse.fandomatch.ui.composables.MyTitle
+import ru.hse.fandomatch.ui.composables.EndIcon
+
+data class TopBarState(
+    val titleContent: @Composable () -> Unit,
+    val endIcons: List<EndIconState> = emptyList()
+)
+
+data class EndIconState(
+    @field:DrawableRes val iconId: Int,
+    val onClick: () -> Unit,
+    @field:StringRes val descriptionId: Int,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
-    title: String,
-    onBackClick: () -> Unit
+    state: TopBarState,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     TopAppBar(
-        title = { MyTitle(text = title) },
+        modifier = modifier,
+        title = { state.titleContent() },
+        actions = {
+            state.endIcons.forEach { endIcon ->
+                EndIcon(endIcon)
+            }
+        },
         navigationIcon = {
             IconButton(onClick = onBackClick) {
                 Icon(
@@ -34,10 +54,10 @@ fun TopBar(
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            actionIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            titleContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            navigationIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            actionIconContentColor = MaterialTheme.colorScheme.onSecondaryContainer
         )
     )
 }

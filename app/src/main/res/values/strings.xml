@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">FandoMatch</string>
 
+    <string name="intro_title">Добро пожаловать!</string>
+
     <string name="authorization_title">Авторизация</string>
     <string name="login_label">Логин</string>
     <string name="password_label">Пароль</string>
@@ -8,27 +10,61 @@
     <string name="no_account">Нет аккаунта?</string>
     <string name="register_button">Зарегистрироваться</string>
 
-    <string name="account_icon_description">Аккаунт</string>
 
-    <string name="registration_title">Регистрация</string>
+    <string name="my_profile_icon_description">Аккаунт</string>
+    <string name="matches_icon_description">Знакомства</string>
+    <string name="feed_icon_description">Лента</string>
+    <string name="chats_list_icon_description">Чаты</string>
+    <string name="filters_icon_description">Фильтры</string>
+    <string name="settings_icon_description">Настройки</string>
+    <string name="edit_profile_icon_description">Редактировать профиль</string>
+
     <string name="account_title">Аккаунт</string>
     <string name="my_profile_title">Мой профиль</string>
 
+    <string name="registration_title">Регистрация</string>
+    <string name="name_label">Имя</string>
+    <string name="email_label">Электронная почта</string>
+    <string name="repeat_password_label">Повторите пароль</string>
+    <string name="already_have_account">Уже есть аккаунт?</string>
+    <string name="next_step">Далее</string>
+    <string name="birthdate_title">Дата рождения</string>
+    <string name="select_birthdate">Выберите дату рождения</string>
+    <string name="gender_title">Пол</string>
+    <string name="select_gender">Выберите пол</string>
+    <string name="male_gender">Мужской</string>
+    <string name="female_gender">Женский</string>
+    <string name="unspecified_gender">Не указан</string>
+    <string name="avatar_title">Аватар</string>
+    <string name="select_avatar">Выберите аватар</string>
+    <string name="no_avatar_selected">Аватар не выбран</string>
+    <string name="avatar_success">Аватар успешно загружен</string>
+    <string name="avatar_error">Ошибка загрузки аватара</string>
+    <string name="agree_terms">Я согласен с <u>условиями использования</u> и <u>политикой конфиденциальности</u></string>
+    <string name="complete_registration">Завершить регистрацию</string>
+    
+    <string name="name_content_error">Имя должно содержать только буквы</string>
+    <string name="surname_content_error">Фамилия должна содержать только буквы</string>
     <string name="name_length_error">Имя должно быть длиной от 2 до 20 символов</string>
     <string name="surname_length_error">Фамилия должна быть длиной от 2 до 20 символов</string>
     <string name="login_length_error">Логин должен быть длиной от 5 до 15 символов</string>
     <string name="login_content_error">Логин должен содержать только латинские буквы и цифры</string>
     <string name="password_length_error">Пароль должен быть длиной не менее 8 символов</string>
-    <string name="password_content_error">Пароль должен содержать латинские буквы и цифры</string>
+    <string name="password_content_error">Пароль должен содержать латинские буквы, цифры и спец. символы из списка !@#$%^*()-_</string>
     <string name="password_mismatch_error">Пароли не совпадают</string>
     <string name="login_taken_error">Данный логин уже занят</string>
     <string name="registration_failed_error">Ошибка регистрации</string>
     <string name="email_content_error">Неверный формат почты</string>
+    <string name="birthdate_too_young_error">Возраст должен быть не менее 12 лет</string>
+    <string name="birthdate_empty_error">Дата рождения не может быть пустой</string>
+    <string name="gender_not_selected_error">Необходимо выбрать пол</string>
+    <string name="password_complexity_error">Пароль должен содержать заглавные и строчные буквы, цифры и специальные символы</string>
 
     <string name="empty_login_error">"Логин не может быть пустым</string>
     <string name="empty_password_error">Пароль не может быть пустым</string>
     <string name="invalid_credentials_error">Неверный логин или пароль</string>
     <string name="network_error">Ошибка сети</string>
+    <string name="network_error_long">Не удалось соединиться с сервером. Проверьте подключение к интернету.</string>
 
     <string name="password_incorrect_error">Неверный пароль</string>
     <string name="turn_visibility_off_description">Сделать пароль невидимым</string>
@@ -37,4 +73,129 @@
     <string name="arrow_back_description">Назад</string>
 
     <string name="repeat_new_password_label">Повторите новый пароль</string>
+
+    <string name="matches_title">Знакомства</string>
+    <string name="no_profiles_found_error">Профили не найдены. Попробуйте изменить фильтры поиска.</string>
+    <string name="retry_load">Повторить загрузку</string>
+    <string name="like_profile_description">Лайк</string>
+    <string name="dislike_profile_description">Дизлайк</string>
+
+    <string name="fandom_category_anime_manga">Аниме и манга</string>
+    <string name="fandom_category_books">Книги</string>
+    <string name="fandom_category_cartoons">Мультфильмы</string>
+    <string name="fandom_category_films">Фильмы</string>
+    <string name="fandom_category_tv_series">Сериалы</string>
+    <string name="fandom_category_games">Игры</string>
+    <string name="fandom_category_tabletop_games">Настольные игры</string>
+    <string name="fandom_category_music">Музыка</string>
+    <string name="fandom_category_theater_musicals">Театр и мюзиклы</string>
+    <string name="fandom_category_podcasts">Подкасты</string>
+    <string name="fandom_category_comics">Комиксы</string>
+    <string name="fandom_category_content_creators">Контент-криэйторы</string>
+    <string name="fandom_category_celebrities">Знаменитости</string>
+    <string name="fandom_category_sports">Спорт</string>
+    <string name="fandom_category_history">История</string>
+    <string name="fandom_category_mythology">Мифология</string>
+    <string name="fandom_category_other">Другое</string>
+
+    <string name="city_moscow">Москва</string>
+    <string name="city_saint_petersburg">Санкт-Петербург</string>
+    <string name="city_novosibirsk">Новосибирск</string>
+    <string name="city_yekaterinburg">Екатеринбург</string>
+    <string name="city_other">Другой</string>
+
+    <string name="filters_title">Фильтры</string>
+    <string name="gender_filter_label">Пол</string>
+    <string name="age_filter_label">Возраст</string>
+    <string name="age_filter_selected_range">Выбранный диапазон: %1$d - %2$s</string>
+    <string name="age_filter_no_age">Возраст не указан</string>
+    <string name="fandom_category_filter_label">Категории фандомов</string>
+    <string name="fandom_filter_label">Фандомы</string>
+    <string name="fandom_filter_input_fandom_name">Введите фандом...</string>
+    <string name="clear_search_icon_description">Очистить поиск</string>
+    <string name="fandom_filter_no_fandoms_found">Фандомы не найдены</string>
+    <string name="fandom_filter_delete_fandom_icon_description">Удалить фандом</string>
+    <string name="city_filter_label">Ваш город: %1$s</string>
+    <string name="city_filter_no_city">не указано</string>
+    <string name="city_filter_only_in_city_checkbox">Только в моем городе</string>
+    <string name="reset_filters_button">Сбросить</string>
+    <string name="apply_filters_button">Применить</string>
+
+    <string name="chats_list_title">Чаты</string>
+    <string name="search_icon_description">Поиск</string>
+    <string name="last_message_time_years">г.</string>
+    <string name="last_message_time_months">мес.</string>
+    <string name="last_message_time_weeks">нед.</string>
+    <string name="last_message_time_days">дн.</string>
+    <string name="search_name_input">Введите имя...</string>
+
+    <string name="type_a_message">Сообщение</string>
+    <string name="send_message_button_description">Отправить сообщение</string>
+    <string name="attach_file_button_description">Прикрепить вложение</string>
+    <string name="detach_file_button_description">Удалить вложение</string>
+    <string name="download_media_button_description">Скачать фото или видео</string>
+
+    <string name="login_hidden">Логин скрыт</string>
+    <string name="go_to_chat_button_description">Отправить сообщение</string>
+
+    <string name="notification_allow_popup_name">Разрешение на уведомления</string>
+    <string name="notification_allow_popup_description">Разрешите уведомления, чтобы получать оповещения о новых сообщениях и мэтчах.</string>
+    <string name="ok">OK</string>
+    <string name="no_thanks">Нет, спасибо</string>
+    <string name="notification_title_new_message">Новое сообщение</string>
+    <string name="notification_title_new_match">Новый мэтч</string>
+    <string name="notification_message_new_message">Вам пишет %1$s!</string>
+    <string name="notification_message_new_match">Посмотрите, сколько у вас общего с %1$s!</string>
+
+    <string name="edit_profile_title">Редактировать профиль</string>
+    <string name="edit_avatar_icon_description">Изменить аватар</string>
+    <string name="edit_background_icon_description">Изменить фон профиля</string>
+    <string name="description_label">Описание профиля</string>
+    <string name="description_length_error">Описание должно быть не длиннее 500 символов</string>
+    <string name="city_label">Ваш город</string>
+    <string name="save_profile_button">Сохранить</string>
+    <string name="city_not_found_error">Город не найден</string>
+    <string name="did_not_found_fandom_label">Не нашли фандом?</string>
+    <string name="here_you_go_button">Вам сюда!</string>
+
+    <string name="settings_title">Настройки</string>
+    <string name="change_email_title">Смена почты</string>
+    <string name="change_email_button">Сменить почту</string>
+    <string name="change_password_title">Смена пароля</string>
+    <string name="change_password_button">Сменить пароль</string>
+    <string name="delete_account_button">Удалить аккаунт</string>
+    <string name="delete_account_title">Удаление аккаунта</string>
+    <string name="delete_account_confirmation">Вы уверены, что хотите удалить аккаунт?</string>
+    <string name="logout_button">Выйти</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    <string name="old_password_label">Старый пароль</string>
+    <string name="new_password_label">Новый пароль</string>
+    <string name="save_button">Сохранить</string>
+    <string name="loading_error">Ошибка загрузки</string>
+    <string name="unknown_error">Неизвестная ошибка</string>
+    <string name="retry_button_text">Попробовать снова</string>
+    <string name="account_not_found_error">Аккаунт не найден</string>
+    <string name="account_delete_error">Не удалось удалить аккаунт</string>
+    <string name="notification_settings_title">Push-уведомления</string>
+    <string name="match_notifications_label">Уведомлять о новых мэтчах</string>
+    <string name="message_notifications_label">Уведомлять о новых сообщениях</string>
+    <string name="privacy_settings_title">Приватность</string>
+    <string name="hide_my_posts_from_non_matches">Скрыть мои посты от всех, кроме друзей</string>
+
+    <string name="like_button_description">Поставить или убрать лайк</string>
+    <string name="comment_button_description">Оставить комментарий</string>
+
+    <string name="feed_title">Лента</string>
+
+    <string name="add_fandom_title">Добавить фандом</string>
+    <string name="add_fandom_description">Если вы не нашли свой любимый фандом в списке, вы можете отправить запрос на его добавление. Пожалуйста, укажите название, категорию и краткое описание фандома. Мы рассмотрим ваш запрос и добавим фандом в ближайшее время!</string>
+    <string name="add_fandom_success">Запрос на добавление фандома успешно отправлен</string>
+    <string name="add_fandom_error">Запрос не был отправлен, попробуйте снова!</string>
+    <string name="fandom_name_label">Название фандома</string>
+    <string name="fandom_category_label">Категория фандома</string>
+    <string name="fandom_description_label">Описание фандома</string>
+    <string name="fandom_name_length_error">Название должно быть длиной от 2 до 100 символов</string>
+    <string name="fandom_description_length_error">Описание должно быть не длиннее 3000 символов</string>
+    <string name="send_request_button">Отправить запрос</string>
 </resources>
