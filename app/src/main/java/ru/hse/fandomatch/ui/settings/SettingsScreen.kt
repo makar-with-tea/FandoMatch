@@ -38,6 +38,7 @@ import ru.hse.fandomatch.ui.composables.MySwitch
 import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.navigation.TopBarState
+import ru.hse.fandomatch.ui.theme.FandoMatchTheme
 
 @Composable
 fun SettingsScreen(
@@ -517,17 +518,19 @@ fun SettingsState.SettingsError.toText() = when (this) {
 @Preview(showBackground = true)
 @Composable
 fun MainStatePreview() {
-    MainState(
-        state = SettingsState.Main(
-            email = "johndoe@example.com",
-        ),
-        onChangePassword = {},
-        onDeleteAccount = {},
-        onLogout = {},
-        onChangeEmail = {},
-        setTopBarState = {},
-        onMatchNotificationsToggled = {},
-        onMessageNotificationsToggled = {},
-        onShowPostsToNonMatchesToggled = {}
-    )
+    FandoMatchTheme {
+        MainState(
+            state = SettingsState.Main(
+                email = "johndoe@example.com",
+            ),
+            onChangePassword = {},
+            onDeleteAccount = {},
+            onLogout = {},
+            onChangeEmail = {},
+            setTopBarState = {},
+            onMatchNotificationsToggled = {},
+            onMessageNotificationsToggled = {},
+            onShowPostsToNonMatchesToggled = {}
+        )
+    }
 }

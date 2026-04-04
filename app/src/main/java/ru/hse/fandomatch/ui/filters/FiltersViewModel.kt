@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.ui.filters
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -46,6 +47,7 @@ class FiltersViewModel(
     }
 
     fun obtainEvent(event: FiltersEvent) {
+        Log.d("FiltersViewModel", "Event obtained: $event")
         when (event) {
             is FiltersEvent.LoadInitialFilters -> loadInitialFilters()
             is FiltersEvent.GenderSelected -> updateGender(event.gender)
