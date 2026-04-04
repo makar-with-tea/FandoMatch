@@ -127,7 +127,7 @@
     <string name="last_message_time_months">мес.</string>
     <string name="last_message_time_weeks">нед.</string>
     <string name="last_message_time_days">дн.</string>
-    <string name="search_name_input">Введите имя...</string>
+    <string name="search_name_input">Введите имя…</string>
 
     <string name="type_a_message">Сообщение</string>
     <string name="send_message_button_description">Отправить сообщение</string>
@@ -198,4 +198,10 @@
     <string name="fandom_name_length_error">Название должно быть длиной от 2 до 100 символов</string>
     <string name="fandom_description_length_error">Описание должно быть не длиннее 3000 символов</string>
     <string name="send_request_button">Отправить запрос</string>
+
+    <string name="new_post_title">Новый пост</string>
+    <string name="create_post_label">Создать пост</string>
+    <string name="post_button">Опубликовать</string>
+    <string name="post_content_label">Что у вас на уме?</string>
+    <string name="post_content_too_long_error">Содержание поста не должно быть длиннее 2000 символов</string>
 </resources>

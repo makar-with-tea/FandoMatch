@@ -3,6 +3,7 @@ package ru.hse.fandomatch.ui.chat
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -13,6 +14,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -47,17 +49,23 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.ImagesScreen
 import ru.hse.fandomatch.ui.composables.Message
+import ru.hse.fandomatch.ui.composables.RawImageOrPlaceholder
 import ru.hse.fandomatch.ui.composables.SkeletonView
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.BitmapHelper
+import ru.hse.fandomatch.MAX_NUMBER_OF_ATTACHMENTS
 import ru.hse.fandomatch.getBytesFromUri
+import ru.hse.fandomatch.ui.composables.AttachmentsRow
 import java.time.LocalDateTime
 import kotlin.collections.emptyList
 
@@ -128,9 +136,8 @@ private fun MainState(
     )
 
     val context = LocalContext.current
-    val maxNumberOfAttachments = 5
     var attachedImages by remember { mutableStateOf(mutableListOf<ByteArray>()) }
-    val pickMedia = when (maxNumberOfAttachments - attachedImages.size) {
+    val pickMedia = when (MAX_NUMBER_OF_ATTACHMENTS - attachedImages.size) {
         0 -> null
 
         1 -> rememberLauncherForActivityResult(
@@ -145,7 +152,7 @@ private fun MainState(
 
         else -> rememberLauncherForActivityResult(
             ActivityResultContracts.PickMultipleVisualMedia(
-                maxItems = maxOf(maxNumberOfAttachments - attachedImages.size)
+                maxItems = maxOf(MAX_NUMBER_OF_ATTACHMENTS - attachedImages.size)
             )
         ) { uris ->
             attachedImages =
@@ -191,57 +198,12 @@ private fun MainState(
             }
         }
 
-        LazyRow(
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .fillMaxWidth()
-        ) {
-            items(attachedImages) { byteArray ->
-                val bitmap = BitmapHelper.byteArrayToBitmap(byteArray)?.asImageBitmap()
-                bitmap?.let { imageBitmap ->
-                    Box(
-                        contentAlignment = Alignment.TopEnd,
-                    ) {
-                        Image(
-                            bitmap = imageBitmap,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(80.dp)
-                                .padding(4.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                        )
-
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.ic_close),
-                            contentDescription = stringResource(R.string.detach_file_button_description),
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier
-                                .size(20.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.background,
-                                    shape = CircleShape
-                                )
-                                .padding(2.dp)
-                                .clip(CircleShape)
-                                .align(Alignment.TopEnd)
-                                .padding(2.dp)
-                                .clickable {
-                                    attachedImages = attachedImages.toMutableList().also {
-                                        it.remove(byteArray)
-                                    }
-                                    Log.i(
-                                        "ChatScreen",
-                                        "Detached an image. ${attachedImages.size} images left."
-                                    )
-                                }
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.size(4.dp))
-                }
-                // todo else show error photo as placeholder
+        AttachmentsRow(
+            attachedImages = attachedImages,
+            onAttachmentsChanged = {
+                attachedImages = it.toMutableList()
             }
-        }
+        )
 
         val newMessage: MutableState<String> = remember { mutableStateOf("") } // todo viewModel?
         OutlinedTextField(
@@ -258,10 +220,10 @@ private fun MainState(
                 IconButton(
                     modifier = Modifier
                         .size(24.dp),
-                    enabled = attachedImages.size < maxNumberOfAttachments,
+                    enabled = attachedImages.size < MAX_NUMBER_OF_ATTACHMENTS,
                     onClick = {
                         pickMedia?.launch(
-                            androidx.activity.result.PickVisualMediaRequest(
+                            PickVisualMediaRequest(
                                 ActivityResultContracts.PickVisualMedia.ImageOnly
                             )
                         )

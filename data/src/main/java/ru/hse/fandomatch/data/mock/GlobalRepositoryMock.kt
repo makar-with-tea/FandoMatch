@@ -250,12 +250,8 @@ class GlobalRepositoryMock: GlobalRepository {
         }
     }
 
-    override suspend fun likeProfile(userId: Long, profileId: Long) {
-        Log.d("GlobalRepositoryMock", "likeProfile: user $userId liked profile $profileId")
-    }
-
-    override suspend fun dislikeProfile(userId: Long, profileId: Long) {
-        Log.d("GlobalRepositoryMock", "dislikeProfile: user $userId disliked profile $profileId")
+    override suspend fun likeOrDislikeProfile(userId: Long, profileId: Long, isLike: Boolean) {
+        Log.d("GlobalRepositoryMock", "likeProfile: user $userId ${if (isLike) "" else "dis"}liked profile $profileId")
     }
 
     override suspend fun subscribeToChatPreviews(

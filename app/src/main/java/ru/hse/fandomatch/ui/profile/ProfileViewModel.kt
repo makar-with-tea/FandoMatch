@@ -2,20 +2,28 @@ package ru.hse.fandomatch.ui.profile
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.data.mock.mockPosts
 import ru.hse.fandomatch.data.mock.mockUser
 import ru.hse.fandomatch.data.mock.mockUserPosts
 import ru.hse.fandomatch.data.mock.mockUsers
+import ru.hse.fandomatch.domain.exception.LoadDataException
+import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
+import ru.hse.fandomatch.ui.matches.MatchesState
 
 class ProfileViewModel(
-    private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
+    private val getUserIdUseCase: GetUserIdUseCase,
+    private val likeOrDislikeProfileUseCase: LikeOrDislikeProfileUseCase,
+    val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
-
     private val _state: MutableStateFlow<ProfileState> = MutableStateFlow(ProfileState.Idle)
     val state: StateFlow<ProfileState> get() = _state
     private val _action = MutableStateFlow<ProfileAction?>(null)
@@ -35,6 +43,15 @@ class ProfileViewModel(
             }
             ProfileEvent.SettingsButtonClicked -> {
                 _action.value = ProfileAction.GoToSettings
+            }
+            ProfileEvent.AddPostButtonClicked -> {
+                _action.value = ProfileAction.GoToAddPost
+            }
+            is ProfileEvent.LikeButtonClicked -> {
+                likeOrDislikeProfile(event.profileId, isLike = true)
+            }
+            is ProfileEvent.DislikeButtonClicked -> {
+                likeOrDislikeProfile(event.profileId, isLike = false)
             }
             ProfileEvent.Clear -> {
                 clear()
@@ -83,6 +100,18 @@ class ProfileViewModel(
                     .map { it.copy(authorLogin = null) }
             }
         )
+    }
+
+    private fun likeOrDislikeProfile(profileId: Long, isLike: Boolean) {
+        viewModelScope.launch(dispatcherIO) {
+            val userId = getUserIdUseCase.execute()
+            userId?.let {
+                likeOrDislikeProfileUseCase.execute(userId, profileId, isLike)
+            }
+            withContext(dispatcherMain) {
+                _action.value = ProfileAction.GoToMatches
+            }
+        }
     }
 
     private fun clear() {

@@ -115,6 +115,7 @@ fun String.checkPasswordContent() = this.any { it.isDigit() }
         && this.any { it !in LATIN && !it.isDigit() }
         && this.all { it.isLetterOrDigit() || it in SPECIAL_SYMBOLS }
 fun String.checkFandomNameLength() = this.length in 2..100
+fun String.checkPostContentLength() = this.length <= 2000 // todo какая длина?
 
 @Composable
 fun FandomCategory.getColor(): Color {
@@ -145,3 +146,5 @@ fun getBytesFromUri(context: Context, uri: Uri): ByteArray? {
     }
     return null
 }
+
+const val MAX_NUMBER_OF_ATTACHMENTS = 5

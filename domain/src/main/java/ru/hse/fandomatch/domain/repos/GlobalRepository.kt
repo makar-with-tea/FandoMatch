@@ -35,8 +35,7 @@ interface GlobalRepository {
     suspend fun checkPassword(login: String, password: String): Boolean
 
     suspend fun getSuggestedProfiles(userId: Long, size: Int): List<ProfileCard>
-    suspend fun likeProfile(userId: Long, profileId: Long)
-    suspend fun dislikeProfile(userId: Long, profileId: Long)
+    suspend fun likeOrDislikeProfile(userId: Long, profileId: Long, isLike: Boolean)
     suspend fun subscribeToChatPreviews(
         beforeTimestamp: Long?,
         size: Int,

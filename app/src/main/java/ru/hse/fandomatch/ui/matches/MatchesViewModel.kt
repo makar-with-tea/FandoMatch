@@ -12,8 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.exception.LoadDataException
 import ru.hse.fandomatch.domain.model.ProfileCard
-import ru.hse.fandomatch.domain.usecase.matches.DislikeProfileUseCase
-import ru.hse.fandomatch.domain.usecase.matches.LikeProfileUseCase
+import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LoadSuggestedProfilesUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
 import java.util.ArrayDeque
@@ -22,8 +21,7 @@ import kotlin.properties.Delegates
 class MatchesViewModel(
     private val loadSuggestedProfilesUseCase: LoadSuggestedProfilesUseCase,
     private val getUserIdUseCase: GetUserIdUseCase,
-    private val likeProfileUseCase: LikeProfileUseCase,
-    private val dislikeProfileUseCase: DislikeProfileUseCase,
+    private val likeOrDislikeProfileUseCase: LikeOrDislikeProfileUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -91,14 +89,14 @@ class MatchesViewModel(
 
     private fun likeProfile(profileId: Long) {
         viewModelScope.launch(dispatcherIO) {
-            likeProfileUseCase.execute(userId, profileId)
+            likeOrDislikeProfileUseCase.execute(userId, profileId, isLike = true)
         }
         popAndMaybePrefetch()
     }
 
     private fun dislikeProfile(profileId: Long) {
         viewModelScope.launch(dispatcherIO) {
-            dislikeProfileUseCase.execute(userId, profileId)
+            likeOrDislikeProfileUseCase.execute(userId, profileId, isLike = false)
         }
         popAndMaybePrefetch()
     }

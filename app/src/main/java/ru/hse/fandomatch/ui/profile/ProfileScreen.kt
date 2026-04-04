@@ -2,7 +2,9 @@ package ru.hse.fandomatch.ui.profile
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,7 +13,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Create
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,7 +27,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
@@ -34,6 +44,8 @@ import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.timestampToDateString
+import ru.hse.fandomatch.ui.composables.MyFloatingButton
+import ru.hse.fandomatch.ui.theme.FandoMatchTheme
 
 @Composable
 fun ProfileScreen(
@@ -42,6 +54,8 @@ fun ProfileScreen(
     goToMessages: (Long?) -> Unit,
     goToEditProfile: () -> Unit,
     goToSettings: () -> Unit,
+    goToAddPost: () -> Unit,
+    goToMatches: () -> Unit,
     viewModel: ProfileViewModel = koinViewModel()
 ) {
     val state = viewModel.state.collectAsState()
@@ -64,6 +78,16 @@ fun ProfileScreen(
             viewModel.obtainEvent(ProfileEvent.Clear)
         }
 
+        is ProfileAction.GoToAddPost -> {
+            goToAddPost()
+            viewModel.obtainEvent(ProfileEvent.Clear)
+        }
+
+        is ProfileAction.GoToMatches -> {
+            goToMatches()
+            viewModel.obtainEvent(ProfileEvent.Clear)
+        }
+
         null -> {}
     }
 
@@ -74,15 +98,22 @@ fun ProfileScreen(
             state = state,
             setTopBarState = setTopBarState,
             onMessagesClicked = {
-                viewModel.obtainEvent(
-                    ProfileEvent.MessageButtonClicked(state.id)
-                )
+                viewModel.obtainEvent(ProfileEvent.MessageButtonClicked(state.id))
             },
             onEditProfileClicked = {
                 viewModel.obtainEvent(ProfileEvent.EditProfileButtonClicked)
             },
             onSettingsClicked = {
                 viewModel.obtainEvent(ProfileEvent.SettingsButtonClicked)
+            },
+            onAddPostClicked = {
+                viewModel.obtainEvent(ProfileEvent.AddPostButtonClicked)
+            },
+            onLikeClicked = {
+                viewModel.obtainEvent(ProfileEvent.LikeButtonClicked(state.id))
+            },
+            onDislikeClicked = {
+                viewModel.obtainEvent(ProfileEvent.DislikeButtonClicked(state.id))
             }
         )
 
@@ -106,6 +137,9 @@ private fun MainState(
     onMessagesClicked: (Long?) -> Unit,
     onEditProfileClicked: () -> Unit,
     onSettingsClicked: () -> Unit,
+    onAddPostClicked: () -> Unit,
+    onLikeClicked: () -> Unit,
+    onDislikeClicked: () -> Unit,
 ) {
     setTopBarState(
         TopBarState(
@@ -138,12 +172,12 @@ private fun MainState(
                 ProfileType.OTHER -> listOf(
                     EndIconState(
                         iconId = R.drawable.ic_dislike,
-                        onClick = { /* TODO */ },
+                        onClick = { onDislikeClicked() },
                         descriptionId = R.string.dislike_profile_description
                     ),
                     EndIconState(
                         iconId = R.drawable.ic_like,
-                        onClick = { /* TODO */ },
+                        onClick = { onLikeClicked() },
                         descriptionId = R.string.like_profile_description
                     ),
                 )
@@ -151,76 +185,85 @@ private fun MainState(
         )
     )
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-    ) {
-        item {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(bottomEnd = 12.dp, bottomStart = 12.dp))
-                    .background(MaterialTheme.colorScheme.tertiaryContainer),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top,
-            ) {
-                // header of profile
-                AvatarWithBackground(
-                    state.backgroundUrl,
-                    state.avatarUrl,
-                    backgroundColor = MaterialTheme.colorScheme.tertiaryContainer
-                )
-
+    Box {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+        ) {
+            item {
                 Column(
                     modifier = Modifier
-                        .padding(horizontal = 8.dp),
+                        .fillMaxSize()
+                        .clip(RoundedCornerShape(bottomEnd = 12.dp, bottomStart = 12.dp))
+                        .background(MaterialTheme.colorScheme.tertiaryContainer),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.Top,
                 ) {
-                    MyTitle(state.name)
+                    // header of profile
+                    AvatarWithBackground(
+                        state.backgroundUrl,
+                        state.avatarUrl,
+                        backgroundColor = MaterialTheme.colorScheme.tertiaryContainer
+                    )
 
-                    FandomCarouselWithDropdown(
-                        fandoms = state.fandoms
+                    Column(
+                        modifier = Modifier
+                            .padding(horizontal = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        MyTitle("${state.name}, ${state.age}")
+
+                        FandomCarouselWithDropdown(
+                            fandoms = state.fandoms
+                        )
+                        ExpandableText(
+                            text = state.description.orEmpty(),
+                            backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
+            }
+
+            // posts
+            items(state.posts) { post ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                ) {
+                    FeedPost(
+                        userName = post.authorName,
+                        userLogin = post.authorLogin,
+                        userAvatarUrl = post.authorAvatarUrl,
+                        postDate = post.timestamp.timestampToDateString(),
+                        postText = post.content,
+                        imageUrls = post.imageUrls,
+                        areReactionsAvailable = true, // todo
+                        likeCount = post.likeCount,
+                        commentCount = post.commentCount,
+                        isLiked = post.isLikedByCurrentUser,
+                        onLikeClick = {},
+                        onCommentClick = {},
+                        onImageClicked = { _, _ -> },
+                        backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                     )
-                    ExpandableText(
-                        text = state.description.orEmpty(),
-                        backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    Spacer(
+                        modifier = Modifier
+                            .height(8.dp)
+                            .fillMaxWidth()
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
                 }
             }
         }
 
-        // posts
-        items(state.posts) { post ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
-            ) {
-                FeedPost(
-                    userName = post.authorName,
-                    userLogin = post.authorLogin,
-                    userAvatarUrl = post.authorAvatarUrl,
-                    postDate = post.timestamp.timestampToDateString(),
-                    postText = post.content,
-                    imageUrls = post.imageUrls,
-                    areReactionsAvailable = true, // todo
-                    likeCount = post.likeCount,
-                    commentCount = post.commentCount,
-                    isLiked = post.isLikedByCurrentUser,
-                    onLikeClick = {},
-                    onCommentClick = {},
-                    onImageClicked = { _, _ -> },
-                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-                )
-                Spacer(
-                    modifier = Modifier
-                        .height(8.dp)
-                        .fillMaxWidth()
-                )
-            }
-        }
+        MyFloatingButton(
+            onClick = { onAddPostClicked() },
+            modifier = Modifier.align(Alignment.BottomEnd),
+            icon = ImageVector.vectorResource(id = R.drawable.ic_add_post),
+            contentDescription = stringResource(R.string.create_post_label),
+        )
     }
 }
 
@@ -258,11 +301,16 @@ fun MainStatePreview() {
         city = mockUser.city,
     )
 
-    MainState(
-        state = mockState,
-        setTopBarState = { },
-        onMessagesClicked = { },
-        onEditProfileClicked = { },
-        onSettingsClicked = { },
-    )
+    FandoMatchTheme {
+        MainState(
+            state = mockState,
+            setTopBarState = { },
+            onMessagesClicked = { },
+            onEditProfileClicked = { },
+            onSettingsClicked = { },
+            onAddPostClicked = { },
+            onLikeClicked = { },
+            onDislikeClicked = { },
+        )
+    }
 }

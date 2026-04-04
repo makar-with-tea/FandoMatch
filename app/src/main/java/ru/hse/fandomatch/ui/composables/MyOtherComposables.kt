@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.ui.composables
 
+import android.content.ClipDescription
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -32,6 +33,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -84,8 +86,9 @@ fun MyTitle(
 fun MyTextField(
     modifier: Modifier = Modifier,
     value: String,
-    label: String,
+    label: String?,
     isError: Boolean,
+    placeholder: String? = null,
     enabled: Boolean = true,
     errorText: String? = null,
     hideOnDone: Boolean = true,
@@ -98,7 +101,8 @@ fun MyTextField(
     TextField(
         modifier = modifier.padding(8.dp),
         value = value,
-        label = { Text(label) },
+        label = { label?.let { Text(it) } },
+        placeholder = { placeholder?.let { Text(it) } },
         isError = isError,
         enabled = enabled,
         onValueChange = onValueChange,
@@ -440,5 +444,33 @@ fun MySwitch(
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(label)
+    }
+}
+
+@Composable
+fun MyFloatingButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    icon: ImageVector,
+    contentDescription: String? = null,
+) {
+    FloatingActionButton(
+        onClick = { onClick() },
+        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        modifier = modifier
+            .padding(16.dp)
+            .clip(CircleShape)
+            .border(
+                2.dp,
+                MaterialTheme.colorScheme.onTertiaryContainer,
+                CircleShape
+            )
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = MaterialTheme.colorScheme.onTertiaryContainer,
+        )
     }
 }

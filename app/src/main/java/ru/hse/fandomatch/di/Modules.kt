@@ -8,19 +8,17 @@ import ru.hse.fandomatch.data.mock.GlobalRepositoryMock
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
-import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
 import ru.hse.fandomatch.domain.usecase.chat.LoadMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
+import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
 import ru.hse.fandomatch.domain.usecase.feed.GetFeedUseCase
-import ru.hse.fandomatch.domain.usecase.matches.DislikeProfileUseCase
-import ru.hse.fandomatch.domain.usecase.matches.LikeProfileUseCase
+import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LoadSuggestedProfilesUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetPastLoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
 import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.RegisterUseCase
 import ru.hse.fandomatch.ui.addfandom.AddFandomViewModel
-import ru.hse.fandomatch.ui.profile.ProfileViewModel
 import ru.hse.fandomatch.ui.authorization.AuthorizationViewModel
 import ru.hse.fandomatch.ui.chat.ChatViewModel
 import ru.hse.fandomatch.ui.chatslist.ChatsListViewModel
@@ -29,6 +27,8 @@ import ru.hse.fandomatch.ui.feed.FeedViewModel
 import ru.hse.fandomatch.ui.filters.FiltersViewModel
 import ru.hse.fandomatch.ui.intro.IntroViewModel
 import ru.hse.fandomatch.ui.matches.MatchesViewModel
+import ru.hse.fandomatch.ui.newpost.NewPostViewModel
+import ru.hse.fandomatch.ui.profile.ProfileViewModel
 import ru.hse.fandomatch.ui.registration.RegistrationViewModel
 import ru.hse.fandomatch.ui.settings.SettingsViewModel
 
@@ -40,11 +40,10 @@ val appModule = module {
         MatchesViewModel(
             loadSuggestedProfilesUseCase = get(),
             getUserIdUseCase = get(),
-            likeProfileUseCase = get(),
-            dislikeProfileUseCase = get()
+            likeOrDislikeProfileUseCase = get(),
         )
     }
-    viewModel<ProfileViewModel> { ProfileViewModel() }
+    viewModel<ProfileViewModel> { ProfileViewModel(get(), get()) }
     viewModel<ChatsListViewModel> { ChatsListViewModel(get()) }
     viewModel<ChatViewModel> { ChatViewModel(get(), get()) }
     viewModel<FiltersViewModel> { FiltersViewModel() }
@@ -52,6 +51,7 @@ val appModule = module {
     viewModel<EditProfileViewModel> { EditProfileViewModel() }
     viewModel<SettingsViewModel> { SettingsViewModel() }
     viewModel<AddFandomViewModel> { AddFandomViewModel() }
+    viewModel<NewPostViewModel> { NewPostViewModel() }
 }
 
 val dataModule = module {
@@ -67,8 +67,7 @@ val domainModule = module {
 
     factory<GetUserIdUseCase> { GetUserIdUseCase(get(), get()) }
     factory<LoadSuggestedProfilesUseCase> { LoadSuggestedProfilesUseCase(get()) }
-    factory<LikeProfileUseCase> { LikeProfileUseCase(get()) }
-    factory<DislikeProfileUseCase> { DislikeProfileUseCase(get()) }
+    factory<LikeOrDislikeProfileUseCase> { LikeOrDislikeProfileUseCase(get()) }
 
     factory<LoadMessagesUseCase> { LoadMessagesUseCase(get()) }
     factory<SendMessageUseCase> { SendMessageUseCase(get()) }

@@ -38,6 +38,9 @@ sealed class ProfileEvent {
     data class MessageButtonClicked(val userId: Long?) : ProfileEvent()
     data object EditProfileButtonClicked : ProfileEvent()
     data object SettingsButtonClicked : ProfileEvent()
+    data object AddPostButtonClicked : ProfileEvent()
+    data class LikeButtonClicked(val profileId: Long) : ProfileEvent()
+    data class DislikeButtonClicked(val profileId: Long) : ProfileEvent()
     data object Clear : ProfileEvent()
 }
 
@@ -45,6 +48,8 @@ sealed class ProfileAction {
     data class GoToMessages(val userId: Long?) : ProfileAction()
     data object GoToEditProfile : ProfileAction()
     data object GoToSettings : ProfileAction()
+    data object GoToAddPost : ProfileAction()
+    data object GoToMatches : ProfileAction()
 }
 
 enum class ProfileType {

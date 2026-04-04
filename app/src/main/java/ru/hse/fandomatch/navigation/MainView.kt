@@ -4,6 +4,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -32,6 +34,7 @@ import ru.hse.fandomatch.ui.profile.ProfileScreen
 import ru.hse.fandomatch.ui.registration.RegistrationScreen
 import ru.hse.fandomatch.ui.settings.SettingsScreen
 import ru.hse.fandomatch.orFalse
+import ru.hse.fandomatch.ui.newpost.NewPostScreen
 
 sealed class Route(val route: String) {
     data object Authorization : Route("authorization")
@@ -57,6 +60,7 @@ sealed class Route(val route: String) {
     data object EditProfile : Route("edit_profile")
     data object Settings : Route("settings")
     data object AddFandom : Route("add_fandom")
+    data object NewPost : Route("new_post")
 }
 
 @Composable
@@ -176,7 +180,11 @@ fun MainView() {
             }
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
+        Box(modifier = Modifier
+            .padding(paddingValues)
+            .consumeWindowInsets(paddingValues)
+            .imePadding()
+        ) {
             NavHost(navController = navController, startDestination = Route.Intro.route) {
                 composable(Route.Intro.route) {
                     updateTopBar()
@@ -227,6 +235,16 @@ fun MainView() {
                         goToSettings = {
                             navigateToRoute(Route.Settings)
                         },
+                        goToAddPost = {
+                            navigateToRoute(Route.NewPost)
+                        },
+                        goToMatches = {
+                            /* do nothing */
+                            Log.d(
+                                "Navigation",
+                                "Impossible: go to matches from MyProfile"
+                            )
+                        }
                     )
                 }
                 composable(Route.ChatsList.route) {
@@ -263,6 +281,16 @@ fun MainView() {
                                 "Impossible: go to settings from other user's profile"
                             )
                         },
+                        goToAddPost = {
+                            /* do nothing */
+                            Log.d(
+                                "Navigation",
+                                "Impossible: go to add post from other user's profile"
+                            )
+                        },
+                        goToMatches = {
+                            navigateToRoute(Route.Matches)
+                        }
                     )
                 }
                 composable(Route.Chat.route) { backStackEntry ->
@@ -316,6 +344,11 @@ fun MainView() {
                     AddFandomScreen(
                         navigateBack = { navController.popBackStack() },
                     )
+                }
+                composable(Route.NewPost.route) {
+                    NewPostScreen(
+                        navigateToPreviousScreen = { navController.popBackStack() },
+                        setTopBarState = { topBarState.value = it },)
                 }
             }
         }
