@@ -62,8 +62,25 @@ fun timestampToTimeAgo(timestamp: Long, context: Context) : String {
 }
 
 fun Long.timestampToDateString(): String {
-    val dateTime = LocalDateTime.ofEpochSecond(this / 1000, 0, ZoneOffset.UTC)
+    val dateTime = toDateTime()
     return String.format("%02d.%02d.%04d", dateTime.dayOfMonth, dateTime.monthValue, dateTime.year)
+}
+
+fun Long.timestampToTimeString(): String {
+    val dateTime = toDateTime()
+    return String.format("%02d:%02d", dateTime.hour, dateTime.minute)
+}
+
+fun Long.isSameDayAs(other: Long): Boolean {
+    val dateTime1 = toDateTime()
+    val dateTime2 = other.toDateTime()
+    return dateTime1.year == dateTime2.year &&
+            dateTime1.monthValue == dateTime2.monthValue &&
+            dateTime1.dayOfMonth == dateTime2.dayOfMonth
+}
+
+private fun Long.toDateTime(): LocalDateTime {
+    return LocalDateTime.ofEpochSecond(this / 1000, 0, ZoneOffset.UTC)
 }
 
 fun Gender.stringId(): Int = when (this) {

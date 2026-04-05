@@ -156,16 +156,16 @@ class ChatViewModelTest {
         // Assert
         val state = viewModel.state.first() as ChatState.Main
 
-        assertEquals(3, state.messages.size)
+        assertEquals(3, state.uiElements.size)
 
-        assertEquals(message3, state.messages[0].first)
-        assertEquals(true, state.messages[0].second)
+        assertEquals(message3, state.uiElements[0].first)
+        assertEquals(true, state.uiElements[0].second)
 
-        assertEquals(message2, state.messages[1].first)
-        assertEquals(true, state.messages[1].second)
+        assertEquals(message2, state.uiElements[1].first)
+        assertEquals(true, state.uiElements[1].second)
 
-        assertEquals(message1, state.messages[2].first)
-        assertEquals(false, state.messages[2].second)
+        assertEquals(message1, state.uiElements[2].first)
+        assertEquals(false, state.uiElements[2].second)
     }
 
     @Test
@@ -202,10 +202,10 @@ class ChatViewModelTest {
         // Assert
         val state = viewModel.state.first() as ChatState.Main
 
-        assertEquals(2, state.messages.size)
+        assertEquals(2, state.uiElements.size)
 
-        val newMessage = state.messages[0].first
-        val newMessageNeedsTail = state.messages[0].second
+        val newMessage = state.uiElements[0].first
+        val newMessageNeedsTail = state.uiElements[0].second
 
         assertEquals(2L, newMessage.messageId)
         assertEquals(true, newMessage.isFromThisUser)
@@ -246,7 +246,7 @@ class ChatViewModelTest {
 
         // Assert
         val state = viewModel.state.first() as ChatState.Main
-        val previousMessageNeedsTail = state.messages[1].second
+        val previousMessageNeedsTail = state.uiElements[1].second
 
         assertEquals(false, previousMessageNeedsTail)
     }

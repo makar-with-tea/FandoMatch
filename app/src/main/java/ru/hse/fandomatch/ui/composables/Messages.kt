@@ -24,7 +24,9 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ru.hse.fandomatch.domain.model.Message
+import ru.hse.fandomatch.timestampToTimeString
 
 @Composable
 internal fun Message(
@@ -167,9 +169,17 @@ private fun MessageContent(
                     start = 8.dp,
                     end = 8.dp,
                     top = if (message.imageUrls.isEmpty()) 4.dp else 0.dp,
-                    bottom = 4.dp
                 )
             )
         }
+        Text(
+            text = message.timestamp.timestampToTimeString(),
+            fontSize = 10.sp,
+            lineHeight = 10.sp,
+            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+            modifier = Modifier
+                .align(Alignment.End)
+                .padding(horizontal = 4.dp)
+        )
     }
 }

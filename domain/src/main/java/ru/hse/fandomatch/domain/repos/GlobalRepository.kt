@@ -40,11 +40,11 @@ interface GlobalRepository {
         beforeTimestamp: Long?,
         size: Int,
     ): StateFlow<List<ChatPreview>>
-    suspend fun loadChatMessages(
+    suspend fun subscribeToChatMessages(
         userId: Long,
         beforeTimestamp: Long?,
         size: Int,
-    ): List<Message>
+    ): StateFlow<List<Message>>
     suspend fun loadChatInfo(userId: Long): Chat
     suspend fun sendMessage(
         receiverId: Long,

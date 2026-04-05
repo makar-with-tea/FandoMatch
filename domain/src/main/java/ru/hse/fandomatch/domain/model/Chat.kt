@@ -5,7 +5,6 @@ data class Chat(
     val participantId: Long,
     val participantName: String,
     val participantAvatarUrl: String?,
-    val messages: List<Message>,
 )
 
 data class ChatPreview(

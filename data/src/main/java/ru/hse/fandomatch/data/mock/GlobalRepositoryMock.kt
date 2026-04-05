@@ -21,100 +21,101 @@ class GlobalRepositoryMock: GlobalRepository {
         chatId = 1L,
         participantId = mockProfileCards[0].id,
         participantName = mockProfileCards[0].name,
-        participantAvatarUrl = mockProfileCards[0].avatarUrl,
-        messages = listOf(
-            Message(
-                messageId = 1L,
-                isFromThisUser = false,
-                content = "Привет! Как дела?",
-                timestamp = LocalDateTime.now().minusDays(2).toEpochSecond(ZoneOffset.UTC) * 1000,
-            ),
-            Message(
-                messageId = 2L,
-                isFromThisUser = true,
-                content = "Привет! Все хорошо, спасибо. А у тебя?",
-                timestamp = LocalDateTime.now().minusDays(2).plusMinutes(5)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-            ),
-            Message(
-                messageId = 3L,
-                isFromThisUser = false,
-                content = "Тоже отлично! Какие фандомы ты любишь?",
-                timestamp = LocalDateTime.now().minusDays(2).plusMinutes(10)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-            ),
-            Message(
-                messageId = 4L,
-                isFromThisUser = true,
-                content = "Я обожаю аниме, особенно One Piece! А ты?",
-                timestamp = LocalDateTime.now().minusDays(2).plusMinutes(15)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-            ),
-            Message(
-                messageId = 5L,
-                isFromThisUser = false,
-                content = "One Piece тоже мой любимый! А до какого момента ты досмотрел?",
-                timestamp = LocalDateTime.now().minusDays(2).plusMinutes(20)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-            ),
-            Message(
-                messageId = 6L,
-                isFromThisUser = true,
-                content = "Я сейчас на Whole Cake Island. Бедный Санжи :(",
-                timestamp = LocalDateTime.now().minusDays(2).plusMinutes(25)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-            ),
-            Message(
-                messageId = 7L,
-                isFromThisUser = false,
-                content = "Ооо, понимаю... Удачи тебе там))",
-                timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-            ),
-            Message(
-                messageId = 8L,
-                isFromThisUser = false,
-                content = "А я аниме уже досмотрела, сейчас читаю мангу",
-                timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-            ),
-            Message(
-                messageId = 9L,
-                isFromThisUser = false,
-                content = "Но хочу пересмотреть когда-нибудь заново)",
-                timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-                imageUrls = listOf("dzimbei", "luffy")
-            ),
-            Message(
-                messageId = 10L,
-                isFromThisUser = false,
-                content = "Там же столько деталей, которые можно упустить при первом просмотре",
-                timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-            ),
-            Message(
-                messageId = 11L,
-                isFromThisUser = false,
-                content = "Та же предыстория Санджи многое меняет в восприятии первых серий, где он появляется",
-                timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-            ),
-            Message(
-                messageId = 12L,
-                isFromThisUser = false,
-                content = "Ну и я просто хочу посмотреть на East Blue Луффи, он такой хаотичный котенок там))",
-                timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-            ),
-            Message(
-                messageId = 13L,
-                isFromThisUser = true,
-                content = "А может, как-нибудь посмотрим ван пис с начала вместе?",
-                timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-            )
+        participantAvatarUrl = mockProfileCards[0].avatarUrl
+    )
+    val mockMessages: MutableStateFlow<List<Message>> = MutableStateFlow(listOf(
+        Message(
+            messageId = 1L,
+            isFromThisUser = false,
+            content = "Привет! Как дела?",
+            timestamp = LocalDateTime.now().minusDays(2).toEpochSecond(ZoneOffset.UTC) * 1000,
         ),
+        Message(
+            messageId = 2L,
+            isFromThisUser = true,
+            content = "Привет! Все хорошо, спасибо. А у тебя?",
+            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(5)
+                .toEpochSecond(ZoneOffset.UTC) * 1000,
+        ),
+        Message(
+            messageId = 3L,
+            isFromThisUser = false,
+            content = "Тоже отлично! Какие фандомы ты любишь?",
+            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(10)
+                .toEpochSecond(ZoneOffset.UTC) * 1000,
+        ),
+        Message(
+            messageId = 4L,
+            isFromThisUser = true,
+            content = "Я обожаю аниме, особенно One Piece! А ты?",
+            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(15)
+                .toEpochSecond(ZoneOffset.UTC) * 1000,
+        ),
+        Message(
+            messageId = 5L,
+            isFromThisUser = false,
+            content = "One Piece тоже мой любимый! А до какого момента ты досмотрел?",
+            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(20)
+                .toEpochSecond(ZoneOffset.UTC) * 1000,
+        ),
+        Message(
+            messageId = 6L,
+            isFromThisUser = true,
+            content = "Я сейчас на Whole Cake Island. Бедный Санжи :(",
+            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(25)
+                .toEpochSecond(ZoneOffset.UTC) * 1000,
+        ),
+        Message(
+            messageId = 7L,
+            isFromThisUser = false,
+            content = "Ооо, понимаю... Удачи тебе там))",
+            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
+                .toEpochSecond(ZoneOffset.UTC) * 1000,
+        ),
+        Message(
+            messageId = 8L,
+            isFromThisUser = false,
+            content = "А я аниме уже досмотрела, сейчас читаю мангу",
+            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
+                .toEpochSecond(ZoneOffset.UTC) * 1000,
+        ),
+        Message(
+            messageId = 9L,
+            isFromThisUser = false,
+            content = "Но хочу пересмотреть когда-нибудь заново)",
+            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
+                .toEpochSecond(ZoneOffset.UTC) * 1000,
+            imageUrls = listOf("dzimbei", "luffy")
+        ),
+        Message(
+            messageId = 10L,
+            isFromThisUser = false,
+            content = "Там же столько деталей, которые можно упустить при первом просмотре",
+            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
+                .toEpochSecond(ZoneOffset.UTC) * 1000,
+        ),
+        Message(
+            messageId = 11L,
+            isFromThisUser = false,
+            content = "Та же предыстория Санджи многое меняет в восприятии первых серий, где он появляется",
+            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
+                .toEpochSecond(ZoneOffset.UTC) * 1000,
+        ),
+        Message(
+            messageId = 12L,
+            isFromThisUser = false,
+            content = "Ну и я просто хочу посмотреть на East Blue Луффи, он такой хаотичный котенок там))",
+            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
+                .toEpochSecond(ZoneOffset.UTC) * 1000,
+        ),
+        Message(
+            messageId = 13L,
+            isFromThisUser = true,
+            content = "А может, как-нибудь посмотрим ван пис с начала вместе?",
+            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
+                .toEpochSecond(ZoneOffset.UTC) * 1000,
+        )
+    )
     )
 
     var mockChatPreviews = MutableStateFlow(
@@ -153,9 +154,9 @@ class GlobalRepositoryMock: GlobalRepository {
                 chatId = 1L,
                 participantName = mockProfileCards[0].name,
                 participantAvatarUrl = mockProfileCards[0].avatarUrl,
-                lastMessage = mockChat.messages[mockChat.messages.size - 1].content,
-                isLastMessageFromThisUser = mockChat.messages[mockChat.messages.size - 1].isFromThisUser,
-                lastMessageTimestamp = mockChat.messages[mockChat.messages.size - 1].timestamp,
+                lastMessage = mockMessages.value[mockMessages.value.size - 1].content,
+                isLastMessageFromThisUser = mockMessages.value[mockMessages.value.size - 1].isFromThisUser,
+                lastMessageTimestamp = mockMessages.value[mockMessages.value.size - 1].timestamp,
                 newMessagesCount = 0,
             ),
             ChatPreview(
@@ -251,7 +252,10 @@ class GlobalRepositoryMock: GlobalRepository {
     }
 
     override suspend fun likeOrDislikeProfile(userId: Long, profileId: Long, isLike: Boolean) {
-        Log.d("GlobalRepositoryMock", "likeProfile: user $userId ${if (isLike) "" else "dis"}liked profile $profileId")
+        Log.d(
+            "GlobalRepositoryMock",
+            "likeProfile: user $userId ${if (isLike) "" else "dis"}liked profile $profileId"
+        )
     }
 
     override suspend fun subscribeToChatPreviews(
@@ -263,26 +267,27 @@ class GlobalRepositoryMock: GlobalRepository {
         }
     }
 
-    override suspend fun loadChatMessages(
+    override suspend fun subscribeToChatMessages(
         userId: Long,
         beforeTimestamp: Long?,
         size: Int
-    ): List<Message> {
-        val messages = if (beforeTimestamp == null) {
-            mockChat.messages
-        } else {
-            mockChat.messages.filter { it.timestamp < beforeTimestamp }
-        }
-        val result = messages
-            .sortedByDescending { it.timestamp }
-            .take(size)
-            .also {
-                Log.d(
-                    "GlobalRepositoryMock",
-                    "loadChatMessages: returned <= ${it.size} messages for userId $userId before $beforeTimestamp"
-                )
-            }
-        return result
+    ): StateFlow<List<Message>> {
+//        val messages = if (beforeTimestamp == null) {
+//            mockMessages.value
+//        } else {
+//            mockMessages.value.filter { it.timestamp < beforeTimestamp }
+//        }
+//        val result = messages
+//            .sortedByDescending { it.timestamp }
+//            .take(size)
+//            .also {
+//                Log.d(
+//                    "GlobalRepositoryMock",
+//                    "loadChatMessages: returned <= ${it.size} messages for userId $userId before $beforeTimestamp"
+//                )
+//            }
+//        mockMessages.value = result todo пагинация
+        return mockMessages
     }
 
     override suspend fun loadChatInfo(userId: Long): Chat {
@@ -296,15 +301,13 @@ class GlobalRepositoryMock: GlobalRepository {
         images: List<ByteArray>,
         timestamp: Long
     ) {
-        mockChat = mockChat.copy(
-            messages = mockChat.messages + Message(
-                messageId = mockChat.messages.size.toLong() + 1,
-                isFromThisUser = true,
-                content = content,
-                imageUrls = images.map { "luffy" }, // todo upload images and get urls
-                timestamp = timestamp,
-            )
-        )
+        mockMessages.value += Message(
+                    messageId = mockMessages.value.size.toLong() + 1,
+                    isFromThisUser = true,
+                    content = content,
+                    imageUrls = images.map { "luffy" }, // todo upload images and get urls
+                    timestamp = timestamp,
+                )
 
         mockChatPreviews.value = mockChatPreviews.value.map {
             if (it.participantName == mockChat.participantName) {
