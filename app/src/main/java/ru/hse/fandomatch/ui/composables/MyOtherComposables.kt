@@ -357,40 +357,46 @@ fun AvatarAndNameBlock(
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.secondaryContainer,
     avatarSize: Dp = 44.dp,
+    onClick: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .background(backgroundColor),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        RawImageOrPlaceholder(
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .padding(start = 4.dp, top = 2.dp, bottom = 2.dp, end = 8.dp)
-                .size(avatarSize)
-                .clip(CircleShape),
-            url = avatarUrl,
-            placeholderId = R.drawable.ic_account_placeholder,
-            context = LocalContext.current,
-        )
-
-        Column {
-            Text(
-                text = name,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                .clickable(enabled = onClick != null) { onClick?.invoke() }
+        ) {
+            RawImageOrPlaceholder(
+                modifier = Modifier
+                    .padding(start = 4.dp, top = 2.dp, bottom = 2.dp, end = 8.dp)
+                    .size(avatarSize)
+                    .clip(CircleShape),
+                url = avatarUrl,
+                placeholderId = R.drawable.ic_account_placeholder,
+                context = LocalContext.current,
             )
 
-            login?.let {
+            Column {
                 Text(
-                    text = it,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                    text = name,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+
+                login?.let {
+                    Text(
+                        text = it,
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
     }

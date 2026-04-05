@@ -33,22 +33,23 @@ class ChatViewModel(
         Log.i("ChatViewModel", "Obtained event: $event")
         when (event) {
             ChatEvent.Clear -> clear()
-            is ChatEvent.LoadChat -> loadChat(event.userId)
+            is ChatEvent.LoadChat -> loadChat(event.profileId)
             is ChatEvent.SendMessage -> sendMessage(event.message, event.images, event.timestamp)
+            is ChatEvent.ProfileClicked -> goToProfile()
         }
     }
 
-    private fun loadChat(userId: Long?) {
+    private fun loadChat(profileId: Long?) {
         _state.value = ChatState.Loading
         // todo
-        if (userId == null) {
+        if (profileId == null) {
             _state.value = ChatState.Error
             return
         }
         viewModelScope.launch(dispatcherIO) {
             delay(1000)
-            val chat = loadChatInfoUseCase.execute(userId = userId)
-            _messages = subscribeToChatMessagesUseCase.execute(userId = userId)
+            val chat = loadChatInfoUseCase.execute(userId = profileId)
+            _messages = subscribeToChatMessagesUseCase.execute(userId = profileId)
             _state.value = ChatState.Main(
                 chatId = chat.chatId,
                 participantId = chat.participantId,
@@ -84,6 +85,15 @@ class ChatViewModel(
                 }
             }
 
+            else -> Unit
+        }
+    }
+
+    private fun goToProfile() {
+        when (val currentState = _state.value) {
+            is ChatState.Main -> _action.value = ChatAction.GoToProfile(
+                profileId = currentState.participantId
+            )
             else -> Unit
         }
     }

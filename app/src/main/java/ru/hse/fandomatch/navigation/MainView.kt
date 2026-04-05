@@ -296,8 +296,14 @@ fun MainView() {
                 composable(Route.Chat.route) { backStackEntry ->
                     val chatId = backStackEntry.arguments?.getString("chat_id")?.toLongOrNull()
                     ChatScreen(
-                        userId = chatId,
+                        profileId = chatId,
                         setTopBarState = { topBarState.value = it },
+                        goToProfile = { profileId ->
+                            Log.d("Navigation", "Navigate to profile $profileId from chat")
+                            navigateToRouteWithArgs(
+                                Route.Profile.createRoute(profileId)
+                            )
+                        },
                     )
                 }
                 composable(Route.Filters.route) {

@@ -28,12 +28,14 @@ sealed class ChatEvent {
         val timestamp: Long,
     ) : ChatEvent()
     data class LoadChat(
-        val userId: Long?,
+        val profileId: Long?,
     ) : ChatEvent()
+    data object ProfileClicked: ChatEvent()
     data object Clear : ChatEvent()
 }
 
 sealed class ChatAction {
+    data class GoToProfile(val profileId: Long) : ChatAction()
 }
 
 sealed class ChatUiElement {

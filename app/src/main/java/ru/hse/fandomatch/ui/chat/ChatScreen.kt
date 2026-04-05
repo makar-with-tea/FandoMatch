@@ -9,6 +9,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,30 +49,35 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
+import ru.hse.fandomatch.MAX_NUMBER_OF_ATTACHMENTS
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.getBytesFromUri
+import ru.hse.fandomatch.navigation.EndIconState
+import ru.hse.fandomatch.navigation.TopBarState
+import ru.hse.fandomatch.ui.composables.AttachmentsRow
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.ImagesScreen
 import ru.hse.fandomatch.ui.composables.Message
 import ru.hse.fandomatch.ui.composables.SkeletonView
-import ru.hse.fandomatch.navigation.EndIconState
-import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.MAX_NUMBER_OF_ATTACHMENTS
-import ru.hse.fandomatch.getBytesFromUri
-import ru.hse.fandomatch.ui.composables.AttachmentsRow
 import java.time.LocalDateTime
-import kotlin.collections.emptyList
 
 @Composable
 fun ChatScreen(
-    userId: Long?,
+    profileId: Long?,
     setTopBarState: (TopBarState?) -> Unit,
+    goToProfile: (Long) -> Unit,
     viewModel: ChatViewModel = koinViewModel(),
 ) {
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
 
     when (val action = action.value) {
-        null -> {}
+        is ChatAction.GoToProfile -> {
+            goToProfile(action.profileId)
+            viewModel.obtainEvent(ChatEvent.Clear)
+        }
+
+        null -> Unit
     }
 
     Log.d("ChatScreen", "State: $state")
@@ -88,12 +94,15 @@ fun ChatScreen(
                         timestamp = LocalDateTime.now().toEpochSecond(java.time.ZoneOffset.UTC)
                     )
                 )
+            },
+            onClickProfile = {
+                viewModel.obtainEvent(ChatEvent.ProfileClicked)
             }
         )
 
         is ChatState.Idle -> {
             IdleState()
-            viewModel.obtainEvent(ChatEvent.LoadChat(userId))
+            viewModel.obtainEvent(ChatEvent.LoadChat(profileId))
         }
 
         is ChatState.Loading -> LoadingState()
@@ -107,14 +116,16 @@ private fun MainState(
     state: ChatState.Main,
     setTopBarState: (TopBarState?) -> Unit,
     onSendMessage: (String, List<ByteArray>) -> Unit,
+    onClickProfile: () -> Unit,
 ) {
     setTopBarState(
         TopBarState(
-            titleContent = @Composable {
+            titleContent = {
                 AvatarAndNameBlock(
                     name = state.participantName,
                     avatarUrl = state.participantAvatarUrl,
                     login = null,
+                    onClick = { onClickProfile() },
                 )
             },
             endIcons = listOf(
