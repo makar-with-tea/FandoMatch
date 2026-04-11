@@ -28,6 +28,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Female
+import androidx.compose.material.icons.filled.Male
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -66,6 +69,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.domain.model.City
+import ru.hse.fandomatch.domain.model.Gender
+import ru.hse.fandomatch.getName
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.rawResId
 
@@ -481,6 +487,48 @@ fun MyFloatingButton(
             imageVector = icon,
             contentDescription = contentDescription,
             tint = MaterialTheme.colorScheme.onTertiaryContainer,
+        )
+    }
+}
+
+@Composable
+fun CityAndGenderText(
+    city: City?,
+    gender: Gender,
+    modifier: Modifier = Modifier,
+    color: Color,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val cityText = city?.getName() ?: stringResource(R.string.profile_no_city)
+        Text(
+            text = "$cityText,",
+            color = color,
+        )
+
+        val genderIcon = when (gender) {
+            Gender.FEMALE -> Icons.Default.Female
+            Gender.MALE -> Icons.Default.Male
+            Gender.NOT_SPECIFIED -> null
+        }
+        val genderText = when (gender) {
+            Gender.FEMALE -> R.string.gender_female_icon_description
+            Gender.MALE -> R.string.gender_male_icon_description
+            Gender.NOT_SPECIFIED -> R.string.gender_not_specified_icon_description
+        }
+        genderIcon?.let {
+            Icon(
+                modifier = Modifier
+                    .size(16.dp),
+                imageVector = genderIcon,
+                tint = color,
+                contentDescription = stringResource(genderText)
+            )
+        } ?: Text(
+            text = stringResource(genderText),
+            color = color,
         )
     }
 }

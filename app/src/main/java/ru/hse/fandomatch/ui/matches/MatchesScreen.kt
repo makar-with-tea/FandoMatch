@@ -137,7 +137,8 @@ fun MainStatePreview() {
                 ),
                 description = "Luffy is my hero!",
                 compatibilityPercentage = 85,
-                gender = Gender.FEMALE
+                gender = Gender.FEMALE,
+                city = null,
             )
         ),
         isLoading = false,

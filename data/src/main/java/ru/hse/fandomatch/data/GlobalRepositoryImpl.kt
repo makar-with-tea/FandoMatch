@@ -191,6 +191,12 @@ class GlobalRepositoryImpl(
                     fandoms = emptyList(), // todo даша
                     gender = Gender.FEMALE, // todo даша
                     compatibilityPercentage = candidateDTO.compatibility!!,
+                    city = candidateDTO.city?.let {
+                        City(
+                            nameRussian = it,
+                            nameEnglish = it
+                        ) // todo даша
+                    }
                 )
             }
         } else {

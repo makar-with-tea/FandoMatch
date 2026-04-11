@@ -105,12 +105,21 @@ val mockProfileCards = listOf(
     ProfileCard(
         id = "12345",
         fandoms = mockFandoms,
-        description = "Я люблю аниме и музыку :3",
+        description = """
+            Я люблю аниме и музыку :3
+            А еще длинные описания))
+            Особенно такие, многострочные, чтобы в высоту много места занимали. Но и в ширину тоже можно, я не против, конечно.
+            Так вот, вы не хотите поговорить о ван писе? Там пираты, приключения и свержение коррумпированного мирового правительства, здорово, правда?
+        """.trimIndent(),
         name = "Алиса",
         gender = Gender.FEMALE,
         avatarUrl = "luffy",
         age = 21,
         compatibilityPercentage = 95,
+        city = City(
+            nameRussian = "Москва",
+            nameEnglish = "Moscow",
+        ),
     ),
     ProfileCard(
         id = "67890",
@@ -121,6 +130,10 @@ val mockProfileCards = listOf(
         avatarUrl = "peace_was_never_an_option",
         age = 17,
         compatibilityPercentage = 80,
+        city = City(
+            nameRussian = "Москва",
+            nameEnglish = "Moscow",
+        ),
     ),
     ProfileCard(
         id = "11223",
@@ -131,6 +144,7 @@ val mockProfileCards = listOf(
         avatarUrl = "pet_the_forbidden_dog",
         age = 25,
         compatibilityPercentage = 70,
+        city = null,
     ),
     ProfileCard(
         id = "44556",
@@ -141,6 +155,7 @@ val mockProfileCards = listOf(
         avatarUrl = "ne_poluchaetsya",
         age = 30,
         compatibilityPercentage = 60,
+        city = null,
     ),
     ProfileCard(
         id = "44557",
@@ -151,6 +166,10 @@ val mockProfileCards = listOf(
         avatarUrl = "lidros",
         age = 21,
         compatibilityPercentage = 60,
+        city = City(
+            nameRussian = "Санкт-Петербург",
+            nameEnglish = "Saint Petersburg",
+        ),
     ),
 )
 
@@ -164,10 +183,7 @@ val mockUsers = mockProfileCards.map {
         age = it.age,
         avatarUrl = it.avatarUrl,
         backgroundUrl = "what_is_written_here",
-        city = City(
-            nameRussian = "Москва",
-            nameEnglish = "Moscow",
-        ),
+        city = it.city,
         profileType = when (it.id) {
             "12345" -> ProfileType.Friend("alice")
             "44556" -> ProfileType.Friend("dana")

@@ -62,6 +62,7 @@ import ru.hse.fandomatch.stringId
 import ru.hse.fandomatch.timestampToDateString
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.AvatarWithBackground
+import ru.hse.fandomatch.ui.composables.CityAndGenderText
 import ru.hse.fandomatch.ui.composables.ExpandableText
 import ru.hse.fandomatch.ui.composables.FandomCarouselWithDropdown
 import ru.hse.fandomatch.ui.composables.FeedPost
@@ -263,39 +264,11 @@ private fun MainState(
                             text = "${state.name}, ${state.age}",
                             padding = 0.dp
                         )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            val cityText =
-                                state.city?.getName() ?: stringResource(R.string.profile_no_city)
-                            Text(
-                                text = "$cityText,",
-                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f),
-                            )
-
-                            val genderIcon = when (state.gender) {
-                                Gender.FEMALE -> Icons.Default.Female
-                                Gender.MALE -> Icons.Default.Male
-                                Gender.NOT_SPECIFIED -> null
-                            }
-                            val genderText = when (state.gender) {
-                                Gender.FEMALE -> R.string.gender_female_icon_description
-                                Gender.MALE -> R.string.gender_male_icon_description
-                                Gender.NOT_SPECIFIED -> R.string.gender_not_specified_icon_description
-                            }
-                            genderIcon?.let {
-                                Icon(
-                                    modifier = Modifier
-                                        .size(16.dp),
-                                    imageVector = genderIcon,
-                                    tint = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f),
-                                    contentDescription = stringResource(genderText)
-                                )
-                            } ?: Text(
-                                text = stringResource(genderText),
-                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f),
-                            )
-                        }
+                        CityAndGenderText(
+                            city = state.city,
+                            gender = state.gender,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.7f)
+                        )
 
                         Spacer(modifier = Modifier.height(4.dp))
                         FandomCarouselWithDropdown(
