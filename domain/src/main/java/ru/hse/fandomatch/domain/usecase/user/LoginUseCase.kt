@@ -9,7 +9,8 @@ class LoginUseCase(
 ) {
     suspend fun execute(login: String, password: String) {
         val res = globalRepository.login(login, password)
-        sharedPrefRepository.saveUser(login)
+
+        sharedPrefRepository.saveUserId(res.userId)
         sharedPrefRepository.saveToken(res.accessToken)
         sharedPrefRepository.saveRefreshToken(res.refreshToken)
     }

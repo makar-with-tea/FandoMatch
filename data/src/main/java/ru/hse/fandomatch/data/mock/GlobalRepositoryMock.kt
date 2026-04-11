@@ -14,7 +14,8 @@ import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.ProfileType
-import ru.hse.fandomatch.domain.model.Token
+import ru.hse.fandomatch.domain.model.AuthInfo
+import ru.hse.fandomatch.domain.model.OtherProfileItem
 import ru.hse.fandomatch.domain.model.User
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import java.time.LocalDateTime
@@ -176,19 +177,19 @@ class GlobalRepositoryMock: GlobalRepository {
         )
     )
 
-    override suspend fun getUserInfo(login: String): User? {
-        val result = (mockUsers + mockUser).find { (it.profileType as? ProfileType.Friend)?.login == login } // todo
+    override suspend fun getUser(profileId: String): User? {
+        val result = (mockUsers + mockUser).find { it.id == profileId } // todo
         return result.also {
-            Log.d("GlobalRepositoryMock", "getUserInfo: $it")
+            Log.d("GlobalRepositoryMock", "getUser: $it")
         }
     }
 
     override suspend fun login(
         login: String,
         password: String
-    ): Token {
+    ): AuthInfo {
         if (login == (mockUser.profileType as ProfileType.Own).login && password == mockPassword)
-            return mockToken.also {
+            return mockAuthInfo.also {
                 Log.d("GlobalRepositoryMock", "login: successful for user $login")
             }
         else throw InvalidCredentialsException().also {
@@ -204,7 +205,7 @@ class GlobalRepositoryMock: GlobalRepository {
         gender: Gender,
         avatarByteArray: ByteArray?,
         password: String
-    ): Token {
+    ): AuthInfo {
         mockUser = mockUser.copy(
             name = name,
             age = ((System.currentTimeMillis() - dateOfBirthMillis) / (1000L * 60 * 60 * 24 * 365)).toInt(),
@@ -214,7 +215,7 @@ class GlobalRepositoryMock: GlobalRepository {
                 login = login,
             )
         )
-        return mockToken.also {
+        return mockAuthInfo.also {
             Log.d("GlobalRepositoryMock", "register: successful for user $login")
         }
     }
@@ -244,6 +245,44 @@ class GlobalRepositoryMock: GlobalRepository {
                 "checkPassword: ${if (it) "valid" else "invalid"} for user $login"
             )
         }
+    }
+
+    override suspend fun getFriends(): List<OtherProfileItem> {
+        return mockUsers
+            .filter { it.profileType is ProfileType.Friend }
+            .map {
+                OtherProfileItem(
+                    id = it.id,
+                    name = it.name,
+                    login = (it.profileType as ProfileType.Friend).login,
+                    avatarUrl = it.avatarUrl,
+                )
+            }
+            .also {
+                Log.d(
+                    "GlobalRepositoryMock",
+                    "getFriends: returned ${it.size} friends"
+                )
+            }
+    }
+
+    override suspend fun getFriendRequests(): List<OtherProfileItem> {
+        return mockUsers
+            .filter { it.profileType is ProfileType.Stranger }
+            .map {
+                OtherProfileItem(
+                    id = it.id,
+                    name = it.name,
+                    login = null,
+                    avatarUrl = it.avatarUrl,
+                )
+            }
+            .also {
+                Log.d(
+                    "GlobalRepositoryMock",
+                    "getFriendRequests: returned ${it.size} friend requests"
+                )
+            }
     }
 
     override suspend fun getSuggestedProfiles(size: Int): List<ProfileCard> {
@@ -362,6 +401,25 @@ class GlobalRepositoryMock: GlobalRepository {
                 )
             }
         return result
+    }
+
+    override suspend fun getUserPosts(
+        userId: String,
+        beforeTimestamp: Long?,
+        size: Int
+    ): List<Post> {
+        val user = (mockUsers + mockUser).find { it.id == userId } ?: return emptyList()
+        val type = user.profileType
+        val userPosts = (mockPosts + mockUserPosts).filter { it.authorId == userId }
+        var posts = if (beforeTimestamp == null) {
+            userPosts
+        } else {
+            userPosts.filter { it.timestamp < beforeTimestamp }
+        }
+        if (type is ProfileType.Stranger) {
+            posts = posts.map { it.copy(authorLogin = null) }
+        }
+        return posts
     }
 
     override suspend fun getFandomCategories(): List<FandomCategory> {

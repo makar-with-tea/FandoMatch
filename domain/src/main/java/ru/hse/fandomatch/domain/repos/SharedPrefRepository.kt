@@ -1,8 +1,6 @@
 package ru.hse.fandomatch.domain.repos
 
 interface SharedPrefRepository {
-    suspend fun saveUser(username: String)
-    suspend fun getUser(): String?
     suspend fun saveUserId(id: String)
     suspend fun getUserId(): String?
     suspend fun clearInfo()

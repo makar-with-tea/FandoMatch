@@ -27,7 +27,7 @@ class RegisterUseCase(
             avatarByteArray = avatarByteArray,
             password = password
         )
-        sharedPrefRepository.saveUser(login)
+        sharedPrefRepository.saveUserId(res.userId)
         sharedPrefRepository.saveToken(res.accessToken)
         sharedPrefRepository.saveRefreshToken(res.refreshToken)
     }

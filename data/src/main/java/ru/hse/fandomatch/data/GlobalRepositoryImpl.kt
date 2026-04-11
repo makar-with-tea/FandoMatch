@@ -11,6 +11,7 @@ import ru.hse.fandomatch.data.model.MatchActionRequestDTO
 import ru.hse.fandomatch.data.model.MatchActionTypeDTO
 import ru.hse.fandomatch.data.model.MatchBatchRequestDTO
 import ru.hse.fandomatch.data.model.MatchFilterRequestDTO
+import ru.hse.fandomatch.data.model.PostsGetRequestDTO
 import ru.hse.fandomatch.data.model.PublicUserProfileResponseDTO
 import ru.hse.fandomatch.data.model.UserProfileRequestDTO
 import ru.hse.fandomatch.domain.model.Chat
@@ -23,7 +24,8 @@ import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.ProfileType
-import ru.hse.fandomatch.domain.model.Token
+import ru.hse.fandomatch.domain.model.AuthInfo
+import ru.hse.fandomatch.domain.model.OtherProfileItem
 import ru.hse.fandomatch.domain.model.User
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import kotlin.String
@@ -31,11 +33,11 @@ import kotlin.String
 class GlobalRepositoryImpl(
     private val apiService: CoreApiService
 ): GlobalRepository {
-    override suspend fun getUserInfo(login: String): User? {
+    override suspend fun getUser(profileId: String): User? {
         try {
             val response = apiService.getUserProfile(
                 UserProfileRequestDTO(
-                    login
+                    profileId
                 )
             )
             val user = response.successResponse?.let { userDTO ->
@@ -55,7 +57,7 @@ class GlobalRepositoryImpl(
                                 nameEnglish = it
                             ) // todo даша
                         },
-                        profileType = ProfileType.Friend(login = login)
+                        profileType = ProfileType.Friend(login = "") // todo даша
                     )
 
                     is FullUserProfileResponseDTO -> User(
@@ -75,7 +77,7 @@ class GlobalRepositoryImpl(
                             ) // todo даша
                         },
                         profileType = ProfileType.Own(
-                            login = login,
+                            login = "", // todo даша
                             email = userDTO.email ?: ""
                         ) // todo даша
                     )
@@ -111,7 +113,7 @@ class GlobalRepositoryImpl(
     override suspend fun login(
         login: String,
         password: String
-    ): Token {
+    ): AuthInfo {
         TODO("Not yet implemented")
     }
 
@@ -123,7 +125,7 @@ class GlobalRepositoryImpl(
         gender: Gender,
         avatarByteArray: ByteArray?,
         password: String
-    ): Token {
+    ): AuthInfo {
         TODO("Not yet implemented")
     }
 
@@ -160,6 +162,14 @@ class GlobalRepositoryImpl(
         login: String,
         password: String
     ): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getFriends(): List<OtherProfileItem> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getFriendRequests(): List<OtherProfileItem> {
         TODO("Not yet implemented")
     }
 
@@ -254,6 +264,35 @@ class GlobalRepositoryImpl(
         val response = apiService.getFeed(
             page = 0,
             size = size
+        )
+        return response.successResponse?.posts?.map { postDTO ->
+            Post(
+                id = postDTO.id,
+                authorId = TODO(),
+                authorName = TODO(),
+                authorLogin = TODO(),
+                authorAvatarUrl = TODO(),
+                timestamp = TODO(),
+                content = postDTO.content,
+                imageUrls = TODO(),
+                likeCount = TODO(),
+                commentCount = TODO(),
+                isLikedByCurrentUser = TODO()
+            )
+        } ?: emptyList()
+    }
+
+    override suspend fun getUserPosts(
+        userId: String,
+        beforeTimestamp: Long?,
+        size: Int
+    ): List<Post> {
+        val response = apiService.getPosts(
+            PostsGetRequestDTO(
+                username = userId, // todo даша
+                page = 0, // todo даша
+                size = size
+            )
         )
         return response.successResponse?.posts?.map { postDTO ->
             Post(

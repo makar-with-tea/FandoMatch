@@ -73,9 +73,10 @@ import ru.hse.fandomatch.rawResId
 fun MyTitle(
     text: String,
     modifier: Modifier = Modifier,
+    padding: Dp = 8.dp,
 ) {
     Text(
-        modifier = modifier.padding(8.dp),
+        modifier = modifier.padding(padding),
         text = text,
         fontWeight = FontWeight.Bold,
         fontSize = 24.sp
@@ -254,7 +255,13 @@ fun AvatarWithBackground(
                 }
             }
 
-            Box {
+            Box(
+                modifier = Modifier
+                    .size(128.dp)
+                    .offset(y = 30.dp)
+                    .background(backgroundColor, shape = CircleShape)
+                    .padding(4.dp),
+            ) {
                 RawImageOrPlaceholder(
                     url = avatarUrl,
                     context = LocalContext.current,
@@ -262,17 +269,14 @@ fun AvatarWithBackground(
                     modifier = Modifier
                         .size(120.dp)
                         .aspectRatio(1f)
-                        .offset(y = 30.dp)
                         .clip(CircleShape)
-                        .background(backgroundColor)
-                        .border(4.dp, backgroundColor, CircleShape),
+                        .background(backgroundColor),
                 )
                 if (onEditAvatar != null) {
                     IconButton(
                         onClick = onEditAvatar,
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .offset(y = 30.dp)
                             .size(24.dp)
                             .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f), shape = CircleShape)
                     ) {

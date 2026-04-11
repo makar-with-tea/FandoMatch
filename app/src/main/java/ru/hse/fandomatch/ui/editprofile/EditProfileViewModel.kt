@@ -39,7 +39,7 @@ class EditProfileViewModel(
             EditProfileEvent.AddFandomButtonClicked -> goToAddFandom()
             is EditProfileEvent.AvatarChanged -> updateAvatar(event.avatar)
             is EditProfileEvent.BackgroundChanged -> updateBackground(event.background)
-            is EditProfileEvent.CityChanged -> updateCity(event.city)
+            is EditProfileEvent.CityChanged -> updateCity(event.cityName)
             is EditProfileEvent.DescriptionChanged -> updateDescription(event.description)
             is EditProfileEvent.FandomAdded -> addFandom(event.fandom)
             is EditProfileEvent.FandomRemoved -> removeFandom(event.fandom)
@@ -84,16 +84,17 @@ class EditProfileViewModel(
     }
 
 
-    private fun updateCity(city: String) {
+    private fun updateCity(cityName: String) {
         val currentState = _state.value
         if (currentState is EditProfileState.Main) {
             // todo get cities from backend and handle error
             val cityNames = mockCities.map(City::nameRussian) + mockCities.map(City::nameEnglish)
             val cityError = when {
-                city.isBlank() -> EditProfileState.EditProfileError.IDLE
-                city !in cityNames -> EditProfileState.EditProfileError.CITY_NOT_FOUND
+                cityName.isBlank() -> EditProfileState.EditProfileError.IDLE
+                cityName !in cityNames -> EditProfileState.EditProfileError.CITY_NOT_FOUND
                 else -> EditProfileState.EditProfileError.IDLE
             }
+            val city = mockCities.find { it.nameRussian.equals(cityName, ignoreCase = true) || it.nameEnglish.equals(cityName, ignoreCase = true) }
             _state.value = currentState.copy(
                 city = city,
                 cityError = cityError,
@@ -180,7 +181,7 @@ class EditProfileViewModel(
                 fandoms = user.fandoms,
                 foundFandoms = emptyList(),
                 areFandomsLoading = false,
-                city = user.city?.getName(),
+                city = user.city,
             )
         }
     }
@@ -196,7 +197,7 @@ class EditProfileViewModel(
                     avatarUrl = currentState.avatarUrl,
                     backgroundUrl = currentState.backgroundUrl,
                     fandoms = currentState.fandoms,
-                    city = currentState.city?.let { City(it, it) },
+                    city = currentState.city,
                 )
                 delay(1000)
                 // todo save data + handle error (do not navigate back if error occurred)
@@ -211,6 +212,3 @@ class EditProfileViewModel(
         _action.value = null
     }
 }
-
-internal const val MIN_AGE_IN_YEARS = 16
-internal const val MAX_AGE_IN_YEARS = 40

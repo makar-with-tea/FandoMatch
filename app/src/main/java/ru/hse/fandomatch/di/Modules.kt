@@ -8,7 +8,6 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import ru.hse.fandomatch.data.AuthInterceptor
-import ru.hse.fandomatch.data.GlobalRepositoryImpl
 import ru.hse.fandomatch.data.SharedPrefRepositoryImpl
 import ru.hse.fandomatch.data.api.CoreApiService
 import ru.hse.fandomatch.data.mock.GlobalRepositoryMock
@@ -17,14 +16,17 @@ import ru.hse.fandomatch.data.serialization.BaseUserProfileDeserializer
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
-import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
+import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
 import ru.hse.fandomatch.domain.usecase.feed.GetFeedUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LoadSuggestedProfilesUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetFriendRequestsUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetFriendsUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetPastLoginUseCase
-import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetUserPostsUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.RegisterUseCase
 import ru.hse.fandomatch.ui.addfandom.AddFandomViewModel
@@ -51,7 +53,13 @@ val appModule = module {
             likeOrDislikeProfileUseCase = get(),
         )
     }
-    viewModel<ProfileViewModel> { ProfileViewModel(get(), get()) }
+    viewModel<ProfileViewModel> { ProfileViewModel(
+        getUserUseCase = get(),
+        likeOrDislikeProfileUseCase = get(),
+        getUserPostsUseCase = get(),
+        getFriendsUseCase = get(),
+        getFriendRequestsUseCase = get(),
+    ) }
     viewModel<ChatsListViewModel> { ChatsListViewModel(get()) }
     viewModel<ChatViewModel> { ChatViewModel(get(), get(), get()) }
     viewModel<FiltersViewModel> { FiltersViewModel() }
@@ -99,9 +107,12 @@ val domainModule = module {
     factory<GetPastLoginUseCase> { GetPastLoginUseCase(get()) }
     factory<RegisterUseCase> { RegisterUseCase(get(), get()) }
 
-    factory<GetUserIdUseCase> { GetUserIdUseCase(get(), get()) }
+    factory<GetUserUseCase> { GetUserUseCase(get(), get()) }
     factory<LoadSuggestedProfilesUseCase> { LoadSuggestedProfilesUseCase(get()) }
     factory<LikeOrDislikeProfileUseCase> { LikeOrDislikeProfileUseCase(get()) }
+    factory<GetUserPostsUseCase> { GetUserPostsUseCase(get(), get()) }
+    factory<GetFriendsUseCase> { GetFriendsUseCase(get()) }
+    factory<GetFriendRequestsUseCase> { GetFriendRequestsUseCase(get()) }
 
     factory<SubscribeToChatMessagesUseCase> { SubscribeToChatMessagesUseCase(get()) }
     factory<SendMessageUseCase> { SendMessageUseCase(get()) }

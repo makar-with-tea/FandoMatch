@@ -10,13 +10,14 @@ import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
-import ru.hse.fandomatch.domain.model.Token
+import ru.hse.fandomatch.domain.model.AuthInfo
+import ru.hse.fandomatch.domain.model.OtherProfileItem
 import ru.hse.fandomatch.domain.model.User
 
 interface GlobalRepository {
     // User
-    suspend fun getUserInfo(login: String): User?
-    suspend fun login(login: String, password: String): Token
+    suspend fun getUser(profileId: String): User?
+    suspend fun login(login: String, password: String): AuthInfo
     suspend fun register(
         name: String,
         email: String,
@@ -25,7 +26,7 @@ interface GlobalRepository {
         gender: Gender,
         avatarByteArray: ByteArray?,
         password: String
-    ): Token // todo
+    ): AuthInfo // todo
 
     suspend fun updateUser(
         name: String,
@@ -38,6 +39,8 @@ interface GlobalRepository {
 
     suspend fun deleteUser(login: String)
     suspend fun checkPassword(login: String, password: String): Boolean
+    suspend fun getFriends(): List<OtherProfileItem>
+    suspend fun getFriendRequests(): List<OtherProfileItem>
 
     // Matches
 
@@ -73,6 +76,11 @@ interface GlobalRepository {
 
     // Posts
     suspend fun getFeedPosts(
+        beforeTimestamp: Long?,
+        size: Int
+    ): List<Post>
+    suspend fun getUserPosts(
+        userId: String,
         beforeTimestamp: Long?,
         size: Int
     ): List<Post>

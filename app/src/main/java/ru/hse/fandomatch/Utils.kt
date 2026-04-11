@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Gender
@@ -109,12 +110,12 @@ fun FandomCategory.toStringId(): Int = when (this) {
     FandomCategory.OTHER -> R.string.fandom_category_other
 }
 
+@Composable
 fun City.getName(): String {
-    val locale = Locale.getDefault().language
-    return when (locale) {
-        "ru" -> this.nameRussian
-        else -> this.nameEnglish
-    }
+    val context = LocalContext.current
+    val locale = context.resources.configuration.locales[0]
+    val isRussianLocale = locale.language.equals("ru", ignoreCase = true)
+    return if (isRussianLocale) this.nameRussian else this.nameEnglish
 }
 
 private const val LATIN = "abcdefghijklmnopqrstuvwxyz"

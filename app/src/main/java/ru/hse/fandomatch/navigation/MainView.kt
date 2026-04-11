@@ -156,6 +156,9 @@ fun MainView() {
                 endIcons = endIcons,
             )
     }
+    val setTopBarState = { state: TopBarState?, route: String? ->
+        if (currentRoute == route) topBarState.value = state
+    }
 
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     Scaffold(
@@ -221,7 +224,8 @@ fun MainView() {
                 composable(Route.MyProfile.route) {
                     ProfileScreen(
                         userId = null,
-                        setTopBarState = { topBarState.value = it },
+                        isCurrentUser = true,
+                        setTopBarState = { setTopBarState(it, Route.MyProfile.route) },
                         goToMessages = { chatId ->
                             /* do nothing */
                             Log.d(
@@ -244,6 +248,12 @@ fun MainView() {
                                 "Navigation",
                                 "Impossible: go to matches from MyProfile"
                             )
+                        },
+                        goToProfile = { profileId ->
+                            Log.d("Navigation", "Navigate to profile $profileId from MyProfile")
+                            navigateToRouteWithArgs(
+                                Route.Profile.createRoute(profileId)
+                            )
                         }
                     )
                 }
@@ -255,7 +265,7 @@ fun MainView() {
                                 Route.Chat.createRoute(chatId)
                             )
                         },
-                        setTopBarState = { topBarState.value = it },
+                        setTopBarState = { setTopBarState(it, Route.ChatsList.route) },
                     )
                 }
                 composable(Route.Profile.route) { backStackEntry ->
@@ -263,7 +273,8 @@ fun MainView() {
                         backStackEntry.arguments?.getString("profile_id")
                     ProfileScreen(
                         userId = profileId,
-                        setTopBarState = { topBarState.value = it },
+                        isCurrentUser = false,
+                        setTopBarState = { setTopBarState(it, Route.Profile.route) },
                         goToMessages = { chatId ->
                             navigateToRouteWithArgs(Route.Chat.createRoute(chatId = chatId))
                         },
@@ -290,6 +301,13 @@ fun MainView() {
                         },
                         goToMatches = {
                             navigateToRoute(Route.Matches)
+                        },
+                        goToProfile = { profileId ->
+                            /* do nothing */
+                            Log.d(
+                                "Navigation",
+                                "Impossible: go to profile $profileId from profile $profileId"
+                            )
                         }
                     )
                 }
@@ -297,7 +315,7 @@ fun MainView() {
                     val chatId = backStackEntry.arguments?.getString("chat_id")
                     ChatScreen(
                         profileId = chatId,
-                        setTopBarState = { topBarState.value = it },
+                        setTopBarState = { setTopBarState(it, Route.Chat.route) },
                         goToProfile = { profileId ->
                             Log.d("Navigation", "Navigate to profile $profileId from chat")
                             navigateToRouteWithArgs(
@@ -330,7 +348,7 @@ fun MainView() {
                 }
                 composable(Route.EditProfile.route) {
                     EditProfileScreen(
-                        setTopBarState = { topBarState.value = it },
+                        setTopBarState = { setTopBarState(it, Route.EditProfile.route) },
                         navigateToAddFandom = {
                             navigateToRoute(Route.AddFandom)
                         },
@@ -341,7 +359,7 @@ fun MainView() {
                 }
                 composable(Route.Settings.route) {
                     SettingsScreen(
-                        setTopBarState = { topBarState.value = it },
+                        setTopBarState = { setTopBarState(it, Route.Settings.route) },
                         navigateToIntro = { navigateToRoute(Route.Intro) },
                     )
                 }
@@ -354,7 +372,8 @@ fun MainView() {
                 composable(Route.NewPost.route) {
                     NewPostScreen(
                         navigateToPreviousScreen = { navController.popBackStack() },
-                        setTopBarState = { topBarState.value = it },)
+                        setTopBarState = { setTopBarState(it, Route.NewPost.route) },
+                    )
                 }
             }
         }

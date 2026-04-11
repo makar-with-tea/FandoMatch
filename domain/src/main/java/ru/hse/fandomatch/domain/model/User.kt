@@ -42,3 +42,10 @@ sealed interface ProfileType {
 
     data object Stranger : ProfileType
 }
+
+data class OtherProfileItem(
+    val id: String,
+    val name: String,
+    val login: String?,
+    val avatarUrl: String?,
+)

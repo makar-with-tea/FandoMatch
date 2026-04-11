@@ -6,6 +6,6 @@ class GetPastLoginUseCase(
     private val sharedPrefRepository: SharedPrefRepository
 ) {
     suspend fun execute(): String? {
-        return sharedPrefRepository.getUser()
+        return sharedPrefRepository.getUserId()
     }
 }

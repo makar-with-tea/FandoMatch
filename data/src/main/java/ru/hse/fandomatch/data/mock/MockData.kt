@@ -8,7 +8,7 @@ import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.ProfileType
-import ru.hse.fandomatch.domain.model.Token
+import ru.hse.fandomatch.domain.model.AuthInfo
 import ru.hse.fandomatch.domain.model.User
 import ru.hse.fandomatch.domain.model.UserPreferences
 
@@ -95,9 +95,10 @@ var mockUser = User(
 
 const val mockPassword = "qwerty123!"
 
-val mockToken = Token(
+val mockAuthInfo = AuthInfo(
     accessToken = "accessToken",
     refreshToken = "refreshToken",
+    userId = mockUser.id,
 )
 
 val mockProfileCards = listOf(

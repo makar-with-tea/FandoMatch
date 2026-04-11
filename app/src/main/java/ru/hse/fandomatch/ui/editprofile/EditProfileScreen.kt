@@ -45,6 +45,7 @@ import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.getBytesFromUri
+import ru.hse.fandomatch.getName
 
 
 @Composable
@@ -256,13 +257,13 @@ private fun MainState(
         }
 
         item {
-            val cityInitial = state.city ?: ""
-            var city by remember { mutableStateOf(cityInitial) }
+            val cityInitialName = state.city?.getName().orEmpty()
+            var cityName by remember { mutableStateOf(cityInitialName) }
             MyTextField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp),
-                value = city,
+                value = cityName,
                 label = stringResource(R.string.city_label),
                 isError = state.cityError != EditProfileState.EditProfileError.IDLE,
                 enabled = true,
@@ -271,7 +272,7 @@ private fun MainState(
                     else -> null
                 },
                 onValueChange = {
-                    city = it
+                    cityName = it
                     onCityChanged(it)
                 }
             )

@@ -98,12 +98,6 @@
     <string name="fandom_category_mythology">Мифология</string>
     <string name="fandom_category_other">Другое</string>
 
-    <string name="city_moscow">Москва</string>
-    <string name="city_saint_petersburg">Санкт-Петербург</string>
-    <string name="city_novosibirsk">Новосибирск</string>
-    <string name="city_yekaterinburg">Екатеринбург</string>
-    <string name="city_other">Другой</string>
-
     <string name="filters_title">Фильтры</string>
     <string name="gender_filter_label">Пол</string>
     <string name="age_filter_label">Возраст</string>
@@ -137,6 +131,13 @@
 
     <string name="login_hidden">Логин скрыт</string>
     <string name="go_to_chat_button_description">Отправить сообщение</string>
+    <string name="profile_no_city">Город не указан</string>
+    <string name="gender_female_icon_description">Женский пол</string>
+    <string name="gender_male_icon_description">Мужской пол</string>
+    <string name="gender_not_specified_icon_description">пол не указан</string>
+    <string name="posts_label">Посты</string>
+    <string name="friends_label">Друзья</string>
+    <string name="your_requests_label">Ваши заявки</string>
 
     <string name="notification_allow_popup_name">Разрешение на уведомления</string>
     <string name="notification_allow_popup_description">Разрешите уведомления, чтобы получать оповещения о новых сообщениях и мэтчах.</string>
