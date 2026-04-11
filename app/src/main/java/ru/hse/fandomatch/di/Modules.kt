@@ -1,10 +1,19 @@
 package ru.hse.fandomatch.di
 
+import com.google.gson.GsonBuilder
+import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import ru.hse.fandomatch.data.AuthInterceptor
+import ru.hse.fandomatch.data.GlobalRepositoryImpl
 import ru.hse.fandomatch.data.SharedPrefRepositoryImpl
+import ru.hse.fandomatch.data.api.CoreApiService
 import ru.hse.fandomatch.data.mock.GlobalRepositoryMock
+import ru.hse.fandomatch.data.model.BaseUserProfileDTO
+import ru.hse.fandomatch.data.serialization.BaseUserProfileDeserializer
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
@@ -39,7 +48,6 @@ val appModule = module {
     viewModel<MatchesViewModel> {
         MatchesViewModel(
             loadSuggestedProfilesUseCase = get(),
-            getUserIdUseCase = get(),
             likeOrDislikeProfileUseCase = get(),
         )
     }
@@ -58,6 +66,32 @@ val dataModule = module {
     single<GlobalRepository> { GlobalRepositoryMock() }
     single<SharedPrefRepository> { SharedPrefRepositoryImpl(androidContext()) }
 //    single<SharedPrefRepository> { SharedPrefRepositoryMock() }
+
+    single {
+        OkHttpClient.Builder()
+            .addInterceptor(AuthInterceptor(get<SharedPrefRepository>()))
+            .build()
+    }
+
+    single {
+        val gson = GsonBuilder()
+            .registerTypeAdapter(
+                BaseUserProfileDTO::class.java,
+                BaseUserProfileDeserializer()
+            )
+            .create()
+
+        Retrofit.Builder()
+            .baseUrl("http://192.168.0.106:8000/") // todo damn
+            .client(get<OkHttpClient>())
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+    }
+
+    single<CoreApiService> { get<Retrofit>().create(CoreApiService::class.java) }
+
+//    single<GlobalRepository> { GlobalRepositoryImpl(get()) }
+    single<GlobalRepository> { GlobalRepositoryMock() }
 }
 
 val domainModule = module {

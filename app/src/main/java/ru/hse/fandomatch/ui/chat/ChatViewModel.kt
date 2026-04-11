@@ -39,7 +39,7 @@ class ChatViewModel(
         }
     }
 
-    private fun loadChat(profileId: Long?) {
+    private fun loadChat(profileId: String?) {
         _state.value = ChatState.Loading
         // todo
         if (profileId == null) {

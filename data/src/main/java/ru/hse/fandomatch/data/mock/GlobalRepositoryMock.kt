@@ -6,10 +6,14 @@ import kotlinx.coroutines.flow.StateFlow
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
 import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.ChatPreview
+import ru.hse.fandomatch.domain.model.City
+import ru.hse.fandomatch.domain.model.Fandom
+import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
+import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.domain.model.Token
 import ru.hse.fandomatch.domain.model.User
 import ru.hse.fandomatch.domain.repos.GlobalRepository
@@ -18,69 +22,69 @@ import java.time.ZoneOffset
 
 class GlobalRepositoryMock: GlobalRepository {
     var mockChat = Chat(
-        chatId = 1L,
+        chatId = "1",
         participantId = mockProfileCards[0].id,
         participantName = mockProfileCards[0].name,
         participantAvatarUrl = mockProfileCards[0].avatarUrl
     )
     val mockMessages: MutableStateFlow<List<Message>> = MutableStateFlow(listOf(
         Message(
-            messageId = 1L,
+            messageId = "1",
             isFromThisUser = false,
             content = "Привет! Как дела?",
             timestamp = LocalDateTime.now().minusDays(2).toEpochSecond(ZoneOffset.UTC) * 1000,
         ),
         Message(
-            messageId = 2L,
+            messageId = "2",
             isFromThisUser = true,
             content = "Привет! Все хорошо, спасибо. А у тебя?",
             timestamp = LocalDateTime.now().minusDays(2).plusMinutes(5)
                 .toEpochSecond(ZoneOffset.UTC) * 1000,
         ),
         Message(
-            messageId = 3L,
+            messageId = "3",
             isFromThisUser = false,
             content = "Тоже отлично! Какие фандомы ты любишь?",
             timestamp = LocalDateTime.now().minusDays(2).plusMinutes(10)
                 .toEpochSecond(ZoneOffset.UTC) * 1000,
         ),
         Message(
-            messageId = 4L,
+            messageId = "4",
             isFromThisUser = true,
             content = "Я обожаю аниме, особенно One Piece! А ты?",
             timestamp = LocalDateTime.now().minusDays(2).plusMinutes(15)
                 .toEpochSecond(ZoneOffset.UTC) * 1000,
         ),
         Message(
-            messageId = 5L,
+            messageId = "5",
             isFromThisUser = false,
             content = "One Piece тоже мой любимый! А до какого момента ты досмотрел?",
             timestamp = LocalDateTime.now().minusDays(2).plusMinutes(20)
                 .toEpochSecond(ZoneOffset.UTC) * 1000,
         ),
         Message(
-            messageId = 6L,
+            messageId = "6",
             isFromThisUser = true,
             content = "Я сейчас на Whole Cake Island. Бедный Санжи :(",
             timestamp = LocalDateTime.now().minusDays(2).plusMinutes(25)
                 .toEpochSecond(ZoneOffset.UTC) * 1000,
         ),
         Message(
-            messageId = 7L,
+            messageId = "7",
             isFromThisUser = false,
             content = "Ооо, понимаю... Удачи тебе там))",
             timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
                 .toEpochSecond(ZoneOffset.UTC) * 1000,
         ),
         Message(
-            messageId = 8L,
+            messageId = "8",
             isFromThisUser = false,
             content = "А я аниме уже досмотрела, сейчас читаю мангу",
             timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
                 .toEpochSecond(ZoneOffset.UTC) * 1000,
         ),
         Message(
-            messageId = 9L,
+            messageId = "9",
             isFromThisUser = false,
             content = "Но хочу пересмотреть когда-нибудь заново)",
             timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
@@ -88,28 +92,28 @@ class GlobalRepositoryMock: GlobalRepository {
             imageUrls = listOf("dzimbei", "luffy")
         ),
         Message(
-            messageId = 10L,
+            messageId = "10",
             isFromThisUser = false,
             content = "Там же столько деталей, которые можно упустить при первом просмотре",
             timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
                 .toEpochSecond(ZoneOffset.UTC) * 1000,
         ),
         Message(
-            messageId = 11L,
+            messageId = "11",
             isFromThisUser = false,
             content = "Та же предыстория Санджи многое меняет в восприятии первых серий, где он появляется",
             timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
                 .toEpochSecond(ZoneOffset.UTC) * 1000,
         ),
         Message(
-            messageId = 12L,
+            messageId = "12",
             isFromThisUser = false,
             content = "Ну и я просто хочу посмотреть на East Blue Луффи, он такой хаотичный котенок там))",
             timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
                 .toEpochSecond(ZoneOffset.UTC) * 1000,
         ),
         Message(
-            messageId = 13L,
+            messageId = "13",
             isFromThisUser = true,
             content = "А может, как-нибудь посмотрим ван пис с начала вместе?",
             timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
@@ -121,7 +125,7 @@ class GlobalRepositoryMock: GlobalRepository {
     var mockChatPreviews = MutableStateFlow(
         listOf(
             ChatPreview(
-                chatId = 5L,
+                chatId = "5",
                 participantName = mockProfileCards[4].name,
                 participantAvatarUrl = mockProfileCards[4].avatarUrl,
                 lastMessage = "Как вы допустили смерть Лидроса на зимке?..",
@@ -131,7 +135,7 @@ class GlobalRepositoryMock: GlobalRepository {
                 newMessagesCount = 101,
             ),
             ChatPreview(
-                chatId = 3L,
+                chatId = "3",
                 participantName = mockProfileCards[2].name,
                 participantAvatarUrl = mockProfileCards[2].avatarUrl,
                 lastMessage = "Привет! Как дела?",
@@ -141,7 +145,7 @@ class GlobalRepositoryMock: GlobalRepository {
                 newMessagesCount = 0,
             ),
             ChatPreview(
-                chatId = 2L,
+                chatId = "2",
                 participantName = mockProfileCards[1].name,
                 participantAvatarUrl = mockProfileCards[1].avatarUrl,
                 lastMessage = "Я тоже люблю аниме!",
@@ -151,7 +155,7 @@ class GlobalRepositoryMock: GlobalRepository {
                 newMessagesCount = 2,
             ),
             ChatPreview(
-                chatId = 1L,
+                chatId = "1",
                 participantName = mockProfileCards[0].name,
                 participantAvatarUrl = mockProfileCards[0].avatarUrl,
                 lastMessage = mockMessages.value[mockMessages.value.size - 1].content,
@@ -160,7 +164,7 @@ class GlobalRepositoryMock: GlobalRepository {
                 newMessagesCount = 0,
             ),
             ChatPreview(
-                chatId = 4L,
+                chatId = "4",
                 participantName = mockProfileCards[3].name,
                 participantAvatarUrl = mockProfileCards[3].avatarUrl,
                 lastMessage = "Посмотрела новый эпизод Токийского Гуля, очень понравилось!",
@@ -173,7 +177,7 @@ class GlobalRepositoryMock: GlobalRepository {
     )
 
     override suspend fun getUserInfo(login: String): User? {
-        val result = (mockUsers + mockUser).find { it.login == login }
+        val result = (mockUsers + mockUser).find { (it.profileType as? ProfileType.Friend)?.login == login } // todo
         return result.also {
             Log.d("GlobalRepositoryMock", "getUserInfo: $it")
         }
@@ -183,9 +187,10 @@ class GlobalRepositoryMock: GlobalRepository {
         login: String,
         password: String
     ): Token {
-        if (login == mockUser.login && password == mockPassword) return mockToken.also {
-            Log.d("GlobalRepositoryMock", "login: successful for user $login")
-        }
+        if (login == (mockUser.profileType as ProfileType.Own).login && password == mockPassword)
+            return mockToken.also {
+                Log.d("GlobalRepositoryMock", "login: successful for user $login")
+            }
         else throw InvalidCredentialsException().also {
             Log.d("GlobalRepositoryMock", "login: failed for user $login")
         }
@@ -202,14 +207,12 @@ class GlobalRepositoryMock: GlobalRepository {
     ): Token {
         mockUser = mockUser.copy(
             name = name,
-            email = email,
-            login = login,
-            birthDate = LocalDateTime.ofEpochSecond(
-                dateOfBirthMillis / 1000,
-                0,
-                ZoneOffset.UTC
-            ).toLocalDate(),
+            age = ((System.currentTimeMillis() - dateOfBirthMillis) / (1000L * 60 * 60 * 24 * 365)).toInt(),
             gender = gender,
+            profileType = ProfileType.Own(
+                email = email,
+                login = login,
+            )
         )
         return mockToken.also {
             Log.d("GlobalRepositoryMock", "register: successful for user $login")
@@ -217,13 +220,14 @@ class GlobalRepositoryMock: GlobalRepository {
     }
 
     override suspend fun updateUser(
-        name: String?,
-        surname: String?,
-        email: String?,
-        login: String,
-        password: String?
+        name: String,
+        bio: String?,
+        gender: Gender,
+        city: City,
+        avatarUrl: String?,
+        backgroundUrl: String?
     ) {
-        Log.d("GlobalRepositoryMock", "updateUser: successful for user $login")
+        Log.d("GlobalRepositoryMock", "updateUser: successful for user $name")
     }
 
     override suspend fun deleteUser(login: String) {
@@ -234,7 +238,7 @@ class GlobalRepositoryMock: GlobalRepository {
         login: String,
         password: String
     ): Boolean {
-        return (login == mockUser.login && password == mockPassword).also {
+        return (login == (mockUser.profileType as ProfileType.Own).login && password == mockPassword).also {
             Log.d(
                 "GlobalRepositoryMock",
                 "checkPassword: ${if (it) "valid" else "invalid"} for user $login"
@@ -242,19 +246,38 @@ class GlobalRepositoryMock: GlobalRepository {
         }
     }
 
-    override suspend fun getSuggestedProfiles(userId: Long, size: Int): List<ProfileCard> {
+    override suspend fun getSuggestedProfiles(size: Int): List<ProfileCard> {
         return mockProfileCards.shuffled().take(size).also {
             Log.d(
                 "GlobalRepositoryMock",
-                "getSuggestedProfiles: returned ${it.size} profiles for userId $userId"
+                "getSuggestedProfiles: returned ${it.size} profiles"
             )
         }
     }
 
-    override suspend fun likeOrDislikeProfile(userId: Long, profileId: Long, isLike: Boolean) {
+    override suspend fun likeOrDislikeProfile(userId: String, isLike: Boolean) {
         Log.d(
             "GlobalRepositoryMock",
-            "likeProfile: user $userId ${if (isLike) "" else "dis"}liked profile $profileId"
+            "likeProfile: ${if (isLike) "" else "dis"}liked profile $userId"
+        )
+    }
+
+    override suspend fun setFilters(
+        userId: String,
+        genders: List<Gender>,
+        minAge: Int?,
+        maxAge: Int?,
+        categories: List<FandomCategory>,
+        fandoms: List<Fandom>,
+        onlyInUserCity: Boolean
+    ) {
+        mockFilters = mockFilters.copy(
+            genders = genders,
+            minAge = minAge ?: mockFilters.minAge,
+            maxAge = maxAge ?: mockFilters.maxAge,
+            categories = categories,
+            fandoms = fandoms,
+            onlyInUserCity = onlyInUserCity,
         )
     }
 
@@ -268,7 +291,7 @@ class GlobalRepositoryMock: GlobalRepository {
     }
 
     override suspend fun subscribeToChatMessages(
-        userId: Long,
+        userId: String,
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<Message>> {
@@ -290,19 +313,19 @@ class GlobalRepositoryMock: GlobalRepository {
         return mockMessages
     }
 
-    override suspend fun loadChatInfo(userId: Long): Chat {
+    override suspend fun loadChatInfo(userId: String): Chat {
         Log.d("GlobalRepositoryMock", "loadChatInfo: returned chat info for userId $userId")
         return mockChat
     }
 
     override suspend fun sendMessage(
-        receiverId: Long,
+        receiverId: String,
         content: String,
         images: List<ByteArray>,
         timestamp: Long
     ) {
         mockMessages.value += Message(
-                    messageId = mockMessages.value.size.toLong() + 1,
+                    messageId = (mockMessages.value.size + 1).toString(),
                     isFromThisUser = true,
                     content = content,
                     imageUrls = images.map { "luffy" }, // todo upload images and get urls
@@ -339,5 +362,13 @@ class GlobalRepositoryMock: GlobalRepository {
                 )
             }
         return result
+    }
+
+    override suspend fun getFandomCategories(): List<FandomCategory> {
+        return FandomCategory.entries
+    }
+
+    override suspend fun getFandomsByQuery(query: String): List<Fandom> {
+        return mockFandoms.filter { it.name.contains(query, ignoreCase = true) }
     }
 }

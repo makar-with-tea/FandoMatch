@@ -1,8 +1,8 @@
 package ru.hse.fandomatch.domain.model
 
 data class Post(
-    val id: Long,
-    val authorId: Long,
+    val id: String,
+    val authorId: String,
     val authorName: String,
     val authorLogin: String?,
     val authorAvatarUrl: String?,

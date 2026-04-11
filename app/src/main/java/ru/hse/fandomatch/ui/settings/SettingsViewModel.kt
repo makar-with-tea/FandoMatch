@@ -12,6 +12,7 @@ import ru.hse.fandomatch.data.mock.mockUser
 import ru.hse.fandomatch.checkEmailContent
 import ru.hse.fandomatch.checkPasswordContent
 import ru.hse.fandomatch.checkPasswordLength
+import ru.hse.fandomatch.domain.model.ProfileType
 
 class SettingsViewModel(
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
@@ -64,11 +65,12 @@ class SettingsViewModel(
 //                    }
 //                    return@launch
 //                }
+                // todo проверить что это ProfileType.Own
                 // todo load notification preferences
                 val userPreferences = mockUserPreferences
                 withContext(dispatcherMain) {
                     _state.value = SettingsState.Main(
-                        email = userInfo.email,
+                        email = (userInfo.profileType as ProfileType.Own).email,
                         matchNotificationsEnabled = userPreferences.matchesEnabled,
                         messageNotificationsEnabled = userPreferences.messagesEnabled,
                         hideMyPostsFromNonMatches = userPreferences.hideMyPostsFromNonMatches

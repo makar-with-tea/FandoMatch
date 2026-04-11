@@ -17,7 +17,7 @@ sealed class FeedState {
 
 sealed class FeedEvent {
     data class PostClicked(
-        val chatId: Long,
+        val chatId: String,
     ): FeedEvent()
     data object LoadPosts: FeedEvent()
 //    data class SearchPosts(val query: String?): FeedEvent() todo мы умеем искать?
@@ -25,5 +25,5 @@ sealed class FeedEvent {
 }
 
 sealed class FeedAction {
-    data class NavigateToPost(val postId: Long) : FeedAction()
+    data class NavigateToPost(val postId: String) : FeedAction()
 }

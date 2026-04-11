@@ -299,6 +299,6 @@ fun FandomInput(
 @Preview(showBackground = true)
 @Composable
 private fun PreviewFandomCarouselWithDropdown() {
-    val sample = List(12) { i -> Fandom(name = "Fandom $i", category = FandomCategory.OTHER, id = i) }
+    val sample = List(12) { i -> Fandom(name = "Fandom $i", category = FandomCategory.OTHER, id = "i") }
     FandomCarouselWithDropdown(fandoms = sample, modifier = Modifier.padding(16.dp))
 }

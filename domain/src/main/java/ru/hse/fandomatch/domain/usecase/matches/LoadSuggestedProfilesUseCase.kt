@@ -6,7 +6,7 @@ import ru.hse.fandomatch.domain.repos.GlobalRepository
 class LoadSuggestedProfilesUseCase(
     private val globalRepository: GlobalRepository,
 ) {
-    suspend fun execute(userId: Long, size: Int): List<ProfileCard> {
-        return globalRepository.getSuggestedProfiles(userId, size)
+    suspend fun execute(size: Int): List<ProfileCard> {
+        return globalRepository.getSuggestedProfiles(size)
     }
 }

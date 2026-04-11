@@ -4,6 +4,7 @@ import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.Post
+import ru.hse.fandomatch.domain.model.ProfileType
 
 sealed class ProfileState {
     enum class ProfileError {
@@ -12,7 +13,7 @@ sealed class ProfileState {
         NO_USER,
     }
     data class Main(
-        val id: Long,
+        val id: String,
         val login: String?,
         val fandoms: List<Fandom>,
         val description: String? = null,
@@ -34,26 +35,20 @@ sealed class ProfileState {
 }
 
 sealed class ProfileEvent {
-    data class LoadProfile(val userId: Long?) : ProfileEvent()
-    data class MessageButtonClicked(val userId: Long?) : ProfileEvent()
+    data class LoadProfile(val userId: String?) : ProfileEvent()
+    data class MessageButtonClicked(val userId: String?) : ProfileEvent()
     data object EditProfileButtonClicked : ProfileEvent()
     data object SettingsButtonClicked : ProfileEvent()
     data object AddPostButtonClicked : ProfileEvent()
-    data class LikeButtonClicked(val profileId: Long) : ProfileEvent()
-    data class DislikeButtonClicked(val profileId: Long) : ProfileEvent()
+    data class LikeButtonClicked(val profileId: String) : ProfileEvent()
+    data class DislikeButtonClicked(val profileId: String) : ProfileEvent()
     data object Clear : ProfileEvent()
 }
 
 sealed class ProfileAction {
-    data class GoToMessages(val userId: Long?) : ProfileAction()
+    data class GoToMessages(val userId: String?) : ProfileAction()
     data object GoToEditProfile : ProfileAction()
     data object GoToSettings : ProfileAction()
     data object GoToAddPost : ProfileAction()
     data object GoToMatches : ProfileAction()
-}
-
-enum class ProfileType {
-    OWN,
-    FRIEND,
-    OTHER,
 }

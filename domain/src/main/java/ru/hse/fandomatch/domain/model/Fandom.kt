@@ -1,7 +1,7 @@
 package ru.hse.fandomatch.domain.model
 
 data class Fandom(
-    val id: Int,
+    val id: String,
     val name: String,
     val category: FandomCategory
 )
@@ -25,4 +25,3 @@ enum class FandomCategory {
     MYTHOLOGY,
     OTHER
 }
-

@@ -39,7 +39,7 @@ class ChatsListViewModel(
         }
     }
 
-    private fun goToChat(chatId: Long) {
+    private fun goToChat(chatId: String) {
         _action.value = ChatsListAction.NavigateToChat(chatId)
     }
 

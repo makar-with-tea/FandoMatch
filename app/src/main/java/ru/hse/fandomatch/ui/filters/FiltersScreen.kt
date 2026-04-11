@@ -356,8 +356,8 @@ fun MainStatePreview() {
                 ageRange = 18..30,
                 selectedCategories = listOf(FandomCategory.ANIME_MANGA, FandomCategory.BOOKS),
                 selectedFandoms = listOf(
-                    Fandom(id = 1, name = "Fandom 1", category = FandomCategory.ANIME_MANGA),
-                    Fandom(id = 2, name = "Fandom 2", category = FandomCategory.CARTOONS)
+                    Fandom(id = "1", name = "Fandom 1", category = FandomCategory.ANIME_MANGA),
+                    Fandom(id = "2", name = "Fandom 2", category = FandomCategory.CARTOONS)
                 ),
                 foundFandoms = listOf(),
                 onlyInUserCity = true,

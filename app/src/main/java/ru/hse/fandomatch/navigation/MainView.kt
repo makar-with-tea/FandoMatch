@@ -39,7 +39,7 @@ import ru.hse.fandomatch.ui.newpost.NewPostScreen
 sealed class Route(val route: String) {
     data object Authorization : Route("authorization")
     data object Chat : Route("chat/{chat_id}") {
-        fun createRoute(chatId: Long?): String {
+        fun createRoute(chatId: String?): String {
             return "chat/$chatId"
         }
     }
@@ -51,7 +51,7 @@ sealed class Route(val route: String) {
     data object Matches : Route("matches")
     data object MyProfile : Route("my_profile")
     data object Profile : Route("profile/{profile_id}") {
-        fun createRoute(profileId: Long): String {
+        fun createRoute(profileId: String): String {
             return "profile/$profileId"
         }
     }
@@ -260,7 +260,7 @@ fun MainView() {
                 }
                 composable(Route.Profile.route) { backStackEntry ->
                     val profileId =
-                        backStackEntry.arguments?.getString("profile_id")?.toLongOrNull() ?: -1L
+                        backStackEntry.arguments?.getString("profile_id")
                     ProfileScreen(
                         userId = profileId,
                         setTopBarState = { topBarState.value = it },
@@ -294,7 +294,7 @@ fun MainView() {
                     )
                 }
                 composable(Route.Chat.route) { backStackEntry ->
-                    val chatId = backStackEntry.arguments?.getString("chat_id")?.toLongOrNull()
+                    val chatId = backStackEntry.arguments?.getString("chat_id")
                     ChatScreen(
                         profileId = chatId,
                         setTopBarState = { topBarState.value = it },

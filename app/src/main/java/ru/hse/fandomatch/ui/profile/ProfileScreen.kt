@@ -2,7 +2,6 @@ package ru.hse.fandomatch.ui.profile
 
 import android.util.Log
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,13 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Create
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,23 +28,24 @@ import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.data.mock.mockUser
+import ru.hse.fandomatch.domain.model.ProfileType
+import ru.hse.fandomatch.navigation.EndIconState
+import ru.hse.fandomatch.navigation.TopBarState
+import ru.hse.fandomatch.timestampToDateString
 import ru.hse.fandomatch.ui.composables.AvatarWithBackground
 import ru.hse.fandomatch.ui.composables.ExpandableText
 import ru.hse.fandomatch.ui.composables.FandomCarouselWithDropdown
 import ru.hse.fandomatch.ui.composables.FeedPost
 import ru.hse.fandomatch.ui.composables.LoadingBlock
-import ru.hse.fandomatch.ui.composables.MyTitle
-import ru.hse.fandomatch.navigation.EndIconState
-import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.timestampToDateString
 import ru.hse.fandomatch.ui.composables.MyFloatingButton
+import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.theme.FandoMatchTheme
 
 @Composable
 fun ProfileScreen(
-    userId: Long? = null,
+    userId: String? = null,
     setTopBarState: (TopBarState) -> Unit,
-    goToMessages: (Long?) -> Unit,
+    goToMessages: (String?) -> Unit,
     goToEditProfile: () -> Unit,
     goToSettings: () -> Unit,
     goToAddPost: () -> Unit,
@@ -134,7 +128,7 @@ fun ProfileScreen(
 private fun MainState(
     state: ProfileState.Main,
     setTopBarState: (TopBarState) -> Unit,
-    onMessagesClicked: (Long?) -> Unit,
+    onMessagesClicked: (String?) -> Unit,
     onEditProfileClicked: () -> Unit,
     onSettingsClicked: () -> Unit,
     onAddPostClicked: () -> Unit,
@@ -148,7 +142,7 @@ private fun MainState(
                 MyTitle(title)
             },
             endIcons = when (state.type) {
-                ProfileType.OWN -> listOf(
+                is ProfileType.Own -> listOf(
                     EndIconState(
                         iconId = R.drawable.ic_edit,
                         onClick = { onEditProfileClicked() },
@@ -161,7 +155,7 @@ private fun MainState(
                     )
                 )
 
-                ProfileType.FRIEND -> listOf(
+                is ProfileType.Friend -> listOf(
                     EndIconState(
                         iconId = R.drawable.ic_message,
                         onClick = { onMessagesClicked(state.id) },
@@ -169,7 +163,7 @@ private fun MainState(
                     )
                 )
 
-                ProfileType.OTHER -> listOf(
+                ProfileType.Stranger -> listOf(
                     EndIconState(
                         iconId = R.drawable.ic_dislike,
                         onClick = { onDislikeClicked() },
@@ -258,12 +252,14 @@ private fun MainState(
             }
         }
 
-        MyFloatingButton(
-            onClick = { onAddPostClicked() },
-            modifier = Modifier.align(Alignment.BottomEnd),
-            icon = ImageVector.vectorResource(id = R.drawable.ic_add_post),
-            contentDescription = stringResource(R.string.create_post_label),
-        )
+        if (state.type is ProfileType.Own) {
+            MyFloatingButton(
+                onClick = { onAddPostClicked() },
+                modifier = Modifier.align(Alignment.BottomEnd),
+                icon = ImageVector.vectorResource(id = R.drawable.ic_add_post),
+                contentDescription = stringResource(R.string.create_post_label),
+            )
+        }
     }
 }
 
@@ -288,9 +284,9 @@ private fun ErrorState(
 @Composable
 fun MainStatePreview() {
     val mockState = ProfileState.Main(
-        type = ProfileType.OWN,
+        type = ProfileType.Own(login = "mocklogin", email = "mockemail"),
         id = mockUser.id,
-        login = mockUser.login,
+        login = (mockUser.profileType as? ProfileType.Own)?.login,
         fandoms = mockUser.fandoms,
         description = mockUser.description,
         name = mockUser.name,

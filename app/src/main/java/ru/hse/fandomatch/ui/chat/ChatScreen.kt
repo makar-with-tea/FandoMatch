@@ -63,9 +63,9 @@ import java.time.LocalDateTime
 
 @Composable
 fun ChatScreen(
-    profileId: Long?,
+    profileId: String?,
     setTopBarState: (TopBarState?) -> Unit,
-    goToProfile: (Long) -> Unit,
+    goToProfile: (String) -> Unit,
     viewModel: ChatViewModel = koinViewModel(),
 ) {
     val state = viewModel.state.collectAsState()

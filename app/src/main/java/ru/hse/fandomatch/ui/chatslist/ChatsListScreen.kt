@@ -62,7 +62,7 @@ import ru.hse.fandomatch.timestampToTimeAgo
 
 @Composable
 fun ChatsListScreen(
-    navigateToChat: (Long) -> Unit,
+    navigateToChat: (String) -> Unit,
     setTopBarState: (TopBarState?) -> Unit,
     viewModel: ChatsListViewModel = koinViewModel()
 ) {
@@ -101,7 +101,7 @@ fun ChatsListScreen(
 @Composable
 private fun MainState(
     state: ChatsListState.Main,
-    onChatClicked: (Long) -> Unit,
+    onChatClicked: (String) -> Unit,
     setTopBarState: (TopBarState?) -> Unit,
     onSearch: (String?) -> Unit,
 ) {

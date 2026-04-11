@@ -19,13 +19,14 @@ import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
+import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.SwipeableCardStack
 
 @Composable
 fun MatchesScreen(
-    navigateToProfile: (Long) -> Unit,
+    navigateToProfile: (String) -> Unit,
     viewModel: MatchesViewModel = koinViewModel()
 ) {
     val state = viewModel.state.collectAsState()
@@ -61,9 +62,9 @@ fun MatchesScreen(
 @Composable
 private fun MainState(
     state: MatchesState.Main,
-    onLike: (Long) -> Unit,
-    onDislike: (Long) -> Unit,
-    onCardClick: (Long) -> Unit,
+    onLike: (String) -> Unit,
+    onDislike: (String) -> Unit,
+    onCardClick: (String) -> Unit,
     onReload: () -> Unit
 ) {
     Scaffold(
@@ -123,19 +124,20 @@ fun MainStatePreview() {
     val mockState = MatchesState.Main(
         profileStack = listOf(
             ProfileCard(
-                id = 1,
+                id = "1",
                 name = "Alice",
                 age = 25,
                 avatarUrl = "",
                 fandoms = listOf(
                     Fandom(
-                        id = 1,
+                        id = "1",
                         name = "One Piece",
                         category = FandomCategory.ANIME_MANGA,
                     )
                 ),
                 description = "Luffy is my hero!",
                 compatibilityPercentage = 85,
+                gender = Gender.FEMALE
             )
         ),
         isLoading = false,

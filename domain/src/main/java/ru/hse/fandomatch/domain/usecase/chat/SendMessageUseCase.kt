@@ -6,7 +6,7 @@ class SendMessageUseCase(
     private val globalRepository: GlobalRepository,
 ) {
     suspend fun execute(
-        userId: Long,
+        userId: String,
         content: String,
         images: List<ByteArray>,
         timestamp: Long

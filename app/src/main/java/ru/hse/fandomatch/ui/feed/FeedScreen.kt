@@ -18,7 +18,7 @@ import ru.hse.fandomatch.timestampToDateString
 
 @Composable
 fun FeedScreen(
-    navigateToPost: (Long) -> Unit,
+    navigateToPost: (String) -> Unit,
     viewModel: FeedViewModel = koinViewModel()
 ) {
     val state = viewModel.state.collectAsState()
@@ -54,7 +54,7 @@ fun FeedScreen(
 @Composable
 private fun MainState(
     state: FeedState.Main,
-    onPostClicked: (Long) -> Unit,
+    onPostClicked: (String) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -95,8 +95,8 @@ private fun FeedScreenPreview() {
         FeedState.Main(
             posts = listOf(
                 Post(
-                    id = 1,
-                    authorId = 1,
+                    id = "1",
+                    authorId = "1",
                     authorName = "John Doe",
                     authorLogin = "johndoe",
                     authorAvatarUrl = "dzimbei",
@@ -108,8 +108,8 @@ private fun FeedScreenPreview() {
                     isLikedByCurrentUser = false,
                 ),
                 Post(
-                    id = 2,
-                    authorId = 2,
+                    id = "2",
+                    authorId = "2",
                     authorName = "Jane Smith",
                     authorLogin = "janesmith",
                     authorAvatarUrl = "what_is_written_here",

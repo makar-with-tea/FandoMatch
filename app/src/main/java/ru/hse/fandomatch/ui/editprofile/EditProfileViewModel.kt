@@ -17,6 +17,7 @@ import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.checkDescriptionLength
 import ru.hse.fandomatch.checkNameContent
 import ru.hse.fandomatch.checkNameLength
+import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.getName
 import kotlin.collections.plus
 
@@ -172,7 +173,7 @@ class EditProfileViewModel(
             _state.value = EditProfileState.Main(
                 id = mockUser.id,
                 name = user.name,
-                login = user.login,
+                login = (user.profileType as ProfileType.Own).login,
                 description = user.description,
                 avatarUrl = user.avatarUrl,
                 backgroundUrl = user.backgroundUrl,

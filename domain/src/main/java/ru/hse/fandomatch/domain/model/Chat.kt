@@ -1,14 +1,14 @@
 package ru.hse.fandomatch.domain.model
 
 data class Chat(
-    val chatId: Long,
-    val participantId: Long,
+    val chatId: String,
+    val participantId: String,
     val participantName: String,
     val participantAvatarUrl: String?,
 )
 
 data class ChatPreview(
-    val chatId: Long,
+    val chatId: String,
     val participantName: String,
     val participantAvatarUrl: String?,
     val lastMessage: String,
@@ -18,7 +18,7 @@ data class ChatPreview(
 )
 
 data class Message(
-    val messageId: Long,
+    val messageId: String,
     val isFromThisUser: Boolean,
     val content: String,
     val timestamp: Long,

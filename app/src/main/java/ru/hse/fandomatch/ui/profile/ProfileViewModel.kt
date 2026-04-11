@@ -14,6 +14,7 @@ import ru.hse.fandomatch.data.mock.mockUser
 import ru.hse.fandomatch.data.mock.mockUserPosts
 import ru.hse.fandomatch.data.mock.mockUsers
 import ru.hse.fandomatch.domain.exception.LoadDataException
+import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
 import ru.hse.fandomatch.ui.matches.MatchesState
@@ -59,54 +60,51 @@ class ProfileViewModel(
         }
     }
 
-    private fun loadProfile(userId: Long?) {
+    private fun loadProfile(userId: String?) {
         // todo backend
         val user = if (userId == mockUser.id || userId == null) {
             mockUser
         } else {
             mockUsers.firstOrNull { it.id == userId }
         }
-        val type = when (userId) {
-            mockUser.id, null -> ProfileType.OWN
-            mockUsers[0].id -> ProfileType.FRIEND
-            else -> ProfileType.OTHER
-        }
         if (user == null) {
             Log.e("ProfileViewModel", "User with id $userId not found")
             _state.value = ProfileState.Error(ProfileState.ProfileError.NO_USER)
             return
         }
+        val type = user.profileType
         Log.i("ProfileViewModel", "Loading profile for userId: $userId")
         _state.value = ProfileState.Main(
             id = user.id,
             login = when (type) {
-                ProfileType.OWN, ProfileType.FRIEND -> user.login
-                ProfileType.OTHER -> null
+                ProfileType.Stranger -> null
+                is ProfileType.Own -> type.login
+                is ProfileType.Friend -> type.login
             },
             fandoms = user.fandoms,
             description = user.description,
             name = user.name,
             gender = user.gender,
-            age = calculateAge(user.birthDate),
+            age = user.age,
             avatarUrl = user.avatarUrl,
             backgroundUrl = user.backgroundUrl,
             city = user.city,
             type = type,
             posts = when (type) {
-                ProfileType.OWN -> mockUserPosts
-                ProfileType.FRIEND -> mockPosts.filter { it.authorId == user.id }
-                ProfileType.OTHER -> mockPosts
+                is ProfileType.Own -> mockUserPosts
+                is ProfileType.Friend -> mockPosts.filter { it.authorId == user.id }
+                ProfileType.Stranger -> mockPosts
                     .filter { it.authorId == user.id }
                     .map { it.copy(authorLogin = null) }
             }
         )
     }
 
-    private fun likeOrDislikeProfile(profileId: Long, isLike: Boolean) {
+    private fun likeOrDislikeProfile(profileId: String, isLike: Boolean) {
         viewModelScope.launch(dispatcherIO) {
             val userId = getUserIdUseCase.execute()
             userId?.let {
-                likeOrDislikeProfileUseCase.execute(userId, profileId, isLike)
+                likeOrDislikeProfileUseCase.execute(profileId, isLike)
             }
             withContext(dispatcherMain) {
                 _action.value = ProfileAction.GoToMatches
@@ -117,14 +115,5 @@ class ProfileViewModel(
     private fun clear() {
         _state.value = ProfileState.Idle
         _action.value = null
-    }
-
-    private fun calculateAge(birthDate: java.time.LocalDate): Int {
-        val today = java.time.LocalDate.now()
-        var age = today.year - birthDate.year
-        if (today.dayOfYear < birthDate.dayOfYear) {
-            age--
-        }
-        return age
     }
 }

@@ -1,20 +1,16 @@
 package ru.hse.fandomatch.domain.model
 
-import java.time.LocalDate
-
 data class User(
-    val id: Long,
-    val login: String,
-    val email: String,
-    val phone: String? = null,
+    val id: String,
     val fandoms: List<Fandom>,
     val description: String? = null,
     val name: String,
-    val gender: Gender? = null,
-    val birthDate: LocalDate,
+    val gender: Gender,
+    val age: Int,
     val avatarUrl: String? = null,
     val backgroundUrl: String? = null,
-    val city: City? = null
+    val city: City? = null,
+    val profileType: ProfileType,
 )
 
 enum class Gender {
@@ -33,3 +29,16 @@ data class UserPreferences(
     val messagesEnabled: Boolean,
     val hideMyPostsFromNonMatches: Boolean,
 )
+
+sealed interface ProfileType {
+    data class Own(
+        val login: String,
+        val email: String,
+    ) : ProfileType
+
+    data class Friend(
+        val login: String,
+    ) : ProfileType
+
+    data object Stranger : ProfileType
+}

@@ -6,7 +6,7 @@ import ru.hse.fandomatch.domain.repos.GlobalRepository
 class LoadChatInfoUseCase(
     private val globalRepository: GlobalRepository,
 ) {
-    suspend fun execute(userId: Long): Chat {
+    suspend fun execute(userId: String): Chat {
         return globalRepository.loadChatInfo(
             userId = userId,
         )

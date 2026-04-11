@@ -30,9 +30,9 @@ import kotlin.math.roundToInt
 @Composable
 fun SwipeableCardStack(
     profiles: List<ProfileCard>,
-    onLike: (Long) -> Unit,
-    onDislike: (Long) -> Unit,
-    onCardClick: (Long) -> Unit,
+    onLike: (String) -> Unit,
+    onDislike: (String) -> Unit,
+    onCardClick: (String) -> Unit,
 ) {
     Log.i("SwipeableCardStack", "Rendering SwipeableCardStack with: ${profiles.map { it.name }}")
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

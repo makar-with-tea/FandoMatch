@@ -8,8 +8,8 @@ sealed class ChatState {
         NETWORK,
     }
     data class Main(
-        val chatId: Long,
-        val participantId: Long,
+        val chatId: String,
+        val participantId: String,
         val participantName: String,
         val participantAvatarUrl: String?,
         val uiElements: List<ChatUiElement>,
@@ -28,14 +28,14 @@ sealed class ChatEvent {
         val timestamp: Long,
     ) : ChatEvent()
     data class LoadChat(
-        val profileId: Long?,
+        val profileId: String?,
     ) : ChatEvent()
     data object ProfileClicked: ChatEvent()
     data object Clear : ChatEvent()
 }
 
 sealed class ChatAction {
-    data class GoToProfile(val profileId: Long) : ChatAction()
+    data class GoToProfile(val profileId: String) : ChatAction()
 }
 
 sealed class ChatUiElement {

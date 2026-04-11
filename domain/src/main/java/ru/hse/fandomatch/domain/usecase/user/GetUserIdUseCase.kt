@@ -7,7 +7,7 @@ class GetUserIdUseCase(
     private val globalRepository: GlobalRepository,
     private val sharedPrefRepository: SharedPrefRepository
 ) {
-    suspend fun execute(): Long? {
+    suspend fun execute(): String? {
         val savedId = sharedPrefRepository.getUserId()
         savedId?.let {
             return it

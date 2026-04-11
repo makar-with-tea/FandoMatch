@@ -10,17 +10,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.hse.fandomatch.domain.exception.LoadDataException
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LoadSuggestedProfilesUseCase
-import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
 import java.util.ArrayDeque
-import kotlin.properties.Delegates
 
 class MatchesViewModel(
     private val loadSuggestedProfilesUseCase: LoadSuggestedProfilesUseCase,
-    private val getUserIdUseCase: GetUserIdUseCase,
     private val likeOrDislikeProfileUseCase: LikeOrDislikeProfileUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
@@ -35,7 +31,6 @@ class MatchesViewModel(
     private val batchSize: Int = 3
     private val prefetchThreshold: Int = 2
     @Volatile private var isLoadingNext: Boolean = false
-    private var userId by Delegates.notNull<Long>()
 
     fun obtainEvent(event: MatchesEvent) {
         Log.i("MatchesViewModel", "Obtained event: $event")
@@ -65,8 +60,7 @@ class MatchesViewModel(
         Log.i("MatchesViewModel", "Starting initial load of suggested profiles")
         viewModelScope.launch(dispatcherIO) {
             try {
-                userId = getUserIdUseCase.execute() ?: throw LoadDataException()
-                val profiles = loadSuggestedProfilesUseCase.execute(userId, batchSize)
+                val profiles = loadSuggestedProfilesUseCase.execute(batchSize)
                 buffer.clear()
                 profiles.forEach { buffer.addLast(it) }
                 withContext(dispatcherMain) {
@@ -87,21 +81,21 @@ class MatchesViewModel(
         }
     }
 
-    private fun likeProfile(profileId: Long) {
+    private fun likeProfile(profileId: String) {
         viewModelScope.launch(dispatcherIO) {
-            likeOrDislikeProfileUseCase.execute(userId, profileId, isLike = true)
+            likeOrDislikeProfileUseCase.execute(profileId, isLike = true)
         }
         popAndMaybePrefetch()
     }
 
-    private fun dislikeProfile(profileId: Long) {
+    private fun dislikeProfile(profileId: String) {
         viewModelScope.launch(dispatcherIO) {
-            likeOrDislikeProfileUseCase.execute(userId, profileId, isLike = false)
+            likeOrDislikeProfileUseCase.execute(profileId, isLike = false)
         }
         popAndMaybePrefetch()
     }
 
-    private fun goToProfile(profileId: Long) {
+    private fun goToProfile(profileId: String) {
         _state.value = MatchesState.Loading
         _action.value = MatchesAction.NavigateToProfile(profileId)
     }
@@ -123,7 +117,7 @@ class MatchesViewModel(
         isLoadingNext = true
         viewModelScope.launch(dispatcherIO) {
             try {
-                val next = loadSuggestedProfilesUseCase.execute(userId, batchSize)
+                val next = loadSuggestedProfilesUseCase.execute(batchSize)
                 withContext(dispatcherMain) {
                     next.forEach { buffer.addLast(it) }
                     _state.value = MatchesState.Main(

@@ -33,7 +33,7 @@ class FeedViewModel(
         }
     }
 
-    private fun goToPost(chatId: Long) {
+    private fun goToPost(chatId: String) {
         _action.value = FeedAction.NavigateToPost(chatId)
     }
 
