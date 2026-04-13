@@ -1,8 +1,12 @@
 package ru.hse.fandomatch.data
 
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import retrofit2.HttpException
+import ru.hse.fandomatch.data.api.ChatApiService
 import ru.hse.fandomatch.data.api.CoreApiService
+import ru.hse.fandomatch.data.model.ChatMessagesRequestDTO
+import ru.hse.fandomatch.data.model.ChatPreviewsRequestDTO
 import ru.hse.fandomatch.data.model.EditUserProfileRequestDTO
 import ru.hse.fandomatch.data.model.FandomDTO
 import ru.hse.fandomatch.data.model.FriendUserProfileResponseDTO
@@ -13,6 +17,7 @@ import ru.hse.fandomatch.data.model.MatchBatchRequestDTO
 import ru.hse.fandomatch.data.model.MatchFilterRequestDTO
 import ru.hse.fandomatch.data.model.PostsGetRequestDTO
 import ru.hse.fandomatch.data.model.PublicUserProfileResponseDTO
+import ru.hse.fandomatch.data.model.SendMessageRequestDTO
 import ru.hse.fandomatch.data.model.UserProfileRequestDTO
 import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.ChatPreview
@@ -31,11 +36,12 @@ import ru.hse.fandomatch.domain.repos.GlobalRepository
 import kotlin.String
 
 class GlobalRepositoryImpl(
-    private val apiService: CoreApiService
+    private val coreApiService: CoreApiService,
+    private val chatApiService: ChatApiService,
 ): GlobalRepository {
     override suspend fun getUser(profileId: String): User? {
         try {
-            val response = apiService.getUserProfile(
+            val response = coreApiService.getUserProfile(
                 UserProfileRequestDTO(
                     profileId
                 )
@@ -137,7 +143,7 @@ class GlobalRepositoryImpl(
         avatarUrl: String?,
         backgroundUrl: String?,
     ) {
-        apiService.editUserProfile(
+        coreApiService.editUserProfile(
             EditUserProfileRequestDTO(
                 bio = bio,
                 avatarUrl = avatarUrl,
@@ -176,7 +182,7 @@ class GlobalRepositoryImpl(
     override suspend fun getSuggestedProfiles(
         size: Int
     ): List<ProfileCard> {
-        val response = apiService.getMatchCandidates(
+        val response = coreApiService.getMatchCandidates(
             MatchBatchRequestDTO(
                 batchSize = size
             )
@@ -208,7 +214,7 @@ class GlobalRepositoryImpl(
         userId: String,
         isLike: Boolean
     ) {
-        apiService.reactOnMatch(
+        coreApiService.reactOnMatch(
             MatchActionRequestDTO(
                 targetUuid = userId,
                 action = if (isLike) MatchActionTypeDTO.LIKE else MatchActionTypeDTO.DISLIKE
@@ -232,14 +238,31 @@ class GlobalRepositoryImpl(
             fandomCategory = categories.map { it.name }.first(), // todo даша
             fandomId = fandoms.map { it.id }.firstOrNull(), // todo даша
         )
-        apiService.setMatchFilter(request)
+        coreApiService.setMatchFilter(request)
     }
 
     override suspend fun subscribeToChatPreviews(
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<ChatPreview>> {
-        TODO("Not yet implemented")
+        val response = chatApiService.getChatPreviews(
+            ChatPreviewsRequestDTO(
+                beforeTimestamp = beforeTimestamp,
+                size = size
+            )
+        )
+        return MutableStateFlow(response.successResponse?.previews?.map { previewDTO ->
+            ChatPreview(
+                chatId = previewDTO.chatId,
+                participantName = previewDTO.participantName,
+                participantAvatarUrl = previewDTO.participantAvatarUrl,
+                lastMessage = previewDTO.lastMessage,
+                isLastMessageFromThisUser = previewDTO.isLastMessageFromThisUser,
+                lastMessageTimestamp = previewDTO.lastMessageTimestamp,
+                newMessagesCount = previewDTO.newMessagesCount,
+            )
+        } ?: emptyList()
+        ) // todo websocket somehow
     }
 
     override suspend fun subscribeToChatMessages(
@@ -247,11 +270,35 @@ class GlobalRepositoryImpl(
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<Message>> {
-        TODO("Not yet implemented")
+        val response = chatApiService.getChatMessages(
+            userId = userId,
+            request = ChatMessagesRequestDTO(
+                beforeTimestamp = beforeTimestamp,
+                size = size
+            )
+        )
+        return MutableStateFlow(response.successResponse?.messages?.map { messageDTO ->
+            Message(
+                messageId = messageDTO.messageId,
+                isFromThisUser = messageDTO.isFromThisUser,
+                content = messageDTO.content,
+                timestamp = messageDTO.timestamp,
+                imageUrls = messageDTO.mediaItems?.map { it.url } ?: emptyList(),
+            )
+        } ?: emptyList()
+        ) // todo websocket somehow
     }
 
     override suspend fun loadChatInfo(userId: String): Chat {
-        TODO("Not yet implemented")
+        val response = chatApiService.getChat(userId)
+        return response.successResponse?.let { chatDTO ->
+            Chat(
+                chatId = chatDTO.chatId,
+                participantName = chatDTO.participantName,
+                participantAvatarUrl = chatDTO.participantAvatarUrl,
+                participantId = chatDTO.participantId
+            )
+        } ?: throw Exception("Failed to load chat info") // todo error handling
     }
 
     override suspend fun sendMessage(
@@ -260,30 +307,38 @@ class GlobalRepositoryImpl(
         images: List<ByteArray>,
         timestamp: Long
     ) {
-        TODO("Not yet implemented")
+        // todo upload images and get mediaIds
+        chatApiService.sendMessage(
+            userId = receiverId,
+            request = SendMessageRequestDTO(
+                content = content,
+                mediaIds = emptyList(),
+                timestamp = timestamp,
+            )
+        )
     }
 
     override suspend fun getFeedPosts(
         beforeTimestamp: Long?,
         size: Int
     ): List<Post> {
-        val response = apiService.getFeed(
+        val response = coreApiService.getFeed(
             page = 0,
             size = size
         )
         return response.successResponse?.posts?.map { postDTO ->
             Post(
                 id = postDTO.id,
-                authorId = TODO(),
-                authorName = TODO(),
-                authorLogin = TODO(),
-                authorAvatarUrl = TODO(),
-                timestamp = TODO(),
+                authorId = "", // todo даша
+                authorName = "", // todo даша
+                authorLogin = "", // todo даша
+                authorAvatarUrl = "", // todo даша
+                timestamp = 0L, // todo даша
                 content = postDTO.content,
-                imageUrls = TODO(),
-                likeCount = TODO(),
-                commentCount = TODO(),
-                isLikedByCurrentUser = TODO()
+                imageUrls = emptyList(), // todo даша
+                likeCount = 0, // todo даша
+                commentCount = 0, // todo даша
+                isLikedByCurrentUser = false // todo даша
             )
         } ?: emptyList()
     }
@@ -293,7 +348,7 @@ class GlobalRepositoryImpl(
         beforeTimestamp: Long?,
         size: Int
     ): List<Post> {
-        val response = apiService.getPosts(
+        val response = coreApiService.getPosts(
             PostsGetRequestDTO(
                 username = userId, // todo даша
                 page = 0, // todo даша
@@ -303,22 +358,22 @@ class GlobalRepositoryImpl(
         return response.successResponse?.posts?.map { postDTO ->
             Post(
                 id = postDTO.id,
-                authorId = TODO(),
-                authorName = TODO(),
-                authorLogin = TODO(),
-                authorAvatarUrl = TODO(),
-                timestamp = TODO(),
+                authorId = "", // todo даша
+                authorName = "", // todo даша
+                authorLogin = "", // todo даша
+                authorAvatarUrl = "", // todo даша
+                timestamp = 0L, // todo даша
                 content = postDTO.content,
-                imageUrls = TODO(),
-                likeCount = TODO(),
-                commentCount = TODO(),
-                isLikedByCurrentUser = TODO()
+                imageUrls = emptyList(), // todo даша
+                likeCount = 0, // todo даша
+                commentCount = 0, // todo даша
+                isLikedByCurrentUser = false // todo даша
             )
         } ?: emptyList()
     }
 
     override suspend fun getFandomCategories(): List<FandomCategory> {
-        val response = apiService.getFandomCategories()
+        val response = coreApiService.getFandomCategories()
         return response.successResponse?.categories?.map { categoryDTO ->
             FandomCategory.BOOKS // todo даша
         } ?: emptyList()
