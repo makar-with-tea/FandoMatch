@@ -3,11 +3,13 @@ package ru.hse.fandomatch.ui.authorization
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -18,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.composables.LoadingBlock
@@ -27,6 +30,7 @@ import ru.hse.fandomatch.ui.composables.MyTextField
 @Composable
 fun AuthorizationScreen(
     navigateToMatches: () -> Unit,
+    navigateToPasswordRecovery: () -> Unit,
     viewModel: AuthorizationViewModel = koinViewModel()
 ) {
     val state = viewModel.state.collectAsState()
@@ -36,6 +40,11 @@ fun AuthorizationScreen(
     when (action.value) {
         is AuthorizationAction.NavigateToMatches -> {
             navigateToMatches()
+            viewModel.obtainEvent(AuthorizationEvent.Clear)
+        }
+
+        is AuthorizationAction.NavigateToPasswordRecovery -> {
+            navigateToPasswordRecovery()
             viewModel.obtainEvent(AuthorizationEvent.Clear)
         }
 
@@ -57,6 +66,9 @@ fun AuthorizationScreen(
                 },
                 onShowPasswordClick = {
                     viewModel.obtainEvent(AuthorizationEvent.ShowPasswordButtonClicked)
+                },
+                onForgotPasswordClicked = {
+                    viewModel.obtainEvent(AuthorizationEvent.ForgotPasswordButtonClicked)
                 }
             )
         }
@@ -72,7 +84,8 @@ fun MainState(
     onLoginChanged: (String) -> Unit,
     onPasswordChanged: (String) -> Unit,
     onLoginClick: () -> Unit,
-    onShowPasswordClick: () -> Unit
+    onShowPasswordClick: () -> Unit,
+    onForgotPasswordClicked: () -> Unit,
 ) {
     val login: MutableState<String> = remember { mutableStateOf(state.login) }
     val password: MutableState<String> = remember { mutableStateOf(state.password) }
@@ -118,6 +131,17 @@ fun MainState(
             ) {
                 Text(stringResource(id = R.string.login_button))
             }
+
+            TextButton(
+                onClick = onForgotPasswordClicked,
+                contentPadding = PaddingValues(4.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.forgot_password_button),
+                    modifier = Modifier.padding(0.dp),
+                    fontSize = 14.sp
+                )
+            }
         }
     }
 
@@ -148,6 +172,7 @@ fun LoadingState() {
 @Composable
 fun AuthorizationScreenPreview() {
     AuthorizationScreen(
-            {}
+        navigateToMatches = {},
+        navigateToPasswordRecovery = {}
     )
 }

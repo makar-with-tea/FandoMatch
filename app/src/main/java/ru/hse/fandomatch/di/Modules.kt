@@ -27,8 +27,10 @@ import ru.hse.fandomatch.domain.usecase.user.GetFriendsUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetPastLoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserPostsUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
 import ru.hse.fandomatch.domain.usecase.user.RegisterUseCase
+import ru.hse.fandomatch.domain.usecase.user.ResetPasswordUseCase
 import ru.hse.fandomatch.ui.addfandom.AddFandomViewModel
 import ru.hse.fandomatch.ui.authorization.AuthorizationViewModel
 import ru.hse.fandomatch.ui.chat.ChatViewModel
@@ -39,6 +41,7 @@ import ru.hse.fandomatch.ui.filters.FiltersViewModel
 import ru.hse.fandomatch.ui.intro.IntroViewModel
 import ru.hse.fandomatch.ui.matches.MatchesViewModel
 import ru.hse.fandomatch.ui.newpost.NewPostViewModel
+import ru.hse.fandomatch.ui.passwordrecovery.PasswordRecoveryViewModel
 import ru.hse.fandomatch.ui.profile.ProfileViewModel
 import ru.hse.fandomatch.ui.registration.RegistrationViewModel
 import ru.hse.fandomatch.ui.settings.SettingsViewModel
@@ -68,6 +71,7 @@ val appModule = module {
     viewModel<SettingsViewModel> { SettingsViewModel() }
     viewModel<AddFandomViewModel> { AddFandomViewModel() }
     viewModel<NewPostViewModel> { NewPostViewModel() }
+    viewModel<PasswordRecoveryViewModel> { PasswordRecoveryViewModel(get(), get()) }
 }
 
 val dataModule = module {
@@ -106,6 +110,8 @@ val domainModule = module {
     factory<LoginUseCase> { LoginUseCase(get(), get()) }
     factory<GetPastLoginUseCase> { GetPastLoginUseCase(get()) }
     factory<RegisterUseCase> { RegisterUseCase(get(), get()) }
+    factory<GetVerificationCodeUseCase> { GetVerificationCodeUseCase(get()) }
+    factory<ResetPasswordUseCase> { ResetPasswordUseCase(get()) }
 
     factory<GetUserUseCase> { GetUserUseCase(get(), get()) }
     factory<LoadSuggestedProfilesUseCase> { LoadSuggestedProfilesUseCase(get()) }

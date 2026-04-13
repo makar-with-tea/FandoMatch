@@ -179,6 +179,14 @@ class GlobalRepositoryImpl(
         TODO("Not yet implemented")
     }
 
+    override suspend fun getVerificationCode(email: String) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun resetPassword(code: String, newPassword: String) {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun getSuggestedProfiles(
         size: Int
     ): List<ProfileCard> {

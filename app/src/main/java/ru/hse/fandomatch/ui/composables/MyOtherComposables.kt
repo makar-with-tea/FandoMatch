@@ -99,6 +99,7 @@ fun MyTextField(
     enabled: Boolean = true,
     errorText: String? = null,
     hideOnDone: Boolean = true,
+    keyboardType: KeyboardType = KeyboardType.Unspecified,
     onValueChange: (String) -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -113,7 +114,10 @@ fun MyTextField(
         isError = isError,
         enabled = enabled,
         onValueChange = onValueChange,
-        keyboardOptions = KeyboardOptions.Default.copy(imeAction = if (hideOnDone) ImeAction.Done else ImeAction.Default),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = if (hideOnDone) ImeAction.Done else ImeAction.Default,
+            keyboardType = keyboardType,
+        ),
         keyboardActions = KeyboardActions(
             onDone = onDone
         ),

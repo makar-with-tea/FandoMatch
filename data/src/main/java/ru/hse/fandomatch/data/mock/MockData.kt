@@ -93,7 +93,8 @@ var mockUser = User(
     )
 )
 
-const val mockPassword = "qwerty123!"
+var mockPassword = "qwerty123!"
+var mockVerificationCode = "123456"
 
 val mockAuthInfo = AuthInfo(
     accessToken = "accessToken",

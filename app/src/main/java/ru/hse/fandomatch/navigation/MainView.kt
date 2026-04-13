@@ -35,6 +35,7 @@ import ru.hse.fandomatch.ui.registration.RegistrationScreen
 import ru.hse.fandomatch.ui.settings.SettingsScreen
 import ru.hse.fandomatch.orFalse
 import ru.hse.fandomatch.ui.newpost.NewPostScreen
+import ru.hse.fandomatch.ui.passwordrecovery.PasswordRecoveryScreen
 
 sealed class Route(val route: String) {
     data object Authorization : Route("authorization")
@@ -61,6 +62,7 @@ sealed class Route(val route: String) {
     data object Settings : Route("settings")
     data object AddFandom : Route("add_fandom")
     data object NewPost : Route("new_post")
+    data object PasswordRecovery : Route("password_recovery")
 }
 
 @Composable
@@ -95,6 +97,7 @@ fun MainView() {
             Route.Filters.route -> R.string.filters_title
             Route.Feed.route -> R.string.feed_title
             Route.AddFandom.route -> R.string.add_fandom_title
+            Route.PasswordRecovery.route -> R.string.password_recovery_title
             else -> null
         }
 
@@ -133,6 +136,7 @@ fun MainView() {
                 Route.Feed.route -> R.string.feed_title
                 Route.AddFandom.route -> R.string.add_fandom_title
                 Route.AddFandom.route -> R.string.add_fandom_title
+                Route.PasswordRecovery.route -> R.string.password_recovery_title
                 Route.Intro.route, Route.Registration.route, Route.Authorization.route -> null
                 else -> null
             }
@@ -156,6 +160,7 @@ fun MainView() {
                 endIcons = endIcons,
             )
     }
+
     val setTopBarState = { state: TopBarState?, route: String? ->
         if (currentRoute == route) topBarState.value = state
     }
@@ -183,10 +188,11 @@ fun MainView() {
             }
         }
     ) { paddingValues ->
-        Box(modifier = Modifier
-            .padding(paddingValues)
-            .consumeWindowInsets(paddingValues)
-            .imePadding()
+        Box(
+            modifier = Modifier
+                .padding(paddingValues)
+                .consumeWindowInsets(paddingValues)
+                .imePadding()
         ) {
             NavHost(navController = navController, startDestination = Route.Intro.route) {
                 composable(Route.Intro.route) {
@@ -200,7 +206,8 @@ fun MainView() {
                 composable(Route.Authorization.route) {
                     updateTopBar()
                     AuthorizationScreen(
-                        navigateToMatches = { navigateToRoute(Route.Matches) }
+                        navigateToMatches = { navigateToRoute(Route.Matches) },
+                        navigateToPasswordRecovery = { navigateToRoute(Route.PasswordRecovery) },
                     )
                 }
                 composable(Route.Registration.route) {
@@ -375,6 +382,12 @@ fun MainView() {
                         setTopBarState = { setTopBarState(it, Route.NewPost.route) },
                     )
                 }
+                composable(Route.PasswordRecovery.route) {
+                    updateTopBar()
+                    PasswordRecoveryScreen(
+                        navigateToAuthorization = { navigateToRoute(Route.Authorization) }
+                    )
+                }
             }
         }
     }
@@ -385,7 +398,9 @@ private fun String.canShowBottomBar(): Boolean {
         Route.Authorization.route,
         Route.Registration.route,
         Route.Intro.route,
-        Route.Chat.route, // todo check if it works
+        Route.Chat.route,
         Route.Filters.route,
+        Route.PasswordRecovery.route,
+        Route.EditProfile.route,
     )
 }

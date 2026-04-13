@@ -285,6 +285,20 @@ class GlobalRepositoryMock: GlobalRepository {
             }
     }
 
+    override suspend fun getVerificationCode(email: String) {
+        Log.d("GlobalRepositoryMock", "getVerificationCode: sent code to email $email")
+    }
+
+    override suspend fun resetPassword(code: String, newPassword: String) {
+        if (code == mockVerificationCode) {
+            mockPassword = newPassword
+            Log.d("GlobalRepositoryMock", "resetPassword: password reset successful with code $code")
+        } else {
+            Log.d("GlobalRepositoryMock", "resetPassword: invalid code $code")
+            throw IllegalArgumentException("Invalid verification code")
+        }
+    }
+
     override suspend fun getSuggestedProfiles(size: Int): List<ProfileCard> {
         return mockProfileCards.shuffled().take(size).also {
             Log.d(

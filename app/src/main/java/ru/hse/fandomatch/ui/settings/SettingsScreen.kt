@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -449,7 +450,8 @@ fun ChangeEmailState(
             onValueChange = { email.value = it },
             label = stringResource(id = R.string.email_label),
             isError = state.emailError != SettingsState.SettingsError.IDLE,
-            errorText = state.emailError.toText()
+            errorText = state.emailError.toText(),
+            keyboardType = KeyboardType.Email,
         )
         Button(onClick = { onSaveEmail(email.value) }) {
             Text(stringResource(id = R.string.save_button))

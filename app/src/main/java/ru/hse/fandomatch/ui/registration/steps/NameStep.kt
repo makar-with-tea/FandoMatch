@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
@@ -57,7 +58,8 @@ internal fun NameStep(
                 value = email.value,
                 label = stringResource(R.string.email_label),
                 isError = state.emailError.isFieldError(),
-                errorText = state.emailError.getText()
+                errorText = state.emailError.getText(),
+                keyboardType = KeyboardType.Email,
             ) {
                 onEmailChanged(it)
                 email.value = it

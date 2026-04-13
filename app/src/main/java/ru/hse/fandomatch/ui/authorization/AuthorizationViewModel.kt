@@ -28,10 +28,11 @@ class AuthorizationViewModel(
     fun obtainEvent(event: AuthorizationEvent) {
         Log.d("AuthorizationViewModel", "Event: $event")
         when (event) {
-            is AuthorizationEvent.LoginButtonClicked -> login()
+            AuthorizationEvent.LoginButtonClicked -> login()
             is AuthorizationEvent.LoginChanged -> loginChanged(event.login)
             is AuthorizationEvent.PasswordChanged -> passwordChanged(event.password)
-            is AuthorizationEvent.ShowPasswordButtonClicked -> changeVisibilityState()
+            AuthorizationEvent.ShowPasswordButtonClicked -> changeVisibilityState()
+            AuthorizationEvent.ForgotPasswordButtonClicked -> forgotPassword()
             is AuthorizationEvent.Clear -> clear()
         }
     }
@@ -109,6 +110,10 @@ class AuthorizationViewModel(
                 }
             }
         }
+    }
+
+    private fun forgotPassword() {
+        _action.value = AuthorizationAction.NavigateToPasswordRecovery
     }
 
     private fun clear() {

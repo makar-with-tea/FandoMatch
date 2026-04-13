@@ -26,9 +26,11 @@ sealed class AuthorizationEvent {
     data class LoginChanged(val login: String): AuthorizationEvent()
     data class PasswordChanged(val password: String): AuthorizationEvent()
     data object ShowPasswordButtonClicked: AuthorizationEvent()
+    data object ForgotPasswordButtonClicked: AuthorizationEvent()
     data object Clear: AuthorizationEvent()
 }
 
 sealed class AuthorizationAction {
     data object NavigateToMatches : AuthorizationAction()
+    data object NavigateToPasswordRecovery : AuthorizationAction()
 }
