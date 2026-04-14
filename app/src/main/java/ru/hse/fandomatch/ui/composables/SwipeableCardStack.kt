@@ -2,14 +2,12 @@ package ru.hse.fandomatch.ui.composables
 
 import android.util.Log
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -19,23 +17,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import ru.hse.fandomatch.domain.model.ProfileCard
-import kotlin.div
-import kotlin.math.roundToInt
-import kotlin.text.compareTo
-import kotlin.text.toFloat
-import kotlin.times
-import kotlin.unaryMinus
+import kotlin.math.abs
 
 @Composable
 fun SwipeableCardStack(
@@ -154,8 +145,15 @@ private fun handleSwipeEnd(
     onSwipedRight: () -> Unit,
     onSwipedLeft: () -> Unit
 ) {
-    val shouldSwipeRight = offsetX.value > SWIPE_DISTANCE_THRESHOLD || velocityX > SWIPE_VELOCITY_THRESHOLD
-    val shouldSwipeLeft = offsetX.value < -SWIPE_DISTANCE_THRESHOLD || velocityX < -SWIPE_VELOCITY_THRESHOLD
+    val hasHorizontalIntent = abs(offsetX.value) >= abs(offsetY.value)
+    val shouldSwipeRight = hasHorizontalIntent && (
+        offsetX.value > SWIPE_DISTANCE_THRESHOLD ||
+            (offsetX.value > 0f && velocityX > SWIPE_VELOCITY_THRESHOLD)
+        )
+    val shouldSwipeLeft = hasHorizontalIntent && (
+        offsetX.value < -SWIPE_DISTANCE_THRESHOLD ||
+            (offsetX.value < 0f && velocityX < -SWIPE_VELOCITY_THRESHOLD)
+        )
 
     when {
         shouldSwipeRight -> launchSwipeOut(
