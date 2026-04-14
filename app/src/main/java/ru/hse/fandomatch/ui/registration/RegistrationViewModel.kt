@@ -18,12 +18,16 @@ import ru.hse.fandomatch.checkNameContent
 import ru.hse.fandomatch.checkNameLength
 import ru.hse.fandomatch.checkPasswordContent
 import ru.hse.fandomatch.checkPasswordLength
+import ru.hse.fandomatch.domain.usecase.user.CheckVerificationCodeUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetVerificationCodeUseCase
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
 class RegistrationViewModel(
     private val registerUseCase: RegisterUseCase,
+    private val getVerificationCodeUseCase: GetVerificationCodeUseCase,
+    private val checkVerificationCodeUseCase: CheckVerificationCodeUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main
 ) : ViewModel() {
@@ -33,7 +37,7 @@ class RegistrationViewModel(
         var email: String = "",
         var login: String = "",
         var dateOfBirthMillis: Long? = null,
-        var gender: Gender? = null,
+        var gender: Gender = Gender.NOT_SPECIFIED,
         var avatarByteArray: ByteArray? = null,
         var password: String = "",
         var passwordRepeat: String = "",
@@ -64,7 +68,7 @@ class RegistrationViewModel(
             result = 31 * result + name.hashCode()
             result = 31 * result + email.hashCode()
             result = 31 * result + login.hashCode()
-            result = 31 * result + (gender?.hashCode() ?: 0)
+            result = 31 * result + (gender.hashCode())
             result = 31 * result + (avatarByteArray?.contentHashCode() ?: 0)
             result = 31 * result + password.hashCode()
             result = 31 * result + passwordRepeat.hashCode()
@@ -86,6 +90,7 @@ class RegistrationViewModel(
             is RegistrationEvent.EmailChanged -> onEmailChanged(event.email)
             is RegistrationEvent.LoginChanged -> onLoginChanged(event.login)
             RegistrationEvent.NameSubmitted -> handlePersonal()
+            is RegistrationEvent.CodeSubmitted -> handleCode(event.code)
             is RegistrationEvent.DateSelected -> handleDate(event.dateOfBirthMillis)
             is RegistrationEvent.GenderSelected -> handleGender(event.gender)
             is RegistrationEvent.AvatarSelected -> handleAvatar(event.avatarByteArray)
@@ -166,10 +171,52 @@ class RegistrationViewModel(
             return
         }
 
-        form.name = currentState.name
-        form.email = currentState.email
-        form.login = currentState.login
-        _state.value = RegistrationState.DateOfBirth(form.dateOfBirthMillis)
+        viewModelScope.launch(dispatcherIO) {
+            try {
+                getVerificationCodeUseCase.execute(currentState.email)
+                withContext(dispatcherMain) {
+                    form.name = currentState.name
+                    form.email = currentState.email
+                    form.login = currentState.login
+                    _state.value = RegistrationState.Code()
+                }
+            } catch (_: Exception) {
+                withContext(dispatcherMain) {
+                    _state.value = currentState.copy(
+                        nameError = RegistrationState.RegistrationError.NETWORK,
+                        emailError = RegistrationState.RegistrationError.NETWORK,
+                        loginError = RegistrationState.RegistrationError.NETWORK
+                    )
+                }
+            }
+        }
+    }
+
+    private fun handleCode(code: String) {
+        _state.value = (state.value as? RegistrationState.Code)?.copy(isLoading = true) ?: return
+
+        viewModelScope.launch(dispatcherIO) {
+            try {
+                val isValid = checkVerificationCodeUseCase.execute(code)
+                withContext(dispatcherMain) {
+                    if (isValid) {
+                        _state.value = RegistrationState.DateOfBirth(form.dateOfBirthMillis)
+                    } else {
+                        _state.value = RegistrationState.Code(
+                            codeError = RegistrationState.RegistrationError.INVALID_CODE,
+                            isLoading = false
+                        )
+                    }
+                }
+            } catch (_: Exception) {
+                withContext(dispatcherMain) {
+                    _state.value = RegistrationState.Code(
+                        codeError = RegistrationState.RegistrationError.NETWORK,
+                        isLoading = false
+                    )
+                }
+            }
+        }
     }
 
     private fun handleDate(dateOfBirthMillis: Long?) {
@@ -192,14 +239,7 @@ class RegistrationViewModel(
         _state.value = RegistrationState.GenderChoice(form.gender)
     }
 
-    private fun handleGender(gender: Gender?) {
-        if (gender == null) {
-            _state.value = RegistrationState.GenderChoice(
-                gender = null,
-                error = RegistrationState.RegistrationError.GENDER_NOT_SELECTED
-            )
-            return
-        }
+    private fun handleGender(gender: Gender) {
         form.gender = gender
         _state.value = RegistrationState.Avatar(form.avatarByteArray)
     }
@@ -278,7 +318,7 @@ class RegistrationViewModel(
             isLoading = true
         )
 
-        if (form.dateOfBirthMillis == null || form.gender == null) {
+        if (form.dateOfBirthMillis == null) {
             // This should never happen
             _state.value = RegistrationState.Password(
                 password = currentState.password,
@@ -296,7 +336,7 @@ class RegistrationViewModel(
                     form.email,
                     form.login,
                     form.dateOfBirthMillis!!,
-                    form.gender!!,
+                    form.gender,
                     form.avatarByteArray,
                     form.password
                 )
@@ -344,11 +384,12 @@ class RegistrationViewModel(
 
     private fun back() {
         _state.value = when (_state.value) {
-            is RegistrationState.DateOfBirth -> RegistrationState.Name(
+            is RegistrationState.Code -> RegistrationState.Name(
                 name = form.name,
                 email = form.email,
                 login = form.login
             )
+            is RegistrationState.DateOfBirth -> RegistrationState.Code()
             is RegistrationState.GenderChoice -> RegistrationState.DateOfBirth(
                 dateOfBirthMillis = form.dateOfBirthMillis
             )
@@ -358,7 +399,8 @@ class RegistrationViewModel(
             is RegistrationState.Password -> RegistrationState.Avatar(
                 avatarByteArray = form.avatarByteArray
             )
-            else -> _state.value.also {
+            is RegistrationState.Idle, is RegistrationState.Loading, is RegistrationState.Name
+                -> _state.value.also {
                 _action.value = RegistrationAction.NavigateBack
             }
         }
@@ -370,7 +412,7 @@ class RegistrationViewModel(
             email = ""
             login = ""
             dateOfBirthMillis = null
-            gender = null
+            gender = Gender.NOT_SPECIFIED
             avatarByteArray = null
             password = ""
             passwordRepeat = ""

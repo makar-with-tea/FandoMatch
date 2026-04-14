@@ -42,6 +42,7 @@ interface GlobalRepository {
     suspend fun getFriends(): List<OtherProfileItem>
     suspend fun getFriendRequests(): List<OtherProfileItem>
     suspend fun getVerificationCode(email: String)
+    suspend fun checkVerificationCode(code: String): Boolean
     suspend fun resetPassword(code: String, newPassword: String)
 
     // Matches

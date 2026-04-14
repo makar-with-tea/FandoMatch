@@ -137,7 +137,7 @@ fun MainView() {
                 Route.AddFandom.route -> R.string.add_fandom_title
                 Route.AddFandom.route -> R.string.add_fandom_title
                 Route.PasswordRecovery.route -> R.string.password_recovery_title
-                Route.Intro.route, Route.Registration.route, Route.Authorization.route -> null
+                Route.Intro.route, Route.Authorization.route -> null
                 else -> null
             }
 
@@ -154,11 +154,12 @@ fun MainView() {
                 else -> listOf()
             }
 
-        topBarState.value =
+        topBarState.value = screenTitleId?.let {
             TopBarState(
-                titleContent = { screenTitleId?.let { MyTitle(text = stringResource(it)) } },
+                titleContent = { MyTitle(text = stringResource(screenTitleId)) },
                 endIcons = endIcons,
             )
+        }
     }
 
     val setTopBarState = { state: TopBarState?, route: String? ->
@@ -211,10 +212,10 @@ fun MainView() {
                     )
                 }
                 composable(Route.Registration.route) {
-                    updateTopBar()
                     RegistrationScreen(
                         navigateToMatches = { navigateToRoute(Route.Matches) },
                         navigateBack = { navController.popBackStack() },
+                        setTopBarState = { setTopBarState(it, Route.Registration.route) }
                     )
                 }
                 composable(Route.Matches.route) {

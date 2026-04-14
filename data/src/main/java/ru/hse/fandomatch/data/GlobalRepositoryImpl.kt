@@ -183,6 +183,10 @@ class GlobalRepositoryImpl(
         TODO("Not yet implemented")
     }
 
+    override suspend fun checkVerificationCode(code: String): Boolean {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun resetPassword(code: String, newPassword: String) {
         TODO("Not yet implemented")
     }

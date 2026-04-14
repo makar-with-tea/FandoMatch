@@ -22,6 +22,7 @@ import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
 import ru.hse.fandomatch.domain.usecase.feed.GetFeedUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LoadSuggestedProfilesUseCase
+import ru.hse.fandomatch.domain.usecase.user.CheckVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetFriendRequestsUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetFriendsUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetPastLoginUseCase
@@ -48,7 +49,12 @@ import ru.hse.fandomatch.ui.settings.SettingsViewModel
 
 val appModule = module {
     viewModel<AuthorizationViewModel> { AuthorizationViewModel(loginUseCase = get()) }
-    viewModel<RegistrationViewModel> { RegistrationViewModel(registerUseCase = get()) }
+    viewModel<RegistrationViewModel> { RegistrationViewModel(
+        registerUseCase = get(),
+        getVerificationCodeUseCase = get(),
+        checkVerificationCodeUseCase = get(),
+        )
+    }
     viewModel<IntroViewModel> { IntroViewModel(getPastLoginUseCase = get()) }
     viewModel<MatchesViewModel> {
         MatchesViewModel(
@@ -111,6 +117,7 @@ val domainModule = module {
     factory<GetPastLoginUseCase> { GetPastLoginUseCase(get()) }
     factory<RegisterUseCase> { RegisterUseCase(get(), get()) }
     factory<GetVerificationCodeUseCase> { GetVerificationCodeUseCase(get()) }
+    factory<CheckVerificationCodeUseCase> { CheckVerificationCodeUseCase(get()) }
     factory<ResetPasswordUseCase> { ResetPasswordUseCase(get()) }
 
     factory<GetUserUseCase> { GetUserUseCase(get(), get()) }

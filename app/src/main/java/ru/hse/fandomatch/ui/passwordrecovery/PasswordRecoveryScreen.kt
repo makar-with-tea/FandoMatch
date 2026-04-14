@@ -131,7 +131,7 @@ fun MainState(
 
             MyTextField(
                 value = code,
-                label = stringResource(id = R.string.recovery_code_label),
+                label = stringResource(id = R.string.verification_code_label),
                 isError = state.codeError != PasswordRecoveryState.PasswordRecoveryError.IDLE,
                 errorText = state.codeError.toText(),
                 onValueChange = { code = it.filter { ch -> ch.isDigit() } },

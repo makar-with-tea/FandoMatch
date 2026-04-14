@@ -7,26 +7,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CornerBasedShape
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Female
-import androidx.compose.material.icons.filled.Male
-import androidx.compose.material.icons.filled.QuestionMark
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MultiChoiceSegmentedButtonRow
@@ -40,25 +28,17 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode.Companion.Color
-import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.data.mock.mockUser
-import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.ProfileType
-import ru.hse.fandomatch.getName
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.stringId
 import ru.hse.fandomatch.timestampToDateString
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.AvatarWithBackground
@@ -70,7 +50,6 @@ import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyFloatingButton
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.theme.FandoMatchTheme
-import kotlin.collections.forEachIndexed
 
 @Composable
 fun ProfileScreen(
@@ -325,6 +304,7 @@ private fun MainState(
                                     colors = colors,
                                     onCheckedChange = { onPostsClicked() },
                                     checked = state.bottomSheetState is ProfileState.BottomSheetState.Posts,
+                                    icon = {},
                                     label = { Text(stringResource(R.string.posts_label)) }
                                 )
                                 SegmentedButton(
@@ -337,6 +317,7 @@ private fun MainState(
                                     colors = colors,
                                     onCheckedChange = { onFriendsClicked() },
                                     checked = state.bottomSheetState is ProfileState.BottomSheetState.Friends,
+                                    icon = {},
                                     label = { Text(stringResource(R.string.friends_label)) }
                                 )
                                 SegmentedButton(
@@ -349,6 +330,7 @@ private fun MainState(
                                     colors = colors,
                                     onCheckedChange = { onRequestsClicked() },
                                     checked = state.bottomSheetState is ProfileState.BottomSheetState.Requests,
+                                    icon = {},
                                     label = { Text(stringResource(R.string.your_requests_label)) }
                                 )
                             }

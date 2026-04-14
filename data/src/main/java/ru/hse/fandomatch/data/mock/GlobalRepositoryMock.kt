@@ -289,6 +289,15 @@ class GlobalRepositoryMock: GlobalRepository {
         Log.d("GlobalRepositoryMock", "getVerificationCode: sent code to email $email")
     }
 
+    override suspend fun checkVerificationCode(code: String): Boolean {
+        return (code == mockVerificationCode).also {
+            Log.d(
+                "GlobalRepositoryMock",
+                "checkVerificationCode: ${if (it) "valid" else "invalid"} code $code"
+            )
+        }
+    }
+
     override suspend fun resetPassword(code: String, newPassword: String) {
         if (code == mockVerificationCode) {
             mockPassword = newPassword

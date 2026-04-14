@@ -93,8 +93,6 @@ class PasswordRecoveryViewModel(
     private fun repeatNewPasswordChanged(password: String) {
         val currentState = _state.value as? PasswordRecoveryState.Main ?: return
         val passwordErr = when {
-            !password.checkPasswordLength() -> PasswordRecoveryState.PasswordRecoveryError.PASSWORD_LENGTH
-            !password.checkPasswordContent() -> PasswordRecoveryState.PasswordRecoveryError.PASSWORD_CONTENT
             password != currentState.newPassword -> PasswordRecoveryState.PasswordRecoveryError.PASSWORD_MISMATCH
             else -> PasswordRecoveryState.PasswordRecoveryError.IDLE
         }
@@ -144,20 +142,6 @@ class PasswordRecoveryViewModel(
         if (!resetState.newPassword.checkPasswordContent()) {
             _state.value = resetState.copy(
                 newPasswordError = PasswordRecoveryState.PasswordRecoveryError.PASSWORD_CONTENT,
-            )
-            return
-        }
-
-        if (!resetState.repeatNewPassword.checkPasswordLength()) {
-            _state.value = resetState.copy(
-                repeatNewPasswordError = PasswordRecoveryState.PasswordRecoveryError.PASSWORD_LENGTH,
-            )
-            return
-        }
-
-        if (!resetState.repeatNewPassword.checkPasswordContent()) {
-            _state.value = resetState.copy(
-                repeatNewPasswordError = PasswordRecoveryState.PasswordRecoveryError.PASSWORD_CONTENT,
             )
             return
         }
