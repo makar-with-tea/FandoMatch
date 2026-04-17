@@ -13,7 +13,7 @@ import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetFriendRequestsUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetFriendsUseCase
-import ru.hse.fandomatch.domain.usecase.user.GetUserPostsUseCase
+import ru.hse.fandomatch.domain.usecase.posts.GetUserPostsUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 
 class ProfileViewModel(
@@ -67,9 +67,9 @@ class ProfileViewModel(
     private fun loadProfile(userId: String?, isCurrentUser: Boolean) {
         // todo backend
         viewModelScope.launch(dispatcherIO) {
-            val user = getUserUseCase.execute(userId, isCurrentUser)
-            if (user == null) {
-                Log.e("ProfileViewModel", "User with id $userId not found")
+            val result = getUserUseCase.execute(userId, isCurrentUser)
+            val user = result.getOrNull() ?: run {
+                Log.e("ProfileViewModel", "Failed to load profile info", result.exceptionOrNull())
                 withContext(dispatcherMain) {
                     _state.value = ProfileState.Error(ProfileState.ProfileError.NO_USER)
                 }
@@ -82,7 +82,7 @@ class ProfileViewModel(
                 _state.value = ProfileState.Main(
                     id = user.id,
                     login = when (type) {
-                        ProfileType.Stranger -> null
+                        is ProfileType.Stranger -> null
                         is ProfileType.Own -> type.login
                         is ProfileType.Friend -> type.login
                     },

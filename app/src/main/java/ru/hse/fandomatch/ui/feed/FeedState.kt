@@ -20,7 +20,6 @@ sealed class FeedEvent {
         val chatId: String,
     ): FeedEvent()
     data object LoadPosts: FeedEvent()
-//    data class SearchPosts(val query: String?): FeedEvent() todo мы умеем искать?
     data object Clear: FeedEvent()
 }
 

@@ -7,9 +7,10 @@ import ru.hse.fandomatch.domain.repos.GlobalRepository
 class SubscribeToChatMessagesUseCase(
     private val globalRepository: GlobalRepository,
 ) {
-    suspend fun execute(userId: String): StateFlow<List<Message>> {
+    suspend fun execute(userId: String, chatId: String): StateFlow<List<Message>> {
         return globalRepository.subscribeToChatMessages(
             userId = userId,
+            chatId = chatId,
             beforeTimestamp = null,
             size = 100500, // todo
         )

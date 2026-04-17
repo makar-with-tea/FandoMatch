@@ -11,12 +11,14 @@ import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.AuthInfo
+import ru.hse.fandomatch.domain.model.FullPost
+import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.OtherProfileItem
 import ru.hse.fandomatch.domain.model.User
 
 interface GlobalRepository {
     // User
-    suspend fun getUser(profileId: String): User?
+    suspend fun getUser(profileId: String): User
     suspend fun login(login: String, password: String): AuthInfo
     suspend fun register(
         name: String,
@@ -33,16 +35,16 @@ interface GlobalRepository {
         bio: String?,
         gender: Gender,
         city: City,
-        avatarUrl: String?,
-        backgroundUrl: String?,
+        avatarMediaId: String?,
+        backgroundMediaId: String?,
     )
+    suspend fun changePassword(oldPassword: String, newPassword: String)
 
     suspend fun deleteUser(login: String)
-    suspend fun checkPassword(login: String, password: String): Boolean
-    suspend fun getFriends(): List<OtherProfileItem>
-    suspend fun getFriendRequests(): List<OtherProfileItem>
+    suspend fun getFriends(id: String): List<OtherProfileItem>
+    suspend fun getFriendRequests(id: String): List<OtherProfileItem>
     suspend fun getVerificationCode(email: String)
-    suspend fun checkVerificationCode(code: String): Boolean
+    suspend fun checkVerificationCode(code: String, email: String): Boolean
     suspend fun resetPassword(code: String, newPassword: String)
 
     // Matches
@@ -65,6 +67,7 @@ interface GlobalRepository {
         size: Int,
     ): StateFlow<List<ChatPreview>>
     suspend fun subscribeToChatMessages(
+        chatId: String,
         userId: String,
         beforeTimestamp: Long?,
         size: Int,
@@ -76,9 +79,11 @@ interface GlobalRepository {
         images: List<ByteArray>,
         timestamp: Long,
     )
+    suspend fun getUploadMediaUrl(mediaType: MediaType): String
 
     // Posts
     suspend fun getFeedPosts(
+        id: String,
         beforeTimestamp: Long?,
         size: Int
     ): List<Post>
@@ -87,8 +92,16 @@ interface GlobalRepository {
         beforeTimestamp: Long?,
         size: Int
     ): List<Post>
+    suspend fun getFullPost(postId: String): FullPost
+    suspend fun likePost(postId: String)
 
     // Fandoms
     suspend fun getFandomCategories(): List<FandomCategory>
     suspend fun getFandomsByQuery(query: String): List<Fandom>
+    suspend fun requestNewFandom(
+        userId: String,
+        name: String,
+        category: FandomCategory,
+        description: String,
+    )
 }

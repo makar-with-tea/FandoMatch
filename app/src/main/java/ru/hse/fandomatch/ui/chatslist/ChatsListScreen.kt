@@ -58,7 +58,7 @@ import ru.hse.fandomatch.ui.composables.RawImageOrPlaceholder
 import ru.hse.fandomatch.ui.composables.SkeletonView
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.timestampToTimeAgo
+import ru.hse.fandomatch.epochMillisToTimeAgo
 
 @Composable
 fun ChatsListScreen(
@@ -212,7 +212,7 @@ private fun MainState(
                                 overflow = TextOverflow.Ellipsis,
                             )
                             Text(
-                                text = timestampToTimeAgo(
+                                text = epochMillisToTimeAgo(
                                     timestamp = chat.lastMessageTimestamp,
                                     context = LocalContext.current
                                 ),

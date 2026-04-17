@@ -14,6 +14,7 @@ sealed class ChatState {
         val participantAvatarUrl: String?,
         val uiElements: List<ChatUiElement>,
         val error: ChatError = ChatError.IDLE,
+        // todo хранить тут вводимое сообщение и картинки
     ) : ChatState()
 
     data object Loading : ChatState()

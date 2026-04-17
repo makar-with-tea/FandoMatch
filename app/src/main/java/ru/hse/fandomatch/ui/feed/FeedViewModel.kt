@@ -9,7 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import ru.hse.fandomatch.domain.usecase.feed.GetFeedUseCase
+import ru.hse.fandomatch.domain.usecase.posts.GetFeedUseCase
 
 class FeedViewModel(
     private val getFeedUseCase: GetFeedUseCase,

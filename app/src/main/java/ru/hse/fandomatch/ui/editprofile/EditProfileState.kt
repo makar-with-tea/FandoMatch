@@ -33,6 +33,7 @@ sealed class EditProfileState {
         val city: City?,
         val cityError: EditProfileError = EditProfileError.IDLE,
     ) : EditProfileState()
+    object Error : EditProfileState()
 }
 
 sealed class EditProfileEvent {

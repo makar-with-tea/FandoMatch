@@ -99,7 +99,6 @@
     <string name="fandom_category_theater_musicals">Театр и мюзиклы</string>
     <string name="fandom_category_podcasts">Подкасты</string>
     <string name="fandom_category_comics">Комиксы</string>
-    <string name="fandom_category_content_creators">Контент-криэйторы</string>
     <string name="fandom_category_celebrities">Знаменитости</string>
     <string name="fandom_category_sports">Спорт</string>
     <string name="fandom_category_history">История</string>
@@ -131,7 +130,7 @@
     <string name="last_message_time_days">дн.</string>
     <string name="search_name_input">Введите имя…</string>
 
-    <string name="type_a_message">Сообщение</string>
+    <string name="type_a_message">Введите сообщение…</string>
     <string name="send_message_button_description">Отправить сообщение</string>
     <string name="attach_file_button_description">Прикрепить вложение</string>
     <string name="detach_file_button_description">Удалить вложение</string>
@@ -196,6 +195,8 @@
     <string name="comment_button_description">Оставить комментарий</string>
 
     <string name="feed_title">Лента</string>
+    <string name="type_a_comment">Введите комментарий…</string>
+    <string name="send_comment_button_description">Отправить комментарий</string>
 
     <string name="add_fandom_title">Добавить фандом</string>
     <string name="add_fandom_description">Если вы не нашли свой любимый фандом в списке, вы можете отправить запрос на его добавление. Пожалуйста, укажите название, категорию и краткое описание фандома. Мы рассмотрим ваш запрос и добавим фандом в ближайшее время!</string>

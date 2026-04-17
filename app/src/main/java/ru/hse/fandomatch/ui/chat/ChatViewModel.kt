@@ -13,7 +13,7 @@ import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
-import ru.hse.fandomatch.timestampToDateString
+import ru.hse.fandomatch.epochMillisToDateString
 
 class ChatViewModel(
     private val sendMessageUseCase: SendMessageUseCase,
@@ -41,15 +41,25 @@ class ChatViewModel(
 
     private fun loadChat(profileId: String?) {
         _state.value = ChatState.Loading
-        // todo
         if (profileId == null) {
             _state.value = ChatState.Error
             return
         }
         viewModelScope.launch(dispatcherIO) {
             delay(1000)
-            val chat = loadChatInfoUseCase.execute(userId = profileId)
-            _messages = subscribeToChatMessagesUseCase.execute(userId = profileId)
+            val result = loadChatInfoUseCase.execute(userId = profileId)
+            if (result.isFailure) {
+                Log.e("ChatViewModel", "Failed to load chat info", result.exceptionOrNull())
+                _state.value = ChatState.Error
+                return@launch
+            }
+            val chat = result.getOrNull() ?: run {
+                Log.e("ChatViewModel", "Chat info is null")
+                _state.value = ChatState.Error
+                return@launch
+            }
+            // todo error handling
+            _messages = subscribeToChatMessagesUseCase.execute(userId = profileId, chatId = chat.chatId)
             _state.value = ChatState.Main(
                 chatId = chat.chatId,
                 participantId = chat.participantId,
@@ -71,17 +81,19 @@ class ChatViewModel(
     }
 
     private fun sendMessage(message: String, images: List<ByteArray>, timestamp: Long) {
-        // todo
         Log.i("ChatViewModel", "Sending message: $message at $timestamp")
         when (val currentState = _state.value) {
             is ChatState.Main -> {
                 viewModelScope.launch(dispatcherIO) {
-                    sendMessageUseCase.execute(
+                    val result = sendMessageUseCase.execute(
                         userId = currentState.participantId,
                         content = message,
                         images = images,
                         timestamp = timestamp * 1000,
                     )
+                    if (result.isFailure) {
+                        Log.e("ChatViewModel", "Failed to send message", result.exceptionOrNull())
+                    }
                 }
             }
 
@@ -109,7 +121,7 @@ class ChatViewModel(
         val result = mutableListOf<ChatUiElement>()
         var lastDate: String? = null
         for ((index, message) in withIndex()) {
-            val dateString = message.timestamp.timestampToDateString()
+            val dateString = message.timestamp.epochMillisToDateString()
             if (dateString != lastDate) {
                 result.add(ChatUiElement.DayElement(dateString))
                 lastDate = dateString

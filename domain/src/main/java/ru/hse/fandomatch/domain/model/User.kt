@@ -40,7 +40,9 @@ sealed interface ProfileType {
         val login: String,
     ) : ProfileType
 
-    data object Stranger : ProfileType
+    data class Stranger(
+        val hasCurrentUserReacted: Boolean,
+    ) : ProfileType
 }
 
 data class OtherProfileItem(

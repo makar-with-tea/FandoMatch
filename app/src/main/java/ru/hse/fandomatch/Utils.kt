@@ -13,8 +13,9 @@ import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.ui.theme.CustomColors
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
-import java.util.Locale
+import java.time.ZonedDateTime
 
 fun Boolean?.orFalse(): Boolean = this ?: false
 
@@ -43,7 +44,7 @@ fun rawResId(name: String, context: Context): Int {
 
 fun nameAndAgeString(name: String, age: Int): String = "$name, $age"
 
-fun timestampToTimeAgo(timestamp: Long, context: Context) : String {
+fun epochMillisToTimeAgo(timestamp: Long, context: Context) : String {
     val dateTime = LocalDateTime.ofEpochSecond(timestamp / 1000, 0, ZoneOffset.UTC)
     val secondsAgo = (System.currentTimeMillis() - timestamp) / 1000
     val minutesAgo = secondsAgo / 60
@@ -62,26 +63,28 @@ fun timestampToTimeAgo(timestamp: Long, context: Context) : String {
     }
 }
 
-fun Long.timestampToDateString(): String {
-    val dateTime = toDateTime()
+fun Long.epochMillisToDateString(): String {
+    val dateTime = epochMillisToDateTime()
     return String.format("%02d.%02d.%04d", dateTime.dayOfMonth, dateTime.monthValue, dateTime.year)
 }
 
-fun Long.timestampToTimeString(): String {
-    val dateTime = toDateTime()
+fun Long.epochMillisToTimeString(): String {
+    val dateTime = epochMillisToDateTime()
     return String.format("%02d:%02d", dateTime.hour, dateTime.minute)
 }
 
 fun Long.isSameDayAs(other: Long): Boolean {
-    val dateTime1 = toDateTime()
-    val dateTime2 = other.toDateTime()
+    val dateTime1 = epochMillisToDateTime()
+    val dateTime2 = other.epochMillisToDateTime()
     return dateTime1.year == dateTime2.year &&
             dateTime1.monthValue == dateTime2.monthValue &&
             dateTime1.dayOfMonth == dateTime2.dayOfMonth
 }
 
-private fun Long.toDateTime(): LocalDateTime {
-    return LocalDateTime.ofEpochSecond(this / 1000, 0, ZoneOffset.UTC)
+private fun Long.epochMillisToDateTime(): LocalDateTime {
+    val zoneId: ZoneId = ZoneId.systemDefault()
+    val offset = ZonedDateTime.now(zoneId).offset
+    return LocalDateTime.ofEpochSecond(this / 1000, 0, offset)
 }
 
 fun Gender.stringId(): Int = when (this) {
@@ -102,7 +105,6 @@ fun FandomCategory.toStringId(): Int = when (this) {
     FandomCategory.THEATER_MUSICALS -> R.string.fandom_category_theater_musicals
     FandomCategory.PODCASTS -> R.string.fandom_category_podcasts
     FandomCategory.COMICS -> R.string.fandom_category_comics
-    FandomCategory.CONTENT_CREATORS -> R.string.fandom_category_content_creators
     FandomCategory.CELEBRITIES -> R.string.fandom_category_celebrities
     FandomCategory.SPORTS -> R.string.fandom_category_sports
     FandomCategory.HISTORY -> R.string.fandom_category_history
@@ -149,7 +151,6 @@ fun FandomCategory.getColor(): Color {
         FandomCategory.COMICS -> CustomColors.comicsBackground
         FandomCategory.THEATER_MUSICALS -> CustomColors.theaterMusicalsBackground
         FandomCategory.PODCASTS -> CustomColors.podcastsBackground
-        FandomCategory.CONTENT_CREATORS -> CustomColors.contentCreatorsBackground
         FandomCategory.CELEBRITIES -> CustomColors.celebritiesBackground
         FandomCategory.SPORTS -> CustomColors.sportsBackground
         FandomCategory.HISTORY -> CustomColors.historyBackground

@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
 import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
+import java.lang.RuntimeException
 
 class AuthorizationViewModel(
     private val loginUseCase: LoginUseCase,
@@ -87,13 +88,10 @@ class AuthorizationViewModel(
         }
 
         viewModelScope.launch(dispatcherIO) {
-            try {
-                loginUseCase.execute(currentState.login, currentState.password)
+            val result = loginUseCase.execute(currentState.login, currentState.password)
+            if (result.isFailure) {
                 withContext(dispatcherMain) {
-                    _action.value = AuthorizationAction.NavigateToMatches
-                }
-            } catch (e: Exception) {
-                withContext(dispatcherMain) {
+                    val e = result.exceptionOrNull() ?: RuntimeException("Unknown error")
                     if (e is InvalidCredentialsException) {
                         _state.value = currentState.copy(
                             loginError = AuthorizationState.AuthorizationError.IDLE,
@@ -107,6 +105,10 @@ class AuthorizationViewModel(
                             isLoading = false,
                         )
                     }
+                }
+            } else {
+                withContext(dispatcherMain) {
+                    _action.value = AuthorizationAction.NavigateToMatches
                 }
             }
         }

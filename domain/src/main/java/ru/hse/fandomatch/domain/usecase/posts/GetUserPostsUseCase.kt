@@ -1,4 +1,4 @@
-package ru.hse.fandomatch.domain.usecase.user
+package ru.hse.fandomatch.domain.usecase.posts
 
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.repos.GlobalRepository

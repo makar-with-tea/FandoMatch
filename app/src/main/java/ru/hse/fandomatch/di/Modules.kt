@@ -15,18 +15,25 @@ import ru.hse.fandomatch.data.model.BaseUserProfileDTO
 import ru.hse.fandomatch.data.serialization.BaseUserProfileDeserializer
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
+import ru.hse.fandomatch.domain.usecase.chat.GetUploadMediaUrlUseCase
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
-import ru.hse.fandomatch.domain.usecase.feed.GetFeedUseCase
+import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
+import ru.hse.fandomatch.domain.usecase.posts.GetFeedUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LoadSuggestedProfilesUseCase
+import ru.hse.fandomatch.domain.usecase.fandoms.RequestNewFandomUseCase
+import ru.hse.fandomatch.domain.usecase.posts.GetFullPostUseCase
 import ru.hse.fandomatch.domain.usecase.user.CheckVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetFriendRequestsUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetFriendsUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetPastLoginUseCase
-import ru.hse.fandomatch.domain.usecase.user.GetUserPostsUseCase
+import ru.hse.fandomatch.domain.usecase.posts.GetUserPostsUseCase
+import ru.hse.fandomatch.domain.usecase.posts.LikePostUseCase
+import ru.hse.fandomatch.domain.usecase.posts.SendCommentUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
@@ -43,6 +50,7 @@ import ru.hse.fandomatch.ui.intro.IntroViewModel
 import ru.hse.fandomatch.ui.matches.MatchesViewModel
 import ru.hse.fandomatch.ui.newpost.NewPostViewModel
 import ru.hse.fandomatch.ui.passwordrecovery.PasswordRecoveryViewModel
+import ru.hse.fandomatch.ui.post.PostViewModel
 import ru.hse.fandomatch.ui.profile.ProfileViewModel
 import ru.hse.fandomatch.ui.registration.RegistrationViewModel
 import ru.hse.fandomatch.ui.settings.SettingsViewModel
@@ -73,11 +81,12 @@ val appModule = module {
     viewModel<ChatViewModel> { ChatViewModel(get(), get(), get()) }
     viewModel<FiltersViewModel> { FiltersViewModel() }
     viewModel<FeedViewModel> { FeedViewModel(get()) }
-    viewModel<EditProfileViewModel> { EditProfileViewModel() }
+    viewModel<EditProfileViewModel> { EditProfileViewModel(get(), get(), get()) }
     viewModel<SettingsViewModel> { SettingsViewModel() }
-    viewModel<AddFandomViewModel> { AddFandomViewModel() }
+    viewModel<AddFandomViewModel> { AddFandomViewModel(get(), get()) }
     viewModel<NewPostViewModel> { NewPostViewModel() }
     viewModel<PasswordRecoveryViewModel> { PasswordRecoveryViewModel(get(), get()) }
+    viewModel<PostViewModel> { PostViewModel(get(), get(), get(), get()) }
 }
 
 val dataModule = module {
@@ -119,18 +128,26 @@ val domainModule = module {
     factory<GetVerificationCodeUseCase> { GetVerificationCodeUseCase(get()) }
     factory<CheckVerificationCodeUseCase> { CheckVerificationCodeUseCase(get()) }
     factory<ResetPasswordUseCase> { ResetPasswordUseCase(get()) }
+    factory<GetUserIdUseCase> { GetUserIdUseCase(get()) }
 
     factory<GetUserUseCase> { GetUserUseCase(get(), get()) }
     factory<LoadSuggestedProfilesUseCase> { LoadSuggestedProfilesUseCase(get()) }
     factory<LikeOrDislikeProfileUseCase> { LikeOrDislikeProfileUseCase(get()) }
     factory<GetUserPostsUseCase> { GetUserPostsUseCase(get(), get()) }
-    factory<GetFriendsUseCase> { GetFriendsUseCase(get()) }
-    factory<GetFriendRequestsUseCase> { GetFriendRequestsUseCase(get()) }
+    factory<GetFriendsUseCase> { GetFriendsUseCase(get(), get()) }
+    factory<GetFriendRequestsUseCase> { GetFriendRequestsUseCase(get(), get()) }
 
     factory<SubscribeToChatMessagesUseCase> { SubscribeToChatMessagesUseCase(get()) }
     factory<SendMessageUseCase> { SendMessageUseCase(get()) }
     factory<LoadChatInfoUseCase> { LoadChatInfoUseCase(get()) }
     factory<SubscribeToChatPreviewsUseCase> { SubscribeToChatPreviewsUseCase(get()) }
+    factory<GetUploadMediaUrlUseCase> { GetUploadMediaUrlUseCase(get()) }
 
-    factory<GetFeedUseCase> { GetFeedUseCase(get()) }
+    factory<GetFeedUseCase> { GetFeedUseCase(get(), get()) }
+    factory<GetFullPostUseCase> { GetFullPostUseCase(get()) }
+    factory<SendCommentUseCase> { SendCommentUseCase(get()) }
+    factory<LikePostUseCase> { LikePostUseCase(get()) }
+
+    factory<RequestNewFandomUseCase> { RequestNewFandomUseCase(get()) }
+    factory<GetFandomsByQueryUseCase> { GetFandomsByQueryUseCase(get()) }
 }

@@ -133,6 +133,7 @@ fun FandomCarouselWithDropdown(
     modifier: Modifier = Modifier,
     maxPlateWidth: Dp = 150.dp,
 ) {
+    if (fandoms.isEmpty()) return
     var expanded by remember { mutableStateOf(false) }
 
     Row(

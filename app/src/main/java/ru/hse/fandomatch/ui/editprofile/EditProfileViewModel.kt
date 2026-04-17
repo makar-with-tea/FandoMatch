@@ -18,10 +18,16 @@ import ru.hse.fandomatch.checkDescriptionLength
 import ru.hse.fandomatch.checkNameContent
 import ru.hse.fandomatch.checkNameLength
 import ru.hse.fandomatch.domain.model.ProfileType
+import ru.hse.fandomatch.domain.usecase.chat.GetUploadMediaUrlUseCase
+import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 import ru.hse.fandomatch.getName
 import kotlin.collections.plus
 
 class EditProfileViewModel(
+    private val getFandomsByQueryUseCase: GetFandomsByQueryUseCase,
+    private val getUserUseCase: GetUserUseCase,
+    private val getUploadMediaUrlUseCase: GetUploadMediaUrlUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ) : ViewModel() {
@@ -139,10 +145,14 @@ class EditProfileViewModel(
                 return
             }
             viewModelScope.launch(dispatcherIO) {
-                // todo
                 _state.value = currentState.copy(foundFandoms = emptyList(), areFandomsLoading = true)
-                delay(500)
-                val foundFandoms = mockFandoms.filter { it.name.contains(query, ignoreCase = true) }
+                val result = getFandomsByQueryUseCase.execute(query)
+                if (result.isFailure) {
+                    Log.e("EditProfileViewModel", "Failed to search fandoms", result.exceptionOrNull())
+                    _state.value = currentState.copy(foundFandoms = emptyList(), areFandomsLoading = false)
+                    return@launch
+                }
+                val foundFandoms = result.getOrNull().orEmpty()
                 _state.value = currentState.copy(foundFandoms = foundFandoms, areFandomsLoading = false)
             }
         }
@@ -166,11 +176,14 @@ class EditProfileViewModel(
 
     private fun loadProfileData() {
         viewModelScope.launch(dispatcherIO) {
-            // todo take from sharedPreferences current user id and take info from backend
-            // todo handle error
             _state.value = EditProfileState.Loading
             delay(1000)
-            val user = mockUser
+            val result = getUserUseCase.execute(null, true)
+            val user = result.getOrNull() ?: run {
+                Log.e("EditProfileViewModel", "Failed to load user data", result.exceptionOrNull())
+                _state.value = EditProfileState.Error
+                return@launch
+            }
             _state.value = EditProfileState.Main(
                 id = mockUser.id,
                 name = user.name,

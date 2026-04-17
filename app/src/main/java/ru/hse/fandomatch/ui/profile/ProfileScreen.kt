@@ -39,7 +39,7 @@ import ru.hse.fandomatch.data.mock.mockUser
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.timestampToDateString
+import ru.hse.fandomatch.epochMillisToDateString
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.AvatarWithBackground
 import ru.hse.fandomatch.ui.composables.CityAndGenderText
@@ -174,7 +174,7 @@ private fun MainState(
                 val title = state.login ?: stringResource(R.string.login_hidden)
                 MyTitle(title)
             },
-            endIcons = when (state.type) {
+            endIcons = when (val type = state.type) {
                 is ProfileType.Own -> listOf(
                     EndIconState(
                         iconId = R.drawable.ic_edit,
@@ -196,7 +196,7 @@ private fun MainState(
                     )
                 )
 
-                ProfileType.Stranger -> listOf(
+                is ProfileType.Stranger -> if (!type.hasCurrentUserReacted) listOf(
                     EndIconState(
                         iconId = R.drawable.ic_dislike,
                         onClick = { onDislikeClicked() },
@@ -207,7 +207,7 @@ private fun MainState(
                         onClick = { onLikeClicked() },
                         descriptionId = R.string.like_profile_description
                     ),
-                )
+                ) else listOf()
             }
         )
     )
@@ -351,18 +351,18 @@ private fun MainState(
                                 userName = post.authorName,
                                 userLogin = post.authorLogin,
                                 userAvatarUrl = post.authorAvatarUrl,
-                                postDate = post.timestamp.timestampToDateString(),
+                                postDate = post.timestamp.epochMillisToDateString(),
                                 postText = post.content,
-                                imageUrls = post.imageUrls,
+                                imageUrls = post.mediaItems,
                                 areReactionsAvailable = state.type is ProfileType.Own
                                         || state.type is ProfileType.Friend,
                                 likeCount = post.likeCount,
                                 commentCount = post.commentCount,
                                 isLiked = post.isLikedByCurrentUser,
                                 onLikeClick = {}, // todo
-                                onCommentClick = {}, // todo
-                                onImageClicked = { _, _ -> }, // todo
+                                onPostClick = {}, // todo
                                 backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                                fandoms = post.fandoms,
                             )
                             Spacer(
                                 modifier = Modifier

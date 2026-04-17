@@ -4,6 +4,12 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import ru.hse.fandomatch.data.model.ChangePasswordRequestDTO
+import ru.hse.fandomatch.data.model.ChangePasswordResponseDTO
+import ru.hse.fandomatch.data.model.DeviceTokenRequestDTO
+import ru.hse.fandomatch.data.model.FcmTokenResponseDTO
+import ru.hse.fandomatch.data.model.GetFcmTokenRequestDTO
 import ru.hse.fandomatch.data.model.GetUserCredentialsResponseDTO
 import ru.hse.fandomatch.data.model.LogoutResponseDTO
 import ru.hse.fandomatch.data.model.PublicJwtResponseDTO
@@ -27,6 +33,11 @@ interface UserApiService {
         @Body request: UserLoginRequestDTO
     ): UserLoginResponseDTO
 
+    @POST("auth/change-password")
+    suspend fun changePassword(
+        @Body request: ChangePasswordRequestDTO
+    ): ChangePasswordResponseDTO
+
     @POST("auth/logout")
     suspend fun logout(): LogoutResponseDTO
 
@@ -40,6 +51,17 @@ interface UserApiService {
     suspend fun refreshToken(
         @Body request: RefreshTokenDTO
     ): RefreshTokenResponseDTO
+
+    @PUT("users/device-token")
+    suspend fun saveDeviceToken(
+        @Body request: DeviceTokenRequestDTO
+    ): Unit
+
+    @POST("users/internal/device-token")
+    suspend fun getInternalDeviceToken(
+        @Body request: GetFcmTokenRequestDTO,
+        @Header("X-API-Key") apiKey: String
+    ): FcmTokenResponseDTO
 
     @POST("users/get-by-id")
     suspend fun getUserById(

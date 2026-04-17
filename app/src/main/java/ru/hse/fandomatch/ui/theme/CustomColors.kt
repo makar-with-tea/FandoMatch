@@ -70,11 +70,7 @@ class CustomColors {
                 lightColor = Color(0xFFF1E4F3),
                 darkColor = Color(0xFF4A2A4A)
             )
-        val contentCreatorsBackground: Color
-            @Composable get() = getColorForTheme(
-                lightColor = Color(0xFFF8E8D9),
-                darkColor = Color(0xFF5A4A3A)
-            )
+
         val celebritiesBackground: Color
             @Composable get() = getColorForTheme(
                 lightColor = Color(0xFFE8F8D9),

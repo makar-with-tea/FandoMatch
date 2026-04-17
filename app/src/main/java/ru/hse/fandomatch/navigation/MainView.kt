@@ -36,6 +36,7 @@ import ru.hse.fandomatch.ui.settings.SettingsScreen
 import ru.hse.fandomatch.orFalse
 import ru.hse.fandomatch.ui.newpost.NewPostScreen
 import ru.hse.fandomatch.ui.passwordrecovery.PasswordRecoveryScreen
+import ru.hse.fandomatch.ui.post.PostScreen
 
 sealed class Route(val route: String) {
     data object Authorization : Route("authorization")
@@ -63,6 +64,11 @@ sealed class Route(val route: String) {
     data object AddFandom : Route("add_fandom")
     data object NewPost : Route("new_post")
     data object PasswordRecovery : Route("password_recovery")
+    data object Post : Route("post/{post_id}") {
+        fun createRoute(postId: String): String {
+            return "post/$postId"
+        }
+    }
 }
 
 @Composable
@@ -342,15 +348,12 @@ fun MainView() {
                 }
                 composable(Route.Feed.route) {
                     updateTopBar()
-                    val context = LocalContext.current
                     FeedScreen(
                         navigateToPost = { postId ->
-                            // todo
-                            Toast.makeText(
-                                context,
-                                "Clicked post $postId",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Log.d("Navigation", "Navigate to post $postId from feed")
+                            navigateToRouteWithArgs(
+                                Route.Post.createRoute(postId)
+                            )
                         }
                     )
                 }
@@ -389,6 +392,19 @@ fun MainView() {
                         navigateToAuthorization = { navigateToRoute(Route.Authorization) }
                     )
                 }
+                composable(Route.Post.route) { backStackEntry ->
+                    val postId = backStackEntry.arguments?.getString("post_id")
+                    PostScreen(
+                        postId = postId,
+                        setTopBarState = { setTopBarState(it, Route.Post.route) },
+                        goToProfile = { profileId ->
+                            Log.d("Navigation", "Navigate to profile $profileId from post")
+                            navigateToRouteWithArgs(
+                                Route.Profile.createRoute(profileId)
+                            )
+                        },
+                    )
+                }
             }
         }
     }
@@ -403,5 +419,6 @@ private fun String.canShowBottomBar(): Boolean {
         Route.Filters.route,
         Route.PasswordRecovery.route,
         Route.EditProfile.route,
+        Route.Post.route,
     )
 }

@@ -117,6 +117,12 @@ fun EditProfileScreen(
             IdleState()
             viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
         }
+
+        is EditProfileState.Error -> {
+            // todo error state
+             IdleState()
+             viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+        }
     }
 }
 

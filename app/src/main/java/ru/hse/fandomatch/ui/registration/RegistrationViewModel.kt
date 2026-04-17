@@ -197,7 +197,7 @@ class RegistrationViewModel(
 
         viewModelScope.launch(dispatcherIO) {
             try {
-                val isValid = checkVerificationCodeUseCase.execute(code)
+                val isValid = checkVerificationCodeUseCase.execute(code, form.email)
                 withContext(dispatcherMain) {
                     if (isValid) {
                         _state.value = RegistrationState.DateOfBirth(form.dateOfBirthMillis)

@@ -128,13 +128,6 @@ private fun MainState(
                     onClick = { onClickProfile() },
                 )
             },
-            endIcons = listOf(
-                EndIconState(
-                    iconId = R.drawable.ic_search,
-                    onClick = { /* TODO search in chat */ },
-                    descriptionId = R.string.search_icon_description
-                ),
-            ),
         )
     )
 

@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.hse.fandomatch.domain.model.Message
-import ru.hse.fandomatch.timestampToTimeString
+import ru.hse.fandomatch.epochMillisToTimeString
 
 @Composable
 internal fun Message(
@@ -173,7 +173,7 @@ private fun MessageContent(
             )
         }
         Text(
-            text = message.timestamp.timestampToTimeString(),
+            text = message.timestamp.epochMillisToTimeString(),
             fontSize = 10.sp,
             lineHeight = 10.sp,
             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),

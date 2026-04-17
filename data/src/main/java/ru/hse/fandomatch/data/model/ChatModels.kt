@@ -2,22 +2,6 @@ package ru.hse.fandomatch.data.model
 
 import com.google.gson.annotations.SerializedName
 
-enum class MediaTypeDTO {
-    @SerializedName("IMAGE")
-    IMAGE,
-
-    @SerializedName("VIDEO")
-    VIDEO
-}
-
-data class MediaItemDTO(
-    @SerializedName("media_id")
-    val mediaId: String,
-    @SerializedName("media_type")
-    val mediaType: MediaTypeDTO,
-    val url: String
-)
-
 data class PresignedUploadRequestDTO(
     @SerializedName("media_type")
     val mediaType: MediaTypeDTO
@@ -100,6 +84,8 @@ data class ChatResponseDTO(
 )
 
 data class ChatMessagesRequestDTO(
+    @SerializedName("chat_id")
+    val chatId: String,
     @SerializedName("before_timestamp")
     val beforeTimestamp: Long? = null,
     val size: Int

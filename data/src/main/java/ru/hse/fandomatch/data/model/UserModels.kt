@@ -3,9 +3,11 @@ package ru.hse.fandomatch.data.model
 import com.google.gson.annotations.SerializedName
 
 data class UserRegistrationRequestDTO(
-    val email: String? = null,
-    val phone: String? = null,
+    val email: String,
     val username: String,
+    @SerializedName("birth_date")
+    val birthDate: Long,
+    val name: String,
     @SerializedName("hashed_password")
     val hashedPassword: String
 )
@@ -18,7 +20,6 @@ data class UserRegistrationResponseDTO(
 
 data class UserLoginRequestDTO(
     val email: String? = null,
-    val phone: String? = null,
     val username: String? = null,
     @SerializedName("hashed_password")
     val hashedPassword: String
@@ -71,7 +72,6 @@ enum class UserCredentialsStatusDTO {
 data class UserCredentialsDTO(
     val uuid: String? = null,
     val email: String? = null,
-    val phone: String? = null,
     val username: String,
     val status: UserCredentialsStatusDTO,
     @SerializedName("created_at")
@@ -83,9 +83,37 @@ data class RefreshTokenDTO(
     val refreshToken: String
 )
 
+data class ChangePasswordRequestDTO(
+    @SerializedName("old_password")
+    val oldPassword: String,
+    @SerializedName("new_password")
+    val newPassword: String
+)
+
+data class ChangePasswordResponseDTO(
+    val status: ResponseStatusDTO,
+    val errorResponse: ErrorDTO? = null
+)
+
 data class RefreshAndAccessTokensDTO(
+    val uuid: String,
     @SerializedName("access_token")
     val accessToken: String,
     @SerializedName("refresh_token")
     val refreshToken: String
+)
+
+data class DeviceTokenRequestDTO(
+    @SerializedName("fcm_token")
+    val fcmToken: String
+)
+
+data class GetFcmTokenRequestDTO(
+    @SerializedName("user_id")
+    val userId: String
+)
+
+data class FcmTokenResponseDTO(
+    @SerializedName("fcm_token")
+    val fcmToken: String? = null
 )

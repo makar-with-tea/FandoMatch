@@ -18,7 +18,6 @@ enum class FandomCategory {
     THEATER_MUSICALS,
     PODCASTS,
     COMICS,
-    CONTENT_CREATORS,
     CELEBRITIES,
     SPORTS,
     HISTORY,

@@ -15,6 +15,10 @@ import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.domain.model.AuthInfo
+import ru.hse.fandomatch.domain.model.Comment
+import ru.hse.fandomatch.domain.model.FullPost
+import ru.hse.fandomatch.domain.model.MediaItem
+import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.OtherProfileItem
 import ru.hse.fandomatch.domain.model.User
 import ru.hse.fandomatch.domain.repos.GlobalRepository
@@ -177,8 +181,77 @@ class GlobalRepositoryMock: GlobalRepository {
         )
     )
 
-    override suspend fun getUser(profileId: String): User? {
-        val result = (mockUsers + mockUser).find { it.id == profileId } // todo
+    var mockUserPosts = listOf(
+        Post(
+            id = "5",
+            authorId = mockUser.id,
+            authorName = mockUser.name,
+            authorLogin = (mockUser.profileType as ProfileType.Own).login,
+            authorAvatarUrl = mockUser.avatarUrl,
+            content = "Вау, я умею писать посты!",
+            mediaItems = listOf("dzimbei"),
+            likeCount = 100,
+            commentCount = 50,
+            isLikedByCurrentUser = false,
+            timestamp = System.currentTimeMillis() - 3600_000, // 1 hour ago
+            fandoms = listOf(),
+        ),
+        Post(
+            id = "6",
+            authorId = mockUser.id,
+            authorName = mockUser.name,
+            authorLogin = (mockUser.profileType as ProfileType.Own).login,
+            authorAvatarUrl = mockUser.avatarUrl,
+            content = "Еще один пост от меня.",
+            mediaItems = listOf(),
+            likeCount = 150,
+            commentCount = 75,
+            isLikedByCurrentUser = false,
+            timestamp = System.currentTimeMillis() - 7200_000, // 2 hours ago
+            fandoms = listOf(mockFandoms[0], mockFandoms[1])
+        ),
+        Post(
+            id = "7",
+            authorId = mockUser.id,
+            authorName = mockUser.name,
+            authorLogin = (mockUser.profileType as ProfileType.Own).login,
+            authorAvatarUrl = mockUser.avatarUrl,
+            content = "Люблю это приложение!",
+            mediaItems = listOf("what_is_written_here"),
+            likeCount = 200,
+            commentCount = 100,
+            isLikedByCurrentUser = true,
+            timestamp = System.currentTimeMillis() - 10800_000, // 3 hours ago
+            fandoms = listOf(mockFandoms[2], mockFandoms[3], mockFandoms[4])
+        )
+    )
+
+    val mockComments = listOf(
+        Comment(
+            authorName = "Алиса",
+            authorLogin = "alice",
+            authorAvatarUrl = "luffy",
+            timestamp = System.currentTimeMillis() - 1800_000, // 30 minutes ago
+            content = "Отличный пост! Я тоже люблю аниме и музыку!"
+        ),
+        Comment(
+            authorName = "Пользователь",
+            authorLogin = "pirate123",
+            authorAvatarUrl = "peace_was_never_an_option",
+            timestamp = System.currentTimeMillis() - 1200_000, // 20 minutes ago
+            content = "Приветствую! Рада видеть новых людей, которые любят аниме! Какие у вас любимые серии?"
+        ),
+        Comment(
+            authorName = "Лесное нечто",
+            authorLogin = "forestentity",
+            authorAvatarUrl = "pet_the_forbidden_dog",
+            timestamp = System.currentTimeMillis() - 600_000, // 10 minutes ago
+            content = "Привет! Я тоже обожаю аниме, особенно One Piece"
+        ),
+    )
+
+    override suspend fun getUser(profileId: String): User {
+        val result = (mockUsers + mockUser).find { it.id == profileId } ?: throw IllegalArgumentException("User with id $profileId not found")
         return result.also {
             Log.d("GlobalRepositoryMock", "getUser: $it")
         }
@@ -225,29 +298,26 @@ class GlobalRepositoryMock: GlobalRepository {
         bio: String?,
         gender: Gender,
         city: City,
-        avatarUrl: String?,
-        backgroundUrl: String?
+        avatarMediaId: String?,
+        backgroundMediaId: String?
     ) {
         Log.d("GlobalRepositoryMock", "updateUser: successful for user $name")
+    }
+
+    override suspend fun changePassword(oldPassword: String, newPassword: String) {
+        if (oldPassword == mockPassword) {
+            mockPassword = newPassword
+            Log.d("GlobalRepositoryMock", "changePassword: password changed successfully")
+        } else {
+            Log.d("GlobalRepositoryMock", "changePassword: failed to change password due to invalid old password")
+        }
     }
 
     override suspend fun deleteUser(login: String) {
         Log.d("GlobalRepositoryMock", "deleteUser: successful for user $login")
     }
 
-    override suspend fun checkPassword(
-        login: String,
-        password: String
-    ): Boolean {
-        return (login == (mockUser.profileType as ProfileType.Own).login && password == mockPassword).also {
-            Log.d(
-                "GlobalRepositoryMock",
-                "checkPassword: ${if (it) "valid" else "invalid"} for user $login"
-            )
-        }
-    }
-
-    override suspend fun getFriends(): List<OtherProfileItem> {
+    override suspend fun getFriends(id: String): List<OtherProfileItem> {
         return mockUsers
             .filter { it.profileType is ProfileType.Friend }
             .map {
@@ -266,7 +336,7 @@ class GlobalRepositoryMock: GlobalRepository {
             }
     }
 
-    override suspend fun getFriendRequests(): List<OtherProfileItem> {
+    override suspend fun getFriendRequests(id: String): List<OtherProfileItem> {
         return mockUsers
             .filter { it.profileType is ProfileType.Stranger }
             .map {
@@ -289,11 +359,14 @@ class GlobalRepositoryMock: GlobalRepository {
         Log.d("GlobalRepositoryMock", "getVerificationCode: sent code to email $email")
     }
 
-    override suspend fun checkVerificationCode(code: String): Boolean {
+    override suspend fun checkVerificationCode(
+        code: String,
+        email: String
+    ): Boolean {
         return (code == mockVerificationCode).also {
             Log.d(
                 "GlobalRepositoryMock",
-                "checkVerificationCode: ${if (it) "valid" else "invalid"} code $code"
+                "checkVerificationCode: ${if (it) "valid" else "invalid"} code $code for email $email"
             )
         }
     }
@@ -352,7 +425,9 @@ class GlobalRepositoryMock: GlobalRepository {
         }
     }
 
+
     override suspend fun subscribeToChatMessages(
+        chatId: String,
         userId: String,
         beforeTimestamp: Long?,
         size: Int
@@ -408,7 +483,20 @@ class GlobalRepositoryMock: GlobalRepository {
             }
     }
 
-    override suspend fun getFeedPosts(beforeTimestamp: Long?, size: Int): List<Post> {
+    override suspend fun getUploadMediaUrl(mediaType: MediaType): String {
+        val url = when (mediaType) {
+            MediaType.IMAGE -> "https://example.com/upload/image"
+            MediaType.VIDEO -> "https://example.com/upload/video"
+        }
+        Log.d("GlobalRepositoryMock", "getUploadMediaUrl: returned url $url for media type ${mediaType.name}")
+        return url
+    }
+
+    override suspend fun getFeedPosts(
+        id: String,
+        beforeTimestamp: Long?,
+        size: Int,
+    ): List<Post> {
         val posts = if (beforeTimestamp == null) {
             mockPosts
         } else {
@@ -445,11 +533,69 @@ class GlobalRepositoryMock: GlobalRepository {
         return posts
     }
 
+    override suspend fun getFullPost(postId: String): FullPost {
+        val post = (mockPosts + mockUserPosts).find { it.id == postId } ?: throw IllegalArgumentException("Post with id $postId not found")
+        val comments = mockComments
+        return FullPost(
+            post = post,
+            comments = comments,
+        ).also {
+            Log.d("GlobalRepositoryMock", "getFullPost: returned full post for postId $postId with ${comments.size} comments")
+        }
+    }
+
+    override suspend fun likePost(postId: String) {
+        mockPosts = mockPosts.map {
+            if (it.id == postId) {
+                if (it.isLikedByCurrentUser) {
+                    it.copy(
+                        likeCount = it.likeCount - 1,
+                        isLikedByCurrentUser = false,
+                    )
+                } else {
+                    it.copy(
+                        likeCount = it.likeCount + 1,
+                        isLikedByCurrentUser = true,
+                    )
+                }
+            } else it
+        }
+
+        mockUserPosts = mockUserPosts.map {
+            if (it.id == postId) {
+                if (it.isLikedByCurrentUser) {
+                    it.copy(
+                        likeCount = it.likeCount - 1,
+                        isLikedByCurrentUser = false,
+                    )
+                } else {
+                    it.copy(
+                        likeCount = it.likeCount + 1,
+                        isLikedByCurrentUser = true,
+                    )
+                }
+            } else it
+        }
+        Log.d("GlobalRepositoryMock", "likePost: liked post $postId")
+    }
+
     override suspend fun getFandomCategories(): List<FandomCategory> {
         return FandomCategory.entries
     }
 
     override suspend fun getFandomsByQuery(query: String): List<Fandom> {
         return mockFandoms.filter { it.name.contains(query, ignoreCase = true) }
+    }
+
+    override suspend fun requestNewFandom(
+        userId: String,
+        name: String,
+        category: FandomCategory,
+        description: String
+    ) {
+        Log.i(
+            "GlobalRepositoryMock",
+            "requestNewFandom: user $userId requested new fandom with name $name, category ${category.name}, description $description"
+        )
     }
 }
