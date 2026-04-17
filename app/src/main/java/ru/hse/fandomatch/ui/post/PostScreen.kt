@@ -35,6 +35,7 @@ import ru.hse.fandomatch.R
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.epochMillisToDateString
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
+import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.FullPost
 import ru.hse.fandomatch.ui.composables.ImagesScreen
 import ru.hse.fandomatch.ui.composables.LoadingBlock
@@ -80,7 +81,9 @@ fun PostScreen(
 
         is PostState.Loading -> LoadingState()
 
-        is PostState.Error -> ErrorState()
+        is PostState.Error -> ErrorState(
+            onRetry = { viewModel.obtainEvent(PostEvent.LoadPost(postId)) }
+        )
     }
 }
 
@@ -224,7 +227,8 @@ private fun IdleState() {
 }
 
 @Composable
-private fun ErrorState() {
-    // todo
-    Text("An error occurred while loading the post.")
+private fun ErrorState(
+    onRetry: () -> Unit,
+) {
+    BasicErrorState(onRetry)
 }

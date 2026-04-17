@@ -121,6 +121,7 @@
     <string name="city_filter_only_in_city_checkbox">Только в моем городе</string>
     <string name="reset_filters_button">Сбросить</string>
     <string name="apply_filters_button">Применить</string>
+    <string name="filters_error_toast">Не удалось сохранить фильтры</string>
 
     <string name="chats_list_title">Чаты</string>
     <string name="search_icon_description">Поиск</string>
@@ -165,6 +166,7 @@
     <string name="city_not_found_error">Город не найден</string>
     <string name="did_not_found_fandom_label">Не нашли фандом?</string>
     <string name="here_you_go_button">Вам сюда!</string>
+    <string name="edit_profile_error_toast">Не удалось сохранить изменения профиля</string>
 
     <string name="settings_title">Настройки</string>
     <string name="change_email_title">Смена почты</string>
@@ -214,4 +216,7 @@
     <string name="post_button">Опубликовать</string>
     <string name="post_content_label">Что у вас на уме?</string>
     <string name="post_content_too_long_error">Содержание поста не должно быть длиннее 2000 символов</string>
+
+    <string name="error_icon_description">Ошибка</string>
+    <string name="basic_error_message">Произошла ошибка загрузки :(\nПожалуйста, проверьте свое интернет-соединение</string>
 </resources>

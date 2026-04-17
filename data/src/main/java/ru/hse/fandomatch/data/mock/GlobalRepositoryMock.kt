@@ -16,6 +16,7 @@ import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.domain.model.AuthInfo
 import ru.hse.fandomatch.domain.model.Comment
+import ru.hse.fandomatch.domain.model.Filters
 import ru.hse.fandomatch.domain.model.FullPost
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
@@ -26,230 +27,6 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 class GlobalRepositoryMock: GlobalRepository {
-    var mockChat = Chat(
-        chatId = "1",
-        participantId = mockProfileCards[0].id,
-        participantName = mockProfileCards[0].name,
-        participantAvatarUrl = mockProfileCards[0].avatarUrl
-    )
-    val mockMessages: MutableStateFlow<List<Message>> = MutableStateFlow(listOf(
-        Message(
-            messageId = "1",
-            isFromThisUser = false,
-            content = "Привет! Как дела?",
-            timestamp = LocalDateTime.now().minusDays(2).toEpochSecond(ZoneOffset.UTC) * 1000,
-        ),
-        Message(
-            messageId = "2",
-            isFromThisUser = true,
-            content = "Привет! Все хорошо, спасибо. А у тебя?",
-            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(5)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
-        ),
-        Message(
-            messageId = "3",
-            isFromThisUser = false,
-            content = "Тоже отлично! Какие фандомы ты любишь?",
-            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(10)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
-        ),
-        Message(
-            messageId = "4",
-            isFromThisUser = true,
-            content = "Я обожаю аниме, особенно One Piece! А ты?",
-            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(15)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
-        ),
-        Message(
-            messageId = "5",
-            isFromThisUser = false,
-            content = "One Piece тоже мой любимый! А до какого момента ты досмотрел?",
-            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(20)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
-        ),
-        Message(
-            messageId = "6",
-            isFromThisUser = true,
-            content = "Я сейчас на Whole Cake Island. Бедный Санжи :(",
-            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(25)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
-        ),
-        Message(
-            messageId = "7",
-            isFromThisUser = false,
-            content = "Ооо, понимаю... Удачи тебе там))",
-            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
-        ),
-        Message(
-            messageId = "8",
-            isFromThisUser = false,
-            content = "А я аниме уже досмотрела, сейчас читаю мангу",
-            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
-        ),
-        Message(
-            messageId = "9",
-            isFromThisUser = false,
-            content = "Но хочу пересмотреть когда-нибудь заново)",
-            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
-            imageUrls = listOf("dzimbei", "luffy")
-        ),
-        Message(
-            messageId = "10",
-            isFromThisUser = false,
-            content = "Там же столько деталей, которые можно упустить при первом просмотре",
-            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
-        ),
-        Message(
-            messageId = "11",
-            isFromThisUser = false,
-            content = "Та же предыстория Санджи многое меняет в восприятии первых серий, где он появляется",
-            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
-        ),
-        Message(
-            messageId = "12",
-            isFromThisUser = false,
-            content = "Ну и я просто хочу посмотреть на East Blue Луффи, он такой хаотичный котенок там))",
-            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
-        ),
-        Message(
-            messageId = "13",
-            isFromThisUser = true,
-            content = "А может, как-нибудь посмотрим ван пис с начала вместе?",
-            timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
-        )
-    )
-    )
-
-    var mockChatPreviews = MutableStateFlow(
-        listOf(
-            ChatPreview(
-                chatId = "5",
-                participantName = mockProfileCards[4].name,
-                participantAvatarUrl = mockProfileCards[4].avatarUrl,
-                lastMessage = "Как вы допустили смерть Лидроса на зимке?..",
-                isLastMessageFromThisUser = false,
-                lastMessageTimestamp = LocalDateTime.now().minusMinutes(25)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-                newMessagesCount = 101,
-            ),
-            ChatPreview(
-                chatId = "3",
-                participantName = mockProfileCards[2].name,
-                participantAvatarUrl = mockProfileCards[2].avatarUrl,
-                lastMessage = "Привет! Как дела?",
-                isLastMessageFromThisUser = false,
-                lastMessageTimestamp = LocalDateTime.now().minusMinutes(30)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-                newMessagesCount = 0,
-            ),
-            ChatPreview(
-                chatId = "2",
-                participantName = mockProfileCards[1].name,
-                participantAvatarUrl = mockProfileCards[1].avatarUrl,
-                lastMessage = "Я тоже люблю аниме!",
-                isLastMessageFromThisUser = false,
-                lastMessageTimestamp = LocalDateTime.now().minusHours(5)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-                newMessagesCount = 2,
-            ),
-            ChatPreview(
-                chatId = "1",
-                participantName = mockProfileCards[0].name,
-                participantAvatarUrl = mockProfileCards[0].avatarUrl,
-                lastMessage = mockMessages.value[mockMessages.value.size - 1].content,
-                isLastMessageFromThisUser = mockMessages.value[mockMessages.value.size - 1].isFromThisUser,
-                lastMessageTimestamp = mockMessages.value[mockMessages.value.size - 1].timestamp,
-                newMessagesCount = 0,
-            ),
-            ChatPreview(
-                chatId = "4",
-                participantName = mockProfileCards[3].name,
-                participantAvatarUrl = mockProfileCards[3].avatarUrl,
-                lastMessage = "Посмотрела новый эпизод Токийского Гуля, очень понравилось!",
-                isLastMessageFromThisUser = true,
-                lastMessageTimestamp = LocalDateTime.now().minusDays(10)
-                    .toEpochSecond(ZoneOffset.UTC) * 1000,
-                newMessagesCount = 0,
-            ),
-        )
-    )
-
-    var mockUserPosts = listOf(
-        Post(
-            id = "5",
-            authorId = mockUser.id,
-            authorName = mockUser.name,
-            authorLogin = (mockUser.profileType as ProfileType.Own).login,
-            authorAvatarUrl = mockUser.avatarUrl,
-            content = "Вау, я умею писать посты!",
-            mediaItems = listOf("dzimbei"),
-            likeCount = 100,
-            commentCount = 50,
-            isLikedByCurrentUser = false,
-            timestamp = System.currentTimeMillis() - 3600_000, // 1 hour ago
-            fandoms = listOf(),
-        ),
-        Post(
-            id = "6",
-            authorId = mockUser.id,
-            authorName = mockUser.name,
-            authorLogin = (mockUser.profileType as ProfileType.Own).login,
-            authorAvatarUrl = mockUser.avatarUrl,
-            content = "Еще один пост от меня.",
-            mediaItems = listOf(),
-            likeCount = 150,
-            commentCount = 75,
-            isLikedByCurrentUser = false,
-            timestamp = System.currentTimeMillis() - 7200_000, // 2 hours ago
-            fandoms = listOf(mockFandoms[0], mockFandoms[1])
-        ),
-        Post(
-            id = "7",
-            authorId = mockUser.id,
-            authorName = mockUser.name,
-            authorLogin = (mockUser.profileType as ProfileType.Own).login,
-            authorAvatarUrl = mockUser.avatarUrl,
-            content = "Люблю это приложение!",
-            mediaItems = listOf("what_is_written_here"),
-            likeCount = 200,
-            commentCount = 100,
-            isLikedByCurrentUser = true,
-            timestamp = System.currentTimeMillis() - 10800_000, // 3 hours ago
-            fandoms = listOf(mockFandoms[2], mockFandoms[3], mockFandoms[4])
-        )
-    )
-
-    val mockComments = listOf(
-        Comment(
-            authorName = "Алиса",
-            authorLogin = "alice",
-            authorAvatarUrl = "luffy",
-            timestamp = System.currentTimeMillis() - 1800_000, // 30 minutes ago
-            content = "Отличный пост! Я тоже люблю аниме и музыку!"
-        ),
-        Comment(
-            authorName = "Пользователь",
-            authorLogin = "pirate123",
-            authorAvatarUrl = "peace_was_never_an_option",
-            timestamp = System.currentTimeMillis() - 1200_000, // 20 minutes ago
-            content = "Приветствую! Рада видеть новых людей, которые любят аниме! Какие у вас любимые серии?"
-        ),
-        Comment(
-            authorName = "Лесное нечто",
-            authorLogin = "forestentity",
-            authorAvatarUrl = "pet_the_forbidden_dog",
-            timestamp = System.currentTimeMillis() - 600_000, // 10 minutes ago
-            content = "Привет! Я тоже обожаю аниме, особенно One Piece"
-        ),
-    )
-
     override suspend fun getUser(profileId: String): User {
         val result = (mockUsers + mockUser).find { it.id == profileId } ?: throw IllegalArgumentException("User with id $profileId not found")
         return result.also {
@@ -296,11 +73,19 @@ class GlobalRepositoryMock: GlobalRepository {
     override suspend fun updateUser(
         name: String,
         bio: String?,
-        gender: Gender,
-        city: City,
+        city: City?,
+        fandoms: List<Fandom>,
         avatarMediaId: String?,
         backgroundMediaId: String?
     ) {
+        mockUser = mockUser.copy(
+            name = name,
+            description = bio,
+            avatarUrl = avatarMediaId,
+            backgroundUrl = backgroundMediaId,
+            fandoms = fandoms,
+            city = city,
+        )
         Log.d("GlobalRepositoryMock", "updateUser: successful for user $name")
     }
 
@@ -395,6 +180,12 @@ class GlobalRepositoryMock: GlobalRepository {
             "GlobalRepositoryMock",
             "likeProfile: ${if (isLike) "" else "dis"}liked profile $userId"
         )
+    }
+
+    override suspend fun getCurrentFilters(): Filters {
+        return mockFilters.also {
+            Log.d("GlobalRepositoryMock", "getCurrentFilters: returned filters $it")
+        }
     }
 
     override suspend fun setFilters(

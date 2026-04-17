@@ -46,6 +46,8 @@ import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.getBytesFromUri
 import ru.hse.fandomatch.getName
+import ru.hse.fandomatch.ui.composables.BasicErrorState
+import ru.hse.fandomatch.ui.settings.ErrorState
 
 
 @Composable
@@ -68,6 +70,14 @@ fun EditProfileScreen(
         is EditProfileAction.NavigateToMyProfile -> {
             navigateToMyProfile()
             viewModel.obtainEvent(EditProfileEvent.Clear)
+        }
+
+        is EditProfileAction.ShowErrorToast -> {
+            Toast.makeText(
+                LocalContext.current,
+                stringResource(R.string.edit_profile_error_toast),
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
         null -> {}
@@ -119,9 +129,11 @@ fun EditProfileScreen(
         }
 
         is EditProfileState.Error -> {
-            // todo error state
-             IdleState()
-             viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+            ErrorState(
+                onRetry = {
+                    viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+                }
+            )
         }
     }
 }
@@ -338,4 +350,11 @@ private fun LoadingState() {
 @Composable
 private fun IdleState() {
     LoadingBlock()
+}
+
+@Composable
+private fun ErrorState(
+    onRetry: () -> Unit,
+) {
+    BasicErrorState(onRetry)
 }

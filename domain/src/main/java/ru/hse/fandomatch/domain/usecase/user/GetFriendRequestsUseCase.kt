@@ -8,9 +8,10 @@ class GetFriendRequestsUseCase(
     private val globalRepository: GlobalRepository,
     private val sharedPrefRepository: SharedPrefRepository,
 ) {
-    suspend fun execute(): List<OtherProfileItem> {
-        // todo runCatching все дела
-        val userId = sharedPrefRepository.getUserId() ?: return emptyList()
-        return globalRepository.getFriendRequests(userId)
+    suspend fun execute(): Result<List<OtherProfileItem>> {
+        return runCatching {
+            val userId = sharedPrefRepository.getUserId() ?: throw RuntimeException("User ID not found in shared preferences")
+            globalRepository.getFriendRequests(userId)
+        }
     }
 }

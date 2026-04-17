@@ -95,6 +95,7 @@ class AuthorizationViewModel(
                     if (e is InvalidCredentialsException) {
                         _state.value = currentState.copy(
                             loginError = AuthorizationState.AuthorizationError.IDLE,
+                            // todo обработать разные ошибки для логина и пароля
                             passwordError = AuthorizationState.AuthorizationError.INVALID_CREDENTIALS,
                             isLoading = false,
                         )

@@ -12,12 +12,16 @@ sealed class FeedState {
     ) : FeedState()
 
     data object Loading : FeedState()
+    data object Error : FeedState()
     data object Idle : FeedState()
 }
 
 sealed class FeedEvent {
     data class PostClicked(
-        val chatId: String,
+        val postId: String,
+    ): FeedEvent()
+    data class PostLiked(
+        val postId: String,
     ): FeedEvent()
     data object LoadPosts: FeedEvent()
     data object Clear: FeedEvent()

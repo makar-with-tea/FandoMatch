@@ -45,6 +45,7 @@ import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.domain.model.AuthInfo
+import ru.hse.fandomatch.domain.model.Filters
 import ru.hse.fandomatch.domain.model.FullPost
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.OtherProfileItem
@@ -185,8 +186,8 @@ class GlobalRepositoryImpl(
     override suspend fun updateUser(
         name: String,
         bio: String?,
-        gender: Gender,
-        city: City,
+        city: City?,
+        fandoms: List<Fandom>,
         avatarMediaId: String?,
         backgroundMediaId: String?,
     ) {
@@ -196,9 +197,9 @@ class GlobalRepositoryImpl(
                 avatarMediaId = avatarMediaId,
                 backgroundMediaId = backgroundMediaId,
                 name = name,
-                gender = GenderDTO.fromDomain(gender),
-                city = CityDTO.fromDomain(city)
-            )
+                gender = GenderDTO.MALE, // todo даша убрать
+                city = CityDTO.fromDomain(city ?: City("aaa", "aaa")) // todo даша nullable
+            ) // todo даша добавить фандомы
         )
         if (response.errorResponse != null) {
             throw Exception("Failed to update user profile: ${response.errorResponse.errorCode}, ${response.errorResponse.errorMessage}")
@@ -330,6 +331,29 @@ class GlobalRepositoryImpl(
         )
         if (response.errorResponse != null) {
             throw Exception("Failed to react on match: ${response.errorResponse.errorCode}, ${response.errorResponse.errorMessage}")
+        }
+    }
+
+    override suspend fun getCurrentFilters(): Filters {
+        val response = coreApiService.getCurrentFilters()
+        when (response.status) {
+            ResponseStatusDTO.SUCCESS -> {
+                val filtersDTO = response.successResponse!!
+                return Filters(
+                    genders = filtersDTO.gender?.map { it.toDomain() } ?: Gender.entries,
+                    minAge = filtersDTO.ageFrom ?: 16,
+                    maxAge = filtersDTO.ageTo ?: 80,
+                    categories = filtersDTO.fandomCategory?.map { it.toDomain() } ?: emptyList(),
+                    fandoms = filtersDTO.fandomId?.map { it.toDomain() } ?: emptyList(),
+                    onlyInUserCity = filtersDTO.onlyInUserCity ?: false
+                )
+            }
+
+            ResponseStatusDTO.ERROR -> {
+                response.errorResponse!!.let { (errorCode, errorMessage) ->
+                    throw Exception("Failed to load current filters: $errorCode, $errorMessage")
+                }
+            }
         }
     }
 

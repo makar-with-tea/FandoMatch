@@ -25,6 +25,8 @@ import ru.hse.fandomatch.domain.usecase.posts.GetFeedUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LoadSuggestedProfilesUseCase
 import ru.hse.fandomatch.domain.usecase.fandoms.RequestNewFandomUseCase
+import ru.hse.fandomatch.domain.usecase.matches.ApplyFiltersUseCase
+import ru.hse.fandomatch.domain.usecase.matches.LoadInitialFiltersUseCase
 import ru.hse.fandomatch.domain.usecase.posts.GetFullPostUseCase
 import ru.hse.fandomatch.domain.usecase.user.CheckVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetFriendRequestsUseCase
@@ -76,13 +78,14 @@ val appModule = module {
         getUserPostsUseCase = get(),
         getFriendsUseCase = get(),
         getFriendRequestsUseCase = get(),
+        likePostUseCase = get(),
     ) }
     viewModel<ChatsListViewModel> { ChatsListViewModel(get()) }
     viewModel<ChatViewModel> { ChatViewModel(get(), get(), get()) }
-    viewModel<FiltersViewModel> { FiltersViewModel() }
-    viewModel<FeedViewModel> { FeedViewModel(get()) }
-    viewModel<EditProfileViewModel> { EditProfileViewModel(get(), get(), get()) }
-    viewModel<SettingsViewModel> { SettingsViewModel() }
+    viewModel<FiltersViewModel> { FiltersViewModel(get(), get(), get(), get()) }
+    viewModel<FeedViewModel> { FeedViewModel(get(), get()) }
+    viewModel<EditProfileViewModel> { EditProfileViewModel(get(), get(), get(), get()) }
+    viewModel<SettingsViewModel> { SettingsViewModel(get()) }
     viewModel<AddFandomViewModel> { AddFandomViewModel(get(), get()) }
     viewModel<NewPostViewModel> { NewPostViewModel() }
     viewModel<PasswordRecoveryViewModel> { PasswordRecoveryViewModel(get(), get()) }
@@ -147,7 +150,9 @@ val domainModule = module {
     factory<GetFullPostUseCase> { GetFullPostUseCase(get()) }
     factory<SendCommentUseCase> { SendCommentUseCase(get()) }
     factory<LikePostUseCase> { LikePostUseCase(get()) }
+    factory<LoadInitialFiltersUseCase> { LoadInitialFiltersUseCase(get()) }
+    factory<ApplyFiltersUseCase> { ApplyFiltersUseCase(get(), get()) }
 
-    factory<RequestNewFandomUseCase> { RequestNewFandomUseCase(get()) }
+    factory<RequestNewFandomUseCase> { RequestNewFandomUseCase(get(), get()) }
     factory<GetFandomsByQueryUseCase> { GetFandomsByQueryUseCase(get()) }
 }

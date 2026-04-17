@@ -31,17 +31,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
-import ru.hse.fandomatch.data.mock.mockUser
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.epochMillisToDateString
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.AvatarWithBackground
+import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.CityAndGenderText
 import ru.hse.fandomatch.ui.composables.ExpandableText
 import ru.hse.fandomatch.ui.composables.FandomCarouselWithDropdown
@@ -49,7 +48,6 @@ import ru.hse.fandomatch.ui.composables.FeedPost
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyFloatingButton
 import ru.hse.fandomatch.ui.composables.MyTitle
-import ru.hse.fandomatch.ui.theme.FandoMatchTheme
 
 @Composable
 fun ProfileScreen(
@@ -62,6 +60,7 @@ fun ProfileScreen(
     goToAddPost: () -> Unit,
     goToMatches: () -> Unit,
     goToProfile: (String) -> Unit,
+    goToPost: (String) -> Unit,
     viewModel: ProfileViewModel = koinViewModel()
 ) {
     val state = viewModel.state.collectAsState()
@@ -96,6 +95,11 @@ fun ProfileScreen(
 
         is ProfileAction.GoToProfile -> {
             goToProfile(action.profileId)
+            viewModel.obtainEvent(ProfileEvent.Clear)
+        }
+
+        is ProfileAction.GoToPost -> {
+            goToPost(action.postId)
             viewModel.obtainEvent(ProfileEvent.Clear)
         }
 
@@ -137,7 +141,13 @@ fun ProfileScreen(
             },
             onProfileClicked = { profileId ->
                 viewModel.obtainEvent(ProfileEvent.ProfileClicked(profileId))
-            }
+            },
+            onPostClicked = { postId ->
+                viewModel.obtainEvent(ProfileEvent.PostClicked(postId))
+            },
+            onPostLiked = { postId ->
+                viewModel.obtainEvent(ProfileEvent.PostLiked(postId))
+            },
         )
 
         is ProfileState.Loading -> LoadingState()
@@ -148,7 +158,9 @@ fun ProfileScreen(
         }
 
         is ProfileState.Error -> ErrorState(
-            error = state.error,
+            onRetry = {
+                viewModel.obtainEvent(ProfileEvent.LoadProfile(userId, isCurrentUser))
+            }
         )
     }
 }
@@ -167,6 +179,8 @@ private fun MainState(
     onFriendsClicked: () -> Unit,
     onRequestsClicked: () -> Unit,
     onProfileClicked: (String) -> Unit,
+    onPostClicked: (String) -> Unit,
+    onPostLiked: (String) -> Unit,
 ) {
     setTopBarState(
         TopBarState(
@@ -283,16 +297,32 @@ private fun MainState(
                                 val colors = SegmentedButtonColors(
                                     activeContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                     activeContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    activeBorderColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f),
+                                    activeBorderColor = MaterialTheme.colorScheme.tertiary.copy(
+                                        alpha = 0.5f
+                                    ),
                                     inactiveContainerColor = MaterialTheme.colorScheme.tertiaryContainer,
                                     inactiveContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                                    inactiveBorderColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f),
-                                    disabledActiveContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                                    disabledActiveContentColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f),
-                                    disabledActiveBorderColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f),
-                                    disabledInactiveContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                                    disabledInactiveContentColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.5f),
-                                    disabledInactiveBorderColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f),
+                                    inactiveBorderColor = MaterialTheme.colorScheme.tertiary.copy(
+                                        alpha = 0.5f
+                                    ),
+                                    disabledActiveContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(
+                                        alpha = 0.5f
+                                    ),
+                                    disabledActiveContentColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                        alpha = 0.5f
+                                    ),
+                                    disabledActiveBorderColor = MaterialTheme.colorScheme.tertiary.copy(
+                                        alpha = 0.5f
+                                    ),
+                                    disabledInactiveContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(
+                                        alpha = 0.5f
+                                    ),
+                                    disabledInactiveContentColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(
+                                        alpha = 0.5f
+                                    ),
+                                    disabledInactiveBorderColor = MaterialTheme.colorScheme.tertiary.copy(
+                                        alpha = 0.5f
+                                    ),
                                 )
                                 SegmentedButton(
                                     shape = SegmentedButtonDefaults.itemShape(
@@ -339,95 +369,117 @@ private fun MainState(
                 }
             }
 
-            // posts
             when (val bottomSheetState = state.bottomSheetState) {
                 is ProfileState.BottomSheetState.Posts -> {
-                    items(bottomSheetState.posts) { post ->
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize(),
-                        ) {
-                            FeedPost(
-                                userName = post.authorName,
-                                userLogin = post.authorLogin,
-                                userAvatarUrl = post.authorAvatarUrl,
-                                postDate = post.timestamp.epochMillisToDateString(),
-                                postText = post.content,
-                                imageUrls = post.mediaItems,
-                                areReactionsAvailable = state.type is ProfileType.Own
-                                        || state.type is ProfileType.Friend,
-                                likeCount = post.likeCount,
-                                commentCount = post.commentCount,
-                                isLiked = post.isLikedByCurrentUser,
-                                onLikeClick = {}, // todo
-                                onPostClick = {}, // todo
-                                backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-                                fandoms = post.fandoms,
-                            )
-                            Spacer(
+                    if (bottomSheetState.isError) {
+                        item {
+                            BasicErrorState(onRetry = { onPostsClicked() })
+                        }
+                    } else {
+                        items(bottomSheetState.posts) { post ->
+                            Column(
                                 modifier = Modifier
-                                    .height(8.dp)
-                                    .fillMaxWidth()
-                            )
+                                    .fillMaxSize(),
+                            ) {
+                                FeedPost(
+                                    userName = post.authorName,
+                                    userLogin = post.authorLogin,
+                                    userAvatarUrl = post.authorAvatarUrl,
+                                    postDate = post.timestamp.epochMillisToDateString(),
+                                    postText = post.content,
+                                    imageUrls = post.mediaItems,
+                                    areReactionsAvailable = state.type is ProfileType.Own
+                                            || state.type is ProfileType.Friend,
+                                    likeCount = post.likeCount,
+                                    commentCount = post.commentCount,
+                                    isLiked = post.isLikedByCurrentUser,
+                                    onLikeClick = {
+                                        onPostLiked(post.id)
+                                    },
+                                    onPostClick = {
+                                        onPostClicked(post.id)
+                                    },
+                                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                                    fandoms = post.fandoms,
+                                )
+                                Spacer(
+                                    modifier = Modifier
+                                        .height(8.dp)
+                                        .fillMaxWidth()
+                                )
+                            }
                         }
                     }
                 }
 
                 is ProfileState.BottomSheetState.Friends -> {
-                    item {
-                        Spacer(modifier = Modifier.height(4.dp))
-                    }
-                    items(bottomSheetState.friends) { friend ->
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 8.dp),
-                        ) {
-                            AvatarAndNameBlock(
-                                name = friend.name,
-                                avatarUrl = friend.avatarUrl,
-                                login = friend.login,
-                                backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-                                avatarSize = 36.dp,
+                    if (bottomSheetState.isError) {
+                        item {
+                            BasicErrorState(onRetry = { onFriendsClicked() })
+                        }
+                    } else {
+                        item {
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                        items(bottomSheetState.friends) { friend ->
+                            Column(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .clickable { onProfileClicked(friend.id) }
-                            )
+                                    .fillMaxSize()
+                                    .padding(horizontal = 8.dp),
+                            ) {
+                                AvatarAndNameBlock(
+                                    name = friend.name,
+                                    avatarUrl = friend.avatarUrl,
+                                    login = friend.login,
+                                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                                    avatarSize = 36.dp,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable { onProfileClicked(friend.id) }
+                                )
 
-                            Spacer(
-                                modifier = Modifier
-                                    .height(4.dp)
-                                    .fillMaxWidth()
-                            )
+                                Spacer(
+                                    modifier = Modifier
+                                        .height(4.dp)
+                                        .fillMaxWidth()
+                                )
+                            }
                         }
                     }
                 }
-                is ProfileState.BottomSheetState.Requests -> {
-                    item {
-                        Spacer(modifier = Modifier.height(4.dp))
-                    }
-                    items(bottomSheetState.requests) { possibleFriend ->
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 8.dp),
-                        ) {
-                            AvatarAndNameBlock(
-                                name = possibleFriend.name,
-                                avatarUrl = possibleFriend.avatarUrl,
-                                login = possibleFriend.login,
-                                backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-                                avatarSize = 36.dp,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .clickable { onProfileClicked(possibleFriend.id) }
-                            )
 
-                            Spacer(
+                is ProfileState.BottomSheetState.Requests -> {
+                    if (bottomSheetState.isError) {
+                        item {
+                            BasicErrorState(onRetry = { onRequestsClicked() })
+                        }
+                    } else {
+                        item {
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                        items(bottomSheetState.requests) { possibleFriend ->
+                            Column(
                                 modifier = Modifier
-                                    .height(4.dp)
-                                    .fillMaxWidth()
-                            )
+                                    .fillMaxSize()
+                                    .padding(horizontal = 8.dp),
+                            ) {
+                                AvatarAndNameBlock(
+                                    name = possibleFriend.name,
+                                    avatarUrl = possibleFriend.avatarUrl,
+                                    login = possibleFriend.login,
+                                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                                    avatarSize = 36.dp,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable { onProfileClicked(possibleFriend.id) }
+                                )
+
+                                Spacer(
+                                    modifier = Modifier
+                                        .height(4.dp)
+                                        .fillMaxWidth()
+                                )
+                            }
                         }
                     }
                 }
@@ -453,50 +505,7 @@ private fun IdleState() = LoadingBlock()
 
 @Composable
 private fun ErrorState(
-    error: ProfileState.ProfileError,
+    onRetry: () -> Unit,
 ) {
-    // todo
-    when (error) {
-        ProfileState.ProfileError.IDLE -> Text("Idle error")
-        ProfileState.ProfileError.NETWORK -> Text("Network error")
-        ProfileState.ProfileError.NO_USER -> Text("No such user")
-    }
-}
-@Preview(showBackground = true)
-@Composable
-fun MainStatePreview() {
-    val mockState = ProfileState.Main(
-        type = ProfileType.Own(login = "mocklogin", email = "mockemail"),
-        id = mockUser.id,
-        login = (mockUser.profileType as? ProfileType.Own)?.login,
-        fandoms = mockUser.fandoms,
-        description = mockUser.description,
-        name = mockUser.name,
-        gender = mockUser.gender,
-        age = 25,
-        avatarUrl = mockUser.avatarUrl,
-        backgroundUrl = mockUser.backgroundUrl,
-        city = mockUser.city,
-        bottomSheetState = ProfileState.BottomSheetState.Posts(
-            posts = listOf(),
-            isError = false
-        )
-    )
-
-    FandoMatchTheme {
-        MainState(
-            state = mockState,
-            setTopBarState = { },
-            onMessagesClicked = { },
-            onEditProfileClicked = { },
-            onSettingsClicked = { },
-            onAddPostClicked = { },
-            onLikeClicked = { },
-            onDislikeClicked = { },
-            onPostsClicked = { },
-            onFriendsClicked = { },
-            onRequestsClicked = { },
-            onProfileClicked = { },
-        )
-    }
+    BasicErrorState(onRetry)
 }

@@ -9,6 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
@@ -48,14 +49,11 @@ class ChatViewModel(
         viewModelScope.launch(dispatcherIO) {
             delay(1000)
             val result = loadChatInfoUseCase.execute(userId = profileId)
-            if (result.isFailure) {
-                Log.e("ChatViewModel", "Failed to load chat info", result.exceptionOrNull())
-                _state.value = ChatState.Error
-                return@launch
-            }
             val chat = result.getOrNull() ?: run {
-                Log.e("ChatViewModel", "Chat info is null")
-                _state.value = ChatState.Error
+                Log.e("ChatViewModel", "Failed to load chat info", result.exceptionOrNull())
+                withContext(dispatcherMain) {
+                    _state.value = ChatState.Error
+                }
                 return@launch
             }
             // todo error handling

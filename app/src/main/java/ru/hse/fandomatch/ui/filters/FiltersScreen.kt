@@ -1,6 +1,7 @@
 package ru.hse.fandomatch.ui.filters
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -30,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,12 +46,12 @@ import ru.hse.fandomatch.getColor
 import ru.hse.fandomatch.getName
 import ru.hse.fandomatch.stringId
 import ru.hse.fandomatch.toStringId
+import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.FandomInput
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MySwitch
 import ru.hse.fandomatch.ui.theme.FandoMatchTheme
 import kotlin.math.roundToInt
-
 
 @Composable
 fun FiltersScreen(
@@ -64,6 +66,14 @@ fun FiltersScreen(
         is FiltersAction.NavigateToMatches -> {
             navigateToMatches()
             viewModel.obtainEvent(FiltersEvent.Clear)
+        }
+
+        is FiltersAction.ShowErrorToast -> {
+            Toast.makeText(
+                LocalContext.current,
+                stringResource(R.string.filters_error_toast),
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
         null -> {}
@@ -90,6 +100,11 @@ fun FiltersScreen(
         is FiltersState.Idle -> {
             IdleState()
             viewModel.obtainEvent(FiltersEvent.LoadInitialFilters)
+        }
+        is FiltersState.Error -> {
+            ErrorState(
+                onRetry = { viewModel.obtainEvent(FiltersEvent.LoadInitialFilters) }
+            )
         }
     }
 }
@@ -344,6 +359,13 @@ private fun LoadingState() {
 @Composable
 private fun IdleState() {
     LoadingBlock()
+}
+
+@Composable
+private fun ErrorState(
+    onRetry: () -> Unit,
+) {
+    BasicErrorState(onRetry)
 }
 
 @Preview(showBackground = true)

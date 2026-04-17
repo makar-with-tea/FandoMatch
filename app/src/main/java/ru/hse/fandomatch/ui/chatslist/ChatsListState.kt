@@ -14,6 +14,7 @@ sealed class ChatsListState {
     ) : ChatsListState()
 
     data object Loading : ChatsListState()
+    data object Error : ChatsListState()
     data object Idle : ChatsListState()
 }
 

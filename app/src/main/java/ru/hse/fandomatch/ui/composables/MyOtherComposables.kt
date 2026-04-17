@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.composables
 
-import android.content.ClipDescription
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.util.Log
@@ -29,6 +28,7 @@ import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.Male
 import androidx.compose.material3.AlertDialog
@@ -534,5 +534,43 @@ fun CityAndGenderText(
             text = stringResource(genderText),
             color = color,
         )
+    }
+}
+
+@Composable
+fun BasicErrorState(
+    onRetry: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.errorContainer),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Error,
+            contentDescription = stringResource(R.string.error_icon_description),
+            tint = MaterialTheme.colorScheme.onErrorContainer,
+            modifier = Modifier
+                .size(48.dp)
+                .padding(bottom = 8.dp)
+        )
+        Text(
+            text = stringResource(R.string.basic_error_message),
+            color = MaterialTheme.colorScheme.onErrorContainer,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ),
+            modifier = Modifier
+                .padding(top = 16.dp)
+        ) {
+            Text(text = stringResource(R.string.retry_button_text))
+        }
     }
 }

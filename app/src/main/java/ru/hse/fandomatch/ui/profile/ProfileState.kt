@@ -47,7 +47,7 @@ sealed class ProfileState {
 
     data object Idle : ProfileState()
 
-    data class Error(val error: ProfileError) : ProfileState()
+    data object Error : ProfileState()
 }
 
 sealed class ProfileEvent {
@@ -62,6 +62,8 @@ sealed class ProfileEvent {
     data object FriendsButtonClicked : ProfileEvent()
     data object RequestsButtonClicked : ProfileEvent()
     data class ProfileClicked(val profileId: String) : ProfileEvent()
+    data class PostClicked(val postId: String) : ProfileEvent()
+    data class PostLiked(val postId: String) : ProfileEvent()
     data object Clear : ProfileEvent()
 }
 
@@ -72,4 +74,5 @@ sealed class ProfileAction {
     data object GoToAddPost : ProfileAction()
     data object GoToMatches : ProfileAction()
     data class GoToProfile(val profileId: String) : ProfileAction()
+    data class GoToPost(val postId: String) : ProfileAction()
 }

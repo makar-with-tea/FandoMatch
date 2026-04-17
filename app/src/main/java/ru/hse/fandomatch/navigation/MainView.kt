@@ -268,6 +268,12 @@ fun MainView() {
                             navigateToRouteWithArgs(
                                 Route.Profile.createRoute(profileId)
                             )
+                        },
+                        goToPost = { postId ->
+                            Log.d("Navigation", "Navigate to post $postId from MyProfile")
+                            navigateToRouteWithArgs(
+                                Route.Post.createRoute(postId)
+                            )
                         }
                     )
                 }
@@ -321,6 +327,12 @@ fun MainView() {
                             Log.d(
                                 "Navigation",
                                 "Impossible: go to profile $profileId from profile $profileId"
+                            )
+                        },
+                        goToPost = { postId ->
+                            Log.d("Navigation", "Navigate to post $postId from profile $profileId")
+                            navigateToRouteWithArgs(
+                                Route.Post.createRoute(postId)
                             )
                         }
                     )

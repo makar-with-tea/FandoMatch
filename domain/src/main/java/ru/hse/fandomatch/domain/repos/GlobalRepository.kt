@@ -11,6 +11,7 @@ import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.AuthInfo
+import ru.hse.fandomatch.domain.model.Filters
 import ru.hse.fandomatch.domain.model.FullPost
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.OtherProfileItem
@@ -33,8 +34,8 @@ interface GlobalRepository {
     suspend fun updateUser(
         name: String,
         bio: String?,
-        gender: Gender,
-        city: City,
+        city: City?,
+        fandoms: List<Fandom>,
         avatarMediaId: String?,
         backgroundMediaId: String?,
     )
@@ -51,6 +52,7 @@ interface GlobalRepository {
 
     suspend fun getSuggestedProfiles(size: Int): List<ProfileCard>
     suspend fun likeOrDislikeProfile(userId: String, isLike: Boolean)
+    suspend fun getCurrentFilters(): Filters
     suspend fun setFilters(
         userId: String,
         genders: List<Gender> = Gender.entries,

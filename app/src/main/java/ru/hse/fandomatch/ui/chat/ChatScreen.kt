@@ -56,6 +56,7 @@ import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.ui.composables.AttachmentsRow
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
+import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.ImagesScreen
 import ru.hse.fandomatch.ui.composables.Message
 import ru.hse.fandomatch.ui.composables.SkeletonView
@@ -107,7 +108,11 @@ fun ChatScreen(
 
         is ChatState.Loading -> LoadingState()
 
-        is ChatState.Error -> ErrorState()
+        is ChatState.Error -> ErrorState(
+            onRetry = {
+                viewModel.obtainEvent(ChatEvent.LoadChat(profileId))
+            },
+        )
     }
 }
 
@@ -353,7 +358,8 @@ private fun IdleState() {
 }
 
 @Composable
-private fun ErrorState() {
-    // todo
-    Text("An error occurred while loading the chat.")
+private fun ErrorState(
+    onRetry: () -> Unit,
+) {
+    BasicErrorState(onRetry)
 }

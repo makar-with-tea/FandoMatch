@@ -21,7 +21,6 @@ class MatchesViewModel(
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
-
     private val _state: MutableStateFlow<MatchesState> = MutableStateFlow(MatchesState.Idle)
     val state: StateFlow<MatchesState> get() = _state
     private val _action = MutableStateFlow<MatchesAction?>(null)
@@ -60,7 +59,18 @@ class MatchesViewModel(
         Log.i("MatchesViewModel", "Starting initial load of suggested profiles")
         viewModelScope.launch(dispatcherIO) {
             try {
-                val profiles = loadSuggestedProfilesUseCase.execute(batchSize)
+                val result = loadSuggestedProfilesUseCase.execute(batchSize)
+                val profiles = result.getOrNull() ?: run {
+                    Log.e("MatchesViewModel", "Failed to load suggested profiles: ${result.exceptionOrNull()}")
+                    withContext(dispatcherMain) {
+                        _state.value = MatchesState.Main(
+                            profileStack = buffer.toList(),
+                            isLoading = false,
+                            error = if (buffer.isEmpty()) MatchesState.MatchesError.NO_PROFILES_FOUND else MatchesState.MatchesError.NETWORK
+                        )
+                    }
+                    return@launch
+                }
                 buffer.clear()
                 profiles.forEach { buffer.addLast(it) }
                 withContext(dispatcherMain) {
@@ -116,17 +126,12 @@ class MatchesViewModel(
         if (isLoadingNext) return
         isLoadingNext = true
         viewModelScope.launch(dispatcherIO) {
-            try {
-                val next = loadSuggestedProfilesUseCase.execute(batchSize)
-                withContext(dispatcherMain) {
-                    next.forEach { buffer.addLast(it) }
-                    _state.value = MatchesState.Main(
-                        profileStack = buffer.toList(),
-                        isLoading = false,
-                        error = MatchesState.MatchesError.IDLE
-                    )
-                }
-            } catch (_: Exception) {
+            val result = loadSuggestedProfilesUseCase.execute(batchSize)
+            val next = result.getOrNull() ?: run {
+                Log.e(
+                    "MatchesViewModel",
+                    "Failed to prefetch suggested profiles: ${result.exceptionOrNull()}"
+                )
                 withContext(dispatcherMain) {
                     _state.value = MatchesState.Main(
                         profileStack = buffer.toList(),
@@ -134,15 +139,23 @@ class MatchesViewModel(
                         error = if (buffer.isEmpty()) MatchesState.MatchesError.NETWORK else MatchesState.MatchesError.IDLE
                     )
                 }
-            } finally {
-                isLoadingNext = false
+                return@launch
             }
+            withContext(dispatcherMain) {
+                next.forEach { buffer.addLast(it) }
+                _state.value = MatchesState.Main(
+                    profileStack = buffer.toList(),
+                    isLoading = false,
+                    error = MatchesState.MatchesError.IDLE
+                )
+            }
+            isLoadingNext = false
         }
     }
 
     private fun clear() {
         viewModelScope.launch(dispatcherIO) {
-            delay(1000) // todo fix??
+            delay(1000)
             _state.value = MatchesState.Idle
             buffer.clear()
             _action.value = null

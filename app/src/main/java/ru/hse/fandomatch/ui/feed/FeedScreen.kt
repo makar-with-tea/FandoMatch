@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
@@ -12,6 +13,7 @@ import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.ui.composables.FeedPost
 import ru.hse.fandomatch.ui.composables.LoadingPosts
 import ru.hse.fandomatch.epochMillisToDateString
+import ru.hse.fandomatch.ui.composables.BasicErrorState
 
 @Composable
 fun FeedScreen(
@@ -44,6 +46,11 @@ fun FeedScreen(
         }
         is FeedState.Loading -> {
             LoadingState()
+        }
+        is FeedState.Error -> {
+            ErrorState(
+                onRetry = { viewModel.obtainEvent(FeedEvent.LoadPosts) },
+            )
         }
     }
 }
@@ -84,3 +91,10 @@ private fun LoadingState() = LoadingPosts()
 
 @Composable
 private fun IdleState() = LoadingState()
+
+@Composable
+private fun ErrorState(
+    onRetry: () -> Unit,
+) {
+    BasicErrorState(onRetry)
+}

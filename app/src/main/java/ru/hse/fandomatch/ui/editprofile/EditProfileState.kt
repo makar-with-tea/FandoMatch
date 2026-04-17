@@ -84,4 +84,5 @@ sealed class EditProfileEvent {
 sealed class EditProfileAction {
     object NavigateToAddFandom : EditProfileAction()
     object NavigateToMyProfile : EditProfileAction()
+    object ShowErrorToast : EditProfileAction()
 }
