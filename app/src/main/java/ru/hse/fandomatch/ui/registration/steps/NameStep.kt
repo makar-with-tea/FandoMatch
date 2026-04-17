@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -12,6 +13,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
@@ -19,17 +22,21 @@ import ru.hse.fandomatch.ui.registration.RegistrationState
 import ru.hse.fandomatch.ui.registration.getText
 import ru.hse.fandomatch.ui.registration.isFieldError
 
-
 @Composable
 internal fun NameStep(
     state: RegistrationState.Name,
-    onNext: (String, String, String) -> Unit,
+    onNameChanged: (String) -> Unit,
+    onEmailChanged: (String) -> Unit,
+    onLoginChanged: (String) -> Unit,
+    onNext: () -> Unit,
 ) {
     val name = remember { mutableStateOf(state.name) }
     val email = remember { mutableStateOf(state.email) }
     val login = remember { mutableStateOf(state.login) }
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -45,26 +52,36 @@ internal fun NameStep(
                 label = stringResource(R.string.name_label),
                 isError = state.nameError.isFieldError(),
                 errorText = state.nameError.getText()
-            ) { name.value = it }
+            ) {
+                onNameChanged(it)
+                name.value = it
+            }
             MyTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = email.value,
                 label = stringResource(R.string.email_label),
                 isError = state.emailError.isFieldError(),
-                errorText = state.emailError.getText()
-            ) { email.value = it }
+                errorText = state.emailError.getText(),
+                keyboardType = KeyboardType.Email,
+            ) {
+                onEmailChanged(it)
+                email.value = it
+            }
             MyTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = login.value,
                 label = stringResource(R.string.login_label),
                 isError = state.loginError.isFieldError(),
                 errorText = state.loginError.getText()
-            ) { login.value = it }
+            ) {
+                onLoginChanged(it)
+                login.value = it
+            }
         }
         Button(
             modifier = Modifier.fillMaxWidth(),
-            enabled = !state.isLoading,
-            onClick = { onNext(name.value, email.value, login.value) }
+            enabled = !state.isLoading && !state.nameError.isFieldError() && !state.emailError.isFieldError() && !state.loginError.isFieldError(),
+            onClick = { onNext() }
         ) { Text(stringResource(R.string.next_step)) }
     }
 }

@@ -39,16 +39,13 @@ class ChatsListViewModel(
         }
     }
 
-    private fun goToChat(chatId: Long) {
+    private fun goToChat(chatId: String) {
         _action.value = ChatsListAction.NavigateToChat(chatId)
     }
 
     private fun loadChats() {
-        // todo
+        // todo error handling
         viewModelScope.launch(dispatcherIO) {
-            delay(1000) // simulate loading
-
-            // todo error handling + how to dispose?..
             _allChats = subscribeToChatPreviewsUseCase.execute()
             _allChats.collect {
                 Log.d("ChatsListViewModel", "Loaded chat previews: $it")

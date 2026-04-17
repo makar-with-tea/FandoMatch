@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,6 +39,7 @@ import ru.hse.fandomatch.ui.composables.MySwitch
 import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.navigation.TopBarState
+import ru.hse.fandomatch.ui.theme.FandoMatchTheme
 
 @Composable
 fun SettingsScreen(
@@ -448,7 +450,8 @@ fun ChangeEmailState(
             onValueChange = { email.value = it },
             label = stringResource(id = R.string.email_label),
             isError = state.emailError != SettingsState.SettingsError.IDLE,
-            errorText = state.emailError.toText()
+            errorText = state.emailError.toText(),
+            keyboardType = KeyboardType.Email,
         )
         Button(onClick = { onSaveEmail(email.value) }) {
             Text(stringResource(id = R.string.save_button))
@@ -517,17 +520,19 @@ fun SettingsState.SettingsError.toText() = when (this) {
 @Preview(showBackground = true)
 @Composable
 fun MainStatePreview() {
-    MainState(
-        state = SettingsState.Main(
-            email = "johndoe@example.com",
-        ),
-        onChangePassword = {},
-        onDeleteAccount = {},
-        onLogout = {},
-        onChangeEmail = {},
-        setTopBarState = {},
-        onMatchNotificationsToggled = {},
-        onMessageNotificationsToggled = {},
-        onShowPostsToNonMatchesToggled = {}
-    )
+    FandoMatchTheme {
+        MainState(
+            state = SettingsState.Main(
+                email = "johndoe@example.com",
+            ),
+            onChangePassword = {},
+            onDeleteAccount = {},
+            onLogout = {},
+            onChangeEmail = {},
+            setTopBarState = {},
+            onMatchNotificationsToggled = {},
+            onMessageNotificationsToggled = {},
+            onShowPostsToNonMatchesToggled = {}
+        )
+    }
 }

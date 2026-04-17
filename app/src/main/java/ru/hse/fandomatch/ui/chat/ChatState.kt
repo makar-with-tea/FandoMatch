@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.chat
 
-import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.Message
 
 sealed class ChatState {
@@ -9,12 +8,13 @@ sealed class ChatState {
         NETWORK,
     }
     data class Main(
-        val chatId: Long,
-        val participantId: Long,
+        val chatId: String,
+        val participantId: String,
         val participantName: String,
         val participantAvatarUrl: String?,
-        val messages: List<Pair<Message, Boolean>>, // Boolean - needsTail in UI
+        val uiElements: List<ChatUiElement>,
         val error: ChatError = ChatError.IDLE,
+        // todo хранить тут вводимое сообщение и картинки
     ) : ChatState()
 
     data object Loading : ChatState()
@@ -29,10 +29,23 @@ sealed class ChatEvent {
         val timestamp: Long,
     ) : ChatEvent()
     data class LoadChat(
-        val userId: Long?,
+        val profileId: String?,
     ) : ChatEvent()
+    data object ProfileClicked: ChatEvent()
     data object Clear : ChatEvent()
 }
 
 sealed class ChatAction {
+    data class GoToProfile(val profileId: String) : ChatAction()
+}
+
+sealed class ChatUiElement {
+    data class MessageElement(
+        val message: Message,
+        val hasTail: Boolean,
+    ) : ChatUiElement()
+
+    data class DayElement(
+        val dateString: String,
+    ) : ChatUiElement()
 }

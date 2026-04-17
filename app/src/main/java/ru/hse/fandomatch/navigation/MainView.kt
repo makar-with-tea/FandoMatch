@@ -4,6 +4,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -32,11 +34,14 @@ import ru.hse.fandomatch.ui.profile.ProfileScreen
 import ru.hse.fandomatch.ui.registration.RegistrationScreen
 import ru.hse.fandomatch.ui.settings.SettingsScreen
 import ru.hse.fandomatch.orFalse
+import ru.hse.fandomatch.ui.newpost.NewPostScreen
+import ru.hse.fandomatch.ui.passwordrecovery.PasswordRecoveryScreen
+import ru.hse.fandomatch.ui.post.PostScreen
 
 sealed class Route(val route: String) {
     data object Authorization : Route("authorization")
     data object Chat : Route("chat/{chat_id}") {
-        fun createRoute(chatId: Long?): String {
+        fun createRoute(chatId: String?): String {
             return "chat/$chatId"
         }
     }
@@ -48,7 +53,7 @@ sealed class Route(val route: String) {
     data object Matches : Route("matches")
     data object MyProfile : Route("my_profile")
     data object Profile : Route("profile/{profile_id}") {
-        fun createRoute(profileId: Long): String {
+        fun createRoute(profileId: String): String {
             return "profile/$profileId"
         }
     }
@@ -57,6 +62,13 @@ sealed class Route(val route: String) {
     data object EditProfile : Route("edit_profile")
     data object Settings : Route("settings")
     data object AddFandom : Route("add_fandom")
+    data object NewPost : Route("new_post")
+    data object PasswordRecovery : Route("password_recovery")
+    data object Post : Route("post/{post_id}") {
+        fun createRoute(postId: String): String {
+            return "post/$postId"
+        }
+    }
 }
 
 @Composable
@@ -91,6 +103,7 @@ fun MainView() {
             Route.Filters.route -> R.string.filters_title
             Route.Feed.route -> R.string.feed_title
             Route.AddFandom.route -> R.string.add_fandom_title
+            Route.PasswordRecovery.route -> R.string.password_recovery_title
             else -> null
         }
 
@@ -129,7 +142,8 @@ fun MainView() {
                 Route.Feed.route -> R.string.feed_title
                 Route.AddFandom.route -> R.string.add_fandom_title
                 Route.AddFandom.route -> R.string.add_fandom_title
-                Route.Intro.route, Route.Registration.route, Route.Authorization.route -> null
+                Route.PasswordRecovery.route -> R.string.password_recovery_title
+                Route.Intro.route, Route.Authorization.route -> null
                 else -> null
             }
 
@@ -146,11 +160,16 @@ fun MainView() {
                 else -> listOf()
             }
 
-        topBarState.value =
+        topBarState.value = screenTitleId?.let {
             TopBarState(
-                titleContent = { screenTitleId?.let { MyTitle(text = stringResource(it)) } },
+                titleContent = { MyTitle(text = stringResource(screenTitleId)) },
                 endIcons = endIcons,
             )
+        }
+    }
+
+    val setTopBarState = { state: TopBarState?, route: String? ->
+        if (currentRoute == route) topBarState.value = state
     }
 
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
@@ -176,7 +195,12 @@ fun MainView() {
             }
         }
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
+        Box(
+            modifier = Modifier
+                .padding(paddingValues)
+                .consumeWindowInsets(paddingValues)
+                .imePadding()
+        ) {
             NavHost(navController = navController, startDestination = Route.Intro.route) {
                 composable(Route.Intro.route) {
                     updateTopBar()
@@ -189,14 +213,15 @@ fun MainView() {
                 composable(Route.Authorization.route) {
                     updateTopBar()
                     AuthorizationScreen(
-                        navigateToMatches = { navigateToRoute(Route.Matches) }
+                        navigateToMatches = { navigateToRoute(Route.Matches) },
+                        navigateToPasswordRecovery = { navigateToRoute(Route.PasswordRecovery) },
                     )
                 }
                 composable(Route.Registration.route) {
-                    updateTopBar()
                     RegistrationScreen(
                         navigateToMatches = { navigateToRoute(Route.Matches) },
                         navigateBack = { navController.popBackStack() },
+                        setTopBarState = { setTopBarState(it, Route.Registration.route) }
                     )
                 }
                 composable(Route.Matches.route) {
@@ -213,7 +238,8 @@ fun MainView() {
                 composable(Route.MyProfile.route) {
                     ProfileScreen(
                         userId = null,
-                        setTopBarState = { topBarState.value = it },
+                        isCurrentUser = true,
+                        setTopBarState = { setTopBarState(it, Route.MyProfile.route) },
                         goToMessages = { chatId ->
                             /* do nothing */
                             Log.d(
@@ -227,6 +253,28 @@ fun MainView() {
                         goToSettings = {
                             navigateToRoute(Route.Settings)
                         },
+                        goToAddPost = {
+                            navigateToRoute(Route.NewPost)
+                        },
+                        goToMatches = {
+                            /* do nothing */
+                            Log.d(
+                                "Navigation",
+                                "Impossible: go to matches from MyProfile"
+                            )
+                        },
+                        goToProfile = { profileId ->
+                            Log.d("Navigation", "Navigate to profile $profileId from MyProfile")
+                            navigateToRouteWithArgs(
+                                Route.Profile.createRoute(profileId)
+                            )
+                        },
+                        goToPost = { postId ->
+                            Log.d("Navigation", "Navigate to post $postId from MyProfile")
+                            navigateToRouteWithArgs(
+                                Route.Post.createRoute(postId)
+                            )
+                        }
                     )
                 }
                 composable(Route.ChatsList.route) {
@@ -237,15 +285,16 @@ fun MainView() {
                                 Route.Chat.createRoute(chatId)
                             )
                         },
-                        setTopBarState = { topBarState.value = it },
+                        setTopBarState = { setTopBarState(it, Route.ChatsList.route) },
                     )
                 }
                 composable(Route.Profile.route) { backStackEntry ->
                     val profileId =
-                        backStackEntry.arguments?.getString("profile_id")?.toLongOrNull() ?: -1L
+                        backStackEntry.arguments?.getString("profile_id")
                     ProfileScreen(
                         userId = profileId,
-                        setTopBarState = { topBarState.value = it },
+                        isCurrentUser = false,
+                        setTopBarState = { setTopBarState(it, Route.Profile.route) },
                         goToMessages = { chatId ->
                             navigateToRouteWithArgs(Route.Chat.createRoute(chatId = chatId))
                         },
@@ -263,13 +312,42 @@ fun MainView() {
                                 "Impossible: go to settings from other user's profile"
                             )
                         },
+                        goToAddPost = {
+                            /* do nothing */
+                            Log.d(
+                                "Navigation",
+                                "Impossible: go to add post from other user's profile"
+                            )
+                        },
+                        goToMatches = {
+                            navigateToRoute(Route.Matches)
+                        },
+                        goToProfile = { profileId ->
+                            /* do nothing */
+                            Log.d(
+                                "Navigation",
+                                "Impossible: go to profile $profileId from profile $profileId"
+                            )
+                        },
+                        goToPost = { postId ->
+                            Log.d("Navigation", "Navigate to post $postId from profile $profileId")
+                            navigateToRouteWithArgs(
+                                Route.Post.createRoute(postId)
+                            )
+                        }
                     )
                 }
                 composable(Route.Chat.route) { backStackEntry ->
-                    val chatId = backStackEntry.arguments?.getString("chat_id")?.toLongOrNull()
+                    val chatId = backStackEntry.arguments?.getString("chat_id")
                     ChatScreen(
-                        userId = chatId,
-                        setTopBarState = { topBarState.value = it },
+                        profileId = chatId,
+                        setTopBarState = { setTopBarState(it, Route.Chat.route) },
+                        goToProfile = { profileId ->
+                            Log.d("Navigation", "Navigate to profile $profileId from chat")
+                            navigateToRouteWithArgs(
+                                Route.Profile.createRoute(profileId)
+                            )
+                        },
                     )
                 }
                 composable(Route.Filters.route) {
@@ -282,21 +360,18 @@ fun MainView() {
                 }
                 composable(Route.Feed.route) {
                     updateTopBar()
-                    val context = LocalContext.current
                     FeedScreen(
                         navigateToPost = { postId ->
-                            // todo
-                            Toast.makeText(
-                                context,
-                                "Clicked post $postId",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Log.d("Navigation", "Navigate to post $postId from feed")
+                            navigateToRouteWithArgs(
+                                Route.Post.createRoute(postId)
+                            )
                         }
                     )
                 }
                 composable(Route.EditProfile.route) {
                     EditProfileScreen(
-                        setTopBarState = { topBarState.value = it },
+                        setTopBarState = { setTopBarState(it, Route.EditProfile.route) },
                         navigateToAddFandom = {
                             navigateToRoute(Route.AddFandom)
                         },
@@ -307,7 +382,7 @@ fun MainView() {
                 }
                 composable(Route.Settings.route) {
                     SettingsScreen(
-                        setTopBarState = { topBarState.value = it },
+                        setTopBarState = { setTopBarState(it, Route.Settings.route) },
                         navigateToIntro = { navigateToRoute(Route.Intro) },
                     )
                 }
@@ -315,6 +390,31 @@ fun MainView() {
                     updateTopBar()
                     AddFandomScreen(
                         navigateBack = { navController.popBackStack() },
+                    )
+                }
+                composable(Route.NewPost.route) {
+                    NewPostScreen(
+                        navigateToPreviousScreen = { navController.popBackStack() },
+                        setTopBarState = { setTopBarState(it, Route.NewPost.route) },
+                    )
+                }
+                composable(Route.PasswordRecovery.route) {
+                    updateTopBar()
+                    PasswordRecoveryScreen(
+                        navigateToAuthorization = { navigateToRoute(Route.Authorization) }
+                    )
+                }
+                composable(Route.Post.route) { backStackEntry ->
+                    val postId = backStackEntry.arguments?.getString("post_id")
+                    PostScreen(
+                        postId = postId,
+                        setTopBarState = { setTopBarState(it, Route.Post.route) },
+                        goToProfile = { profileId ->
+                            Log.d("Navigation", "Navigate to profile $profileId from post")
+                            navigateToRouteWithArgs(
+                                Route.Profile.createRoute(profileId)
+                            )
+                        },
                     )
                 }
             }
@@ -327,7 +427,10 @@ private fun String.canShowBottomBar(): Boolean {
         Route.Authorization.route,
         Route.Registration.route,
         Route.Intro.route,
-        Route.Chat.route, // todo check if it works
+        Route.Chat.route,
         Route.Filters.route,
+        Route.PasswordRecovery.route,
+        Route.EditProfile.route,
+        Route.Post.route,
     )
 }

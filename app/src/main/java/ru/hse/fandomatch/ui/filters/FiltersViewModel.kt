@@ -1,21 +1,28 @@
 package ru.hse.fandomatch.ui.filters
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import ru.hse.fandomatch.data.mock.mockFandoms
-import ru.hse.fandomatch.data.mock.mockFilters
+import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Filters
 import ru.hse.fandomatch.domain.model.Gender
+import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
+import ru.hse.fandomatch.domain.usecase.matches.ApplyFiltersUseCase
+import ru.hse.fandomatch.domain.usecase.matches.LoadInitialFiltersUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 
 class FiltersViewModel(
+    private val loadInitialFiltersUseCase: LoadInitialFiltersUseCase,
+    private val applyFiltersUseCase: ApplyFiltersUseCase,
+    private val getUserUseCase: GetUserUseCase,
+    private val getFandomsByQueryUseCase: GetFandomsByQueryUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,) : ViewModel() {
     private val _state: MutableStateFlow<FiltersState> = MutableStateFlow(FiltersState.Idle)
@@ -26,26 +33,8 @@ class FiltersViewModel(
     val action: StateFlow<FiltersAction?>
         get() = _action
 
-    private fun loadInitialFilters() {
-        viewModelScope.launch {
-            _state.value = FiltersState.Loading
-            delay(1000)
-
-            val initialFilters = FiltersState.Main(
-                selectedGenders = mockFilters.genders,
-                ageRange = mockFilters.minAge..mockFilters.maxAge,
-                selectedCategories = mockFilters.categories,
-                selectedFandoms = mockFilters.fandoms,
-                foundFandoms = emptyList(),
-                onlyInUserCity = mockFilters.onlyInUserCity,
-                userCity = mockFilters.userCity,
-                areFandomsLoading = false,
-            )
-            _state.value = initialFilters
-        }
-    }
-
     fun obtainEvent(event: FiltersEvent) {
+        Log.d("FiltersViewModel", "Event obtained: $event")
         when (event) {
             is FiltersEvent.LoadInitialFilters -> loadInitialFilters()
             is FiltersEvent.GenderSelected -> updateGender(event.gender)
@@ -58,6 +47,36 @@ class FiltersViewModel(
             is FiltersEvent.ResetFilters -> resetFilters()
             is FiltersEvent.ApplyFilters -> applyFilters()
             is FiltersEvent.Clear -> clear()
+        }
+    }
+
+    private fun loadInitialFilters() {
+        viewModelScope.launch {
+            _state.value = FiltersState.Loading
+            val result = loadInitialFiltersUseCase.execute()
+            val filters = result.getOrNull() ?: run {
+                Log.e("FiltersViewModel", "Failed to load initial filters: ${result.exceptionOrNull()}")
+                _state.value = FiltersState.Error
+                return@launch
+            }
+            val userResult = getUserUseCase.execute(profileId = null, isCurrentUser = true)
+            val user = userResult.getOrNull() ?: run {
+                Log.e("FiltersViewModel", "Failed to load user data: ${userResult.exceptionOrNull()}")
+                _state.value = FiltersState.Error
+                return@launch
+            }
+            val city = user.city
+            val initialFilters = FiltersState.Main(
+                selectedGenders = filters.genders,
+                ageRange = filters.minAge..filters.maxAge,
+                selectedCategories = filters.categories,
+                selectedFandoms = filters.fandoms,
+                foundFandoms = emptyList(),
+                onlyInUserCity = filters.onlyInUserCity,
+                areFandomsLoading = false,
+                userCity = city,
+            )
+            _state.value = initialFilters
         }
     }
 
@@ -118,10 +137,15 @@ class FiltersViewModel(
                 return
             }
             viewModelScope.launch(dispatcherIO) {
-                // todo
                 _state.value = currentState.copy(foundFandoms = emptyList(), areFandomsLoading = true)
-                delay(500)
-                val foundFandoms = mockFandoms.filter { it.name.contains(query, ignoreCase = true) }
+                val result = getFandomsByQueryUseCase.execute(query)
+                val foundFandoms = result.getOrNull() ?: run {
+                    Log.e("FiltersViewModel", "Failed to search fandoms: ${result.exceptionOrNull()}")
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(foundFandoms = emptyList(), areFandomsLoading = false)
+                    }
+                    return@launch
+                }
                 _state.value = currentState.copy(foundFandoms = foundFandoms, areFandomsLoading = false)
             }
         }
@@ -137,7 +161,8 @@ class FiltersViewModel(
     private fun resetFilters() {
         val currentState = _state.value
         if (currentState is FiltersState.Main) {
-            val filters = Filters(userCity = currentState.userCity)
+            val filters = Filters()
+            val city = currentState.userCity
             _state.value = FiltersState.Main(
                 selectedGenders = filters.genders,
                 ageRange = filters.minAge..filters.maxAge,
@@ -145,14 +170,32 @@ class FiltersViewModel(
                 selectedFandoms = filters.fandoms,
                 foundFandoms = emptyList(),
                 onlyInUserCity = filters.onlyInUserCity,
-                userCity = filters.userCity,
+                userCity = city,
                 areFandomsLoading = false,
             )
         }
     }
 
     private fun applyFilters() {
-        _action.value = FiltersAction.NavigateToMatches
+        val currentState = _state.value as? FiltersState.Main ?: return
+        viewModelScope.launch {
+            val result = applyFiltersUseCase.execute(
+                genders = currentState.selectedGenders,
+                minAge = currentState.ageRange.first,
+                maxAge = currentState.ageRange.last,
+                categories = currentState.selectedCategories,
+                fandoms = currentState.selectedFandoms,
+                onlyInUserCity = currentState.onlyInUserCity,
+            )
+            if (result.isFailure) {
+                Log.e("FiltersViewModel", "Failed to apply filters: ${result.exceptionOrNull()}")
+                _action.value = FiltersAction.ShowErrorToast
+                return@launch
+            }
+            withContext(dispatcherMain) {
+                _action.value = FiltersAction.NavigateToMatches
+            }
+        }
     }
 
     private fun clear() {

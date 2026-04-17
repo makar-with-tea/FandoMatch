@@ -18,9 +18,8 @@ sealed interface RegistrationState {
         DOB_TOO_YOUNG,
         DOB_EMPTY,
         GENDER_NOT_SELECTED,
+        INVALID_CODE;
     }
-
-    sealed interface Main: RegistrationState
 
     data class Name(
         val name: String = "",
@@ -30,23 +29,28 @@ sealed interface RegistrationState {
         val emailError: RegistrationError = RegistrationError.IDLE,
         val loginError: RegistrationError = RegistrationError.IDLE,
         val isLoading: Boolean = false
-    ) : Main
+    ) : RegistrationState
+
+    data class Code(
+        val codeError: RegistrationError = RegistrationError.IDLE,
+        val isLoading: Boolean = false,
+    ) : RegistrationState
 
     data class DateOfBirth(
         val dateOfBirthMillis: Long? = null,
         val error: RegistrationError = RegistrationError.IDLE
-    ) : Main
+    ) : RegistrationState
 
     data class GenderChoice(
-        val gender: Gender? = null,
+        val gender: Gender = Gender.NOT_SPECIFIED,
         val error: RegistrationError = RegistrationError.IDLE
-    ) : Main
+    ) : RegistrationState
 
     data class Avatar(
         val avatarByteArray: ByteArray?,
         val error: RegistrationError = RegistrationError.IDLE,
         val isUploading: Boolean = false
-    ) : Main {
+    ) : RegistrationState {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
@@ -77,30 +81,21 @@ sealed interface RegistrationState {
         val passwordError: RegistrationError = RegistrationError.IDLE,
         val passwordRepeatError: RegistrationError = RegistrationError.IDLE,
         val isLoading: Boolean = false
-    ) : Main
-
-    fun Main.isLoading(): Boolean {
-        return when (this) {
-            is Name -> isLoading
-            is Password -> isLoading
-            else -> false
-        }
-    }
+    ) : RegistrationState
 
     data object Idle : RegistrationState
     data object Loading : RegistrationState
 }
 
 sealed class RegistrationEvent {
-    data class NameSubmitted(
-        val name: String,
-        val email: String,
-        val login: String
-    ) : RegistrationEvent()
-
+    data class NameChanged(val name: String) : RegistrationEvent()
+    data class EmailChanged(val email: String) : RegistrationEvent()
+    data class LoginChanged(val login: String) : RegistrationEvent()
+    data object NameSubmitted : RegistrationEvent()
+    data class CodeSubmitted(val code: String) : RegistrationEvent()
     data class DateSelected(val dateOfBirthMillis: Long?) : RegistrationEvent()
-    data class GenderSelected(val gender: Gender?) : RegistrationEvent()
-    data class AvatarSelected(val avatarByteArray: ByteArray?) : RegistrationEvent() {
+    data class GenderSelected(val gender: Gender) : RegistrationEvent()
+    data class AvatarSelected(val avatarByteArray: ByteArray?) : RegistrationEvent() { // todo разделить выбор и клик на "далее"
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
@@ -114,13 +109,10 @@ sealed class RegistrationEvent {
             return avatarByteArray?.contentHashCode() ?: 0
         }
     }
-
-    data class PasswordSubmit(
-        val password: String,
-        val passwordRepeat: String,
-        val agreedToTerms: Boolean,
-    ) : RegistrationEvent()
-
+    data class PasswordChanged(val password: String) : RegistrationEvent()
+    data class PasswordRepeatChanged(val passwordRepeat: String) : RegistrationEvent()
+    data class AgreedToTermsChanged(val agreedToTerms: Boolean) : RegistrationEvent()
+    data object PasswordSubmit : RegistrationEvent()
     data object PasswordVisibilityChanged : RegistrationEvent()
     data object PasswordRepeatVisibilityChanged : RegistrationEvent()
     data object Back : RegistrationEvent()

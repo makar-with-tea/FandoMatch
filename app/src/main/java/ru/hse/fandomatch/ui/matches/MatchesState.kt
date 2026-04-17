@@ -20,14 +20,14 @@ sealed class MatchesState {
 
 sealed class MatchesEvent {
     data object LoadSuggestedProfiles : MatchesEvent()
-    data class LikedProfile(val profileId: Long) : MatchesEvent()
-    data class DislikedProfile(val profileId: Long) : MatchesEvent()
-    data class ProfileClicked(val profileId: Long) : MatchesEvent()
+    data class LikedProfile(val profileId: String) : MatchesEvent()
+    data class DislikedProfile(val profileId: String) : MatchesEvent()
+    data class ProfileClicked(val profileId: String) : MatchesEvent()
     data object Clear : MatchesEvent()
 }
 
 sealed class MatchesAction {
     data class NavigateToProfile(
-        val profileId: Long,
+        val profileId: String,
     ) : MatchesAction()
 }

@@ -6,14 +6,16 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.ui.theme.CustomColors
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
-import java.util.Locale
+import java.time.ZonedDateTime
 
 fun Boolean?.orFalse(): Boolean = this ?: false
 
@@ -42,7 +44,7 @@ fun rawResId(name: String, context: Context): Int {
 
 fun nameAndAgeString(name: String, age: Int): String = "$name, $age"
 
-fun timestampToTimeAgo(timestamp: Long, context: Context) : String {
+fun epochMillisToTimeAgo(timestamp: Long, context: Context) : String {
     val dateTime = LocalDateTime.ofEpochSecond(timestamp / 1000, 0, ZoneOffset.UTC)
     val secondsAgo = (System.currentTimeMillis() - timestamp) / 1000
     val minutesAgo = secondsAgo / 60
@@ -61,9 +63,28 @@ fun timestampToTimeAgo(timestamp: Long, context: Context) : String {
     }
 }
 
-fun Long.timestampToDateString(): String {
-    val dateTime = LocalDateTime.ofEpochSecond(this / 1000, 0, ZoneOffset.UTC)
+fun Long.epochMillisToDateString(): String {
+    val dateTime = epochMillisToDateTime()
     return String.format("%02d.%02d.%04d", dateTime.dayOfMonth, dateTime.monthValue, dateTime.year)
+}
+
+fun Long.epochMillisToTimeString(): String {
+    val dateTime = epochMillisToDateTime()
+    return String.format("%02d:%02d", dateTime.hour, dateTime.minute)
+}
+
+fun Long.isSameDayAs(other: Long): Boolean {
+    val dateTime1 = epochMillisToDateTime()
+    val dateTime2 = other.epochMillisToDateTime()
+    return dateTime1.year == dateTime2.year &&
+            dateTime1.monthValue == dateTime2.monthValue &&
+            dateTime1.dayOfMonth == dateTime2.dayOfMonth
+}
+
+private fun Long.epochMillisToDateTime(): LocalDateTime {
+    val zoneId: ZoneId = ZoneId.systemDefault()
+    val offset = ZonedDateTime.now(zoneId).offset
+    return LocalDateTime.ofEpochSecond(this / 1000, 0, offset)
 }
 
 fun Gender.stringId(): Int = when (this) {
@@ -84,7 +105,6 @@ fun FandomCategory.toStringId(): Int = when (this) {
     FandomCategory.THEATER_MUSICALS -> R.string.fandom_category_theater_musicals
     FandomCategory.PODCASTS -> R.string.fandom_category_podcasts
     FandomCategory.COMICS -> R.string.fandom_category_comics
-    FandomCategory.CONTENT_CREATORS -> R.string.fandom_category_content_creators
     FandomCategory.CELEBRITIES -> R.string.fandom_category_celebrities
     FandomCategory.SPORTS -> R.string.fandom_category_sports
     FandomCategory.HISTORY -> R.string.fandom_category_history
@@ -92,12 +112,12 @@ fun FandomCategory.toStringId(): Int = when (this) {
     FandomCategory.OTHER -> R.string.fandom_category_other
 }
 
+@Composable
 fun City.getName(): String {
-    val locale = Locale.getDefault().language
-    return when (locale) {
-        "ru" -> this.nameRussian
-        else -> this.nameEnglish
-    }
+    val context = LocalContext.current
+    val locale = context.resources.configuration.locales[0]
+    val isRussianLocale = locale.language.equals("ru", ignoreCase = true)
+    return if (isRussianLocale) this.nameRussian else this.nameEnglish
 }
 
 private const val LATIN = "abcdefghijklmnopqrstuvwxyz"
@@ -105,7 +125,7 @@ private const val LOGIN_SPECIAL_SYMBOLS = "_-"
 private const val SPECIAL_SYMBOLS = "!@#$%^*()-_"
 fun String.checkNameLength() = this.length in 2..20
 fun String.checkNameContent() = this.all { it.isLetter() || it == ' ' || it == '\'' }
-fun String.checkEmailContent() = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex().matches(this)
+fun String.checkEmailContent() = this.isNotEmpty() && "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex().matches(this)
 fun String.checkLoginLength() = this.length in 5..15
 fun String.checkLoginContent() = this.all { it.isDigit() || it.lowercase() in LATIN || it in LOGIN_SPECIAL_SYMBOLS }
 fun String.checkDescriptionLength() = this.length <= 500
@@ -115,6 +135,7 @@ fun String.checkPasswordContent() = this.any { it.isDigit() }
         && this.any { it !in LATIN && !it.isDigit() }
         && this.all { it.isLetterOrDigit() || it in SPECIAL_SYMBOLS }
 fun String.checkFandomNameLength() = this.length in 2..100
+fun String.checkPostContentLength() = this.length <= 2000 // todo какая длина?
 
 @Composable
 fun FandomCategory.getColor(): Color {
@@ -130,7 +151,6 @@ fun FandomCategory.getColor(): Color {
         FandomCategory.COMICS -> CustomColors.comicsBackground
         FandomCategory.THEATER_MUSICALS -> CustomColors.theaterMusicalsBackground
         FandomCategory.PODCASTS -> CustomColors.podcastsBackground
-        FandomCategory.CONTENT_CREATORS -> CustomColors.contentCreatorsBackground
         FandomCategory.CELEBRITIES -> CustomColors.celebritiesBackground
         FandomCategory.SPORTS -> CustomColors.sportsBackground
         FandomCategory.HISTORY -> CustomColors.historyBackground
@@ -145,3 +165,5 @@ fun getBytesFromUri(context: Context, uri: Uri): ByteArray? {
     }
     return null
 }
+
+const val MAX_NUMBER_OF_ATTACHMENTS = 5

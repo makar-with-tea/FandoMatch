@@ -9,18 +9,25 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.data.mock.mockCities
-import ru.hse.fandomatch.data.mock.mockFandoms
-import ru.hse.fandomatch.data.mock.mockUser
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.checkDescriptionLength
 import ru.hse.fandomatch.checkNameContent
 import ru.hse.fandomatch.checkNameLength
-import ru.hse.fandomatch.getName
+import ru.hse.fandomatch.domain.model.ProfileType
+import ru.hse.fandomatch.domain.usecase.chat.GetUploadMediaUrlUseCase
+import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
+import ru.hse.fandomatch.domain.usecase.user.EditProfileUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 import kotlin.collections.plus
 
 class EditProfileViewModel(
+    private val getFandomsByQueryUseCase: GetFandomsByQueryUseCase,
+    private val getUserUseCase: GetUserUseCase,
+    private val getUploadMediaUrlUseCase: GetUploadMediaUrlUseCase,
+    private val editProfileUseCase: EditProfileUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ) : ViewModel() {
@@ -38,7 +45,7 @@ class EditProfileViewModel(
             EditProfileEvent.AddFandomButtonClicked -> goToAddFandom()
             is EditProfileEvent.AvatarChanged -> updateAvatar(event.avatar)
             is EditProfileEvent.BackgroundChanged -> updateBackground(event.background)
-            is EditProfileEvent.CityChanged -> updateCity(event.city)
+            is EditProfileEvent.CityChanged -> updateCity(event.cityName)
             is EditProfileEvent.DescriptionChanged -> updateDescription(event.description)
             is EditProfileEvent.FandomAdded -> addFandom(event.fandom)
             is EditProfileEvent.FandomRemoved -> removeFandom(event.fandom)
@@ -56,9 +63,10 @@ class EditProfileViewModel(
 
     private fun updateAvatar(avatar: ByteArray?) {
         val currentState = _state.value
+        if (avatar == null) return
         viewModelScope.launch(dispatcherIO) {
             delay(1000)
-            val avatarUrl = avatar?.let { "luffy" } // todo upload avatar and get url + handle error
+            val avatarUrl = "luffy" // todo upload avatar and get url + handle error
             if (currentState is EditProfileState.Main) {
                 _state.value = currentState.copy(
                     avatarUrl = avatarUrl,
@@ -69,9 +77,10 @@ class EditProfileViewModel(
 
     private fun updateBackground(background: ByteArray?) {
         val currentState = _state.value
+        if (background == null) return
         viewModelScope.launch(dispatcherIO) {
             delay(1000)
-            val backgroundUrl = background?.let { "i_may_be_stupid" } // todo upload background and get url + handle error
+            val backgroundUrl = "i_may_be_stupid" // todo upload background and get url + handle error
             if (currentState is EditProfileState.Main) {
                 _state.value = currentState.copy(
                     backgroundUrl = backgroundUrl,
@@ -81,21 +90,25 @@ class EditProfileViewModel(
     }
 
 
-    private fun updateCity(city: String) {
-        val currentState = _state.value
-        if (currentState is EditProfileState.Main) {
-            // todo get cities from backend and handle error
-            val cityNames = mockCities.map(City::nameRussian) + mockCities.map(City::nameEnglish)
-            val cityError = when {
-                city.isBlank() -> EditProfileState.EditProfileError.IDLE
-                city !in cityNames -> EditProfileState.EditProfileError.CITY_NOT_FOUND
-                else -> EditProfileState.EditProfileError.IDLE
-            }
-            _state.value = currentState.copy(
-                city = city,
-                cityError = cityError,
-            )
+    private fun updateCity(cityName: String) {
+        val currentState = _state.value as? EditProfileState.Main ?: return
+        // todo get cities from backend and handle error
+        val cityNames = mockCities.map(City::nameRussian) + mockCities.map(City::nameEnglish)
+        val cityError = when {
+            cityName.isBlank() -> EditProfileState.EditProfileError.IDLE
+            cityName !in cityNames -> EditProfileState.EditProfileError.CITY_NOT_FOUND
+            else -> EditProfileState.EditProfileError.IDLE
         }
+        val city = mockCities.find {
+            it.nameRussian.equals(
+                cityName,
+                ignoreCase = true
+            ) || it.nameEnglish.equals(cityName, ignoreCase = true)
+        }
+        _state.value = currentState.copy(
+            city = city,
+            cityError = cityError,
+        )
     }
 
     private fun updateDescription(description: String?) {
@@ -135,10 +148,15 @@ class EditProfileViewModel(
                 return
             }
             viewModelScope.launch(dispatcherIO) {
-                // todo
                 _state.value = currentState.copy(foundFandoms = emptyList(), areFandomsLoading = true)
-                delay(500)
-                val foundFandoms = mockFandoms.filter { it.name.contains(query, ignoreCase = true) }
+                val result = getFandomsByQueryUseCase.execute(query)
+                val foundFandoms = result.getOrNull() ?: run {
+                    Log.e("EditProfileViewModel", "Failed to search fandoms: ${result.exceptionOrNull()}")
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(foundFandoms = emptyList(), areFandomsLoading = false)
+                    }
+                    return@launch
+                }
                 _state.value = currentState.copy(foundFandoms = foundFandoms, areFandomsLoading = false)
             }
         }
@@ -162,41 +180,53 @@ class EditProfileViewModel(
 
     private fun loadProfileData() {
         viewModelScope.launch(dispatcherIO) {
-            // todo take from sharedPreferences current user id and take info from backend
-            // todo handle error
             _state.value = EditProfileState.Loading
             delay(1000)
-            val user = mockUser
+            val result = getUserUseCase.execute(null, true)
+            val user = result.getOrNull() ?: run {
+                Log.e("EditProfileViewModel", "Failed to load user data", result.exceptionOrNull())
+                _state.value = EditProfileState.Error
+                return@launch
+            }
             _state.value = EditProfileState.Main(
-                id = mockUser.id,
+                id = user.id,
                 name = user.name,
-                login = user.login,
+                login = (user.profileType as ProfileType.Own).login,
                 description = user.description,
                 avatarUrl = user.avatarUrl,
                 backgroundUrl = user.backgroundUrl,
                 fandoms = user.fandoms,
                 foundFandoms = emptyList(),
                 areFandomsLoading = false,
-                city = user.city?.getName(),
+                city = user.city,
             )
         }
     }
 
     private fun saveData() {
-        val currentState = _state.value
-        if (currentState is EditProfileState.Main) {
-            viewModelScope.launch(dispatcherIO) {
-                _state.value = EditProfileState.Loading
-                mockUser = mockUser.copy(
-                    name = currentState.name,
-                    description = currentState.description,
-                    avatarUrl = currentState.avatarUrl,
-                    backgroundUrl = currentState.backgroundUrl,
-                    fandoms = currentState.fandoms,
-                    city = currentState.city?.let { City(it, it) },
+        val currentState = _state.value as? EditProfileState.Main ?: return
+        _state.value = EditProfileState.Loading
+        viewModelScope.launch(dispatcherIO) {
+            val result = editProfileUseCase.execute(
+                name = currentState.name,
+                bio = currentState.description,
+                city = currentState.city,
+                fandoms = currentState.fandoms,
+                avatarMediaId = currentState.avatarUrl, // todo get media id from url
+                backgroundMediaId = currentState.backgroundUrl, // todo get media id from url
+            )
+            if (result.isFailure) {
+                Log.e(
+                    "EditProfileViewModel",
+                    "Failed to save profile data",
+                    result.exceptionOrNull()
                 )
-                delay(1000)
-                // todo save data + handle error (do not navigate back if error occurred)
+                withContext(dispatcherMain) {
+                    _action.value = EditProfileAction.ShowErrorToast
+                }
+                return@launch
+            }
+            withContext(dispatcherMain) {
                 _state.value = currentState
                 _action.value = EditProfileAction.NavigateToMyProfile
             }
@@ -208,6 +238,3 @@ class EditProfileViewModel(
         _action.value = null
     }
 }
-
-internal const val MIN_AGE_IN_YEARS = 16
-internal const val MAX_AGE_IN_YEARS = 40

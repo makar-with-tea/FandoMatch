@@ -1,21 +1,28 @@
 package ru.hse.fandomatch.ui.composables
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,12 +33,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ru.hse.fandomatch.BitmapHelper
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
@@ -318,7 +331,6 @@ fun ImagesGrid(
                             modifier = smallImageModifier
                                 .weight(1f)
                                 .fillMaxSize()
-                                .fillMaxWidth()
                                 .clickable {
                                     onImageClicked(imageUrls, 3)
                                 }
@@ -400,5 +412,61 @@ fun ImagesScreen(
                 .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
                 .padding(8.dp)
         )
+    }
+}
+
+@Composable
+fun AttachmentsRow(
+    attachedImages: List<ByteArray>,
+    onAttachmentsChanged: (List<ByteArray>) -> Unit,
+) {
+    LazyRow(
+        modifier = Modifier
+            .padding(horizontal = 8.dp)
+            .fillMaxWidth()
+    ) {
+        items(attachedImages) { byteArray ->
+            val bitmap = BitmapHelper.byteArrayToBitmap(byteArray)?.asImageBitmap()
+            bitmap?.let { imageBitmap ->
+                Box(
+                    contentAlignment = Alignment.TopEnd,
+                ) {
+                    Image(
+                        bitmap = imageBitmap,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(80.dp)
+                            .padding(4.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_close),
+                        contentDescription = stringResource(R.string.detach_file_button_description),
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .background(
+                                MaterialTheme.colorScheme.background,
+                                shape = CircleShape
+                            )
+                            .padding(2.dp)
+                            .clip(CircleShape)
+                            .align(Alignment.TopEnd)
+                            .padding(2.dp)
+                            .clickable {
+                                onAttachmentsChanged(
+                                    attachedImages.toMutableList().also {
+                                        it.remove(byteArray)
+                                    }
+                                )
+                            }
+                    )
+                }
+
+                Spacer(modifier = Modifier.size(4.dp))
+            }
+            // todo else show error photo as placeholder
+        }
     }
 }

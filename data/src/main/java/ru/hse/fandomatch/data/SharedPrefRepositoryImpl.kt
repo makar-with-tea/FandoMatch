@@ -11,25 +11,14 @@ class SharedPrefRepositoryImpl(
 ): SharedPrefRepository {
     private val preferences: SharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
 
-    override suspend fun saveUser(username: String) {
-        Log.d("SharedPrefRepository", "saveUser: $username")
-        preferences.edit { putString("login", username) }
-    }
-
-    override suspend fun getUser(): String? {
-        return preferences.getString("login", null).also {
-            Log.d("SharedPrefRepository", "getUser: $it")
-        }
-    }
-
-    override suspend fun saveUserId(id: Long) {
+    override suspend fun saveUserId(id: String) {
         Log.d("SharedPrefRepository", "saveUserId: $id")
-        preferences.edit { putLong("user_id", id) }
+        preferences.edit { putString("user_id", id) }
     }
 
-    override suspend fun getUserId(): Long? {
-        return preferences.getLong("user_id", -1L).let {
-            if (it == -1L) {
+    override suspend fun getUserId(): String? {
+        return preferences.getString("user_id", "").let {
+            if (it == "") {
                 null
             } else {
                 Log.d("SharedPrefRepository", "getUserId: $it")

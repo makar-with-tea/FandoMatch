@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.ui.addfandom
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -11,8 +12,12 @@ import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.checkDescriptionLength
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.checkFandomNameLength
+import ru.hse.fandomatch.domain.usecase.fandoms.RequestNewFandomUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
 
 class AddFandomViewModel(
+    private val getUserIdUseCase: GetUserIdUseCase,
+    private val requestNewFandomUseCase: RequestNewFandomUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -91,20 +96,29 @@ class AddFandomViewModel(
         }
 
         viewModelScope.launch(dispatcherIO) {
-            try {
-                // todo backend
-                withContext(dispatcherMain) {
-                    _state.value = currentState.copy(
-                        isLoading = false
-                    )
-                    _action.value = AddFandomAction.ShowSuccessToastAndGoBack
-                }
-            } catch (_: Exception) {
+            val result = requestNewFandomUseCase.execute(
+                name = currentState.name,
+                category = currentState.category,
+                description = currentState.description,
+            )
+            if (result.isFailure) {
+                Log.e(
+                    "AddFandomViewModel",
+                    "Failed to request new fandom",
+                    result.exceptionOrNull()
+                )
                 withContext(dispatcherMain) {
                     _state.value = currentState.copy(
                         isLoading = false
                     )
                     _action.value = AddFandomAction.ShowNetworkErrorToast
+                }
+            } else {
+                withContext(dispatcherMain) {
+                    _state.value = currentState.copy(
+                        isLoading = false
+                    )
+                    _action.value = AddFandomAction.ShowSuccessToastAndGoBack
                 }
             }
         }

@@ -8,12 +8,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.data.mock.mockUserPreferences
-import ru.hse.fandomatch.data.mock.mockUser
 import ru.hse.fandomatch.checkEmailContent
 import ru.hse.fandomatch.checkPasswordContent
 import ru.hse.fandomatch.checkPasswordLength
+import ru.hse.fandomatch.domain.model.ProfileType
+import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 
 class SettingsViewModel(
+    private val getUserUseCase: GetUserUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -54,21 +56,20 @@ class SettingsViewModel(
         _state.value = SettingsState.Loading
         viewModelScope.launch(dispatcherIO) {
             try {
-                // todo load user info
-                val userInfo = mockUser
-//                    ?: run {
-//                    withContext(dispatcherMain) {
-//                        _state.value = SettingsState.Error(
-//                            error = SettingsState.SettingsError.ACCOUNT_NOT_FOUND
-//                        )
-//                    }
-//                    return@launch
-//                }
+                val result = getUserUseCase.execute(null, true)
+                val userInfo = result.getOrNull() ?: run {
+                    withContext(dispatcherMain) {
+                        _state.value = SettingsState.Error(
+                            error = SettingsState.SettingsError.NETWORK_FATAL
+                        )
+                    }
+                    return@launch
+                }
                 // todo load notification preferences
                 val userPreferences = mockUserPreferences
                 withContext(dispatcherMain) {
                     _state.value = SettingsState.Main(
-                        email = userInfo.email,
+                        email = (userInfo.profileType as ProfileType.Own).email,
                         matchNotificationsEnabled = userPreferences.matchesEnabled,
                         messageNotificationsEnabled = userPreferences.messagesEnabled,
                         hideMyPostsFromNonMatches = userPreferences.hideMyPostsFromNonMatches

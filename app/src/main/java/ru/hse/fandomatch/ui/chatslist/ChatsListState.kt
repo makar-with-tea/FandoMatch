@@ -14,12 +14,13 @@ sealed class ChatsListState {
     ) : ChatsListState()
 
     data object Loading : ChatsListState()
+    data object Error : ChatsListState()
     data object Idle : ChatsListState()
 }
 
 sealed class ChatsListEvent {
     data class ChatClicked(
-        val chatId: Long,
+        val chatId: String,
     ): ChatsListEvent()
     // todo other events: delete, mute, etc.
     data object LoadChats: ChatsListEvent()
@@ -28,5 +29,5 @@ sealed class ChatsListEvent {
 }
 
 sealed class ChatsListAction {
-    data class NavigateToChat(val chatId: Long) : ChatsListAction()
+    data class NavigateToChat(val chatId: String) : ChatsListAction()
 }

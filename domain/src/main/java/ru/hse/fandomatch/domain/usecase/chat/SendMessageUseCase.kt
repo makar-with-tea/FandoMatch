@@ -6,16 +6,18 @@ class SendMessageUseCase(
     private val globalRepository: GlobalRepository,
 ) {
     suspend fun execute(
-        userId: Long,
+        userId: String,
         content: String,
         images: List<ByteArray>,
         timestamp: Long
-    ) {
-        globalRepository.sendMessage(
-            receiverId = userId,
-            content = content,
-            images = images,
-            timestamp = timestamp,
-        )
+    ): Result<Unit> {
+        return runCatching {
+            globalRepository.sendMessage(
+                receiverId = userId,
+                content = content,
+                images = images,
+                timestamp = timestamp,
+            )
+        }
     }
 }

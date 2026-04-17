@@ -27,11 +27,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActionScope
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Female
+import androidx.compose.material.icons.filled.Male
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -64,6 +69,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.domain.model.City
+import ru.hse.fandomatch.domain.model.Gender
+import ru.hse.fandomatch.getName
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.rawResId
 
@@ -71,9 +79,10 @@ import ru.hse.fandomatch.rawResId
 fun MyTitle(
     text: String,
     modifier: Modifier = Modifier,
+    padding: Dp = 8.dp,
 ) {
     Text(
-        modifier = modifier.padding(8.dp),
+        modifier = modifier.padding(padding),
         text = text,
         fontWeight = FontWeight.Bold,
         fontSize = 24.sp
@@ -84,11 +93,13 @@ fun MyTitle(
 fun MyTextField(
     modifier: Modifier = Modifier,
     value: String,
-    label: String,
+    label: String?,
     isError: Boolean,
+    placeholder: String? = null,
     enabled: Boolean = true,
     errorText: String? = null,
     hideOnDone: Boolean = true,
+    keyboardType: KeyboardType = KeyboardType.Unspecified,
     onValueChange: (String) -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -98,11 +109,15 @@ fun MyTextField(
     TextField(
         modifier = modifier.padding(8.dp),
         value = value,
-        label = { Text(label) },
+        label = { label?.let { Text(it) } },
+        placeholder = { placeholder?.let { Text(it) } },
         isError = isError,
         enabled = enabled,
         onValueChange = onValueChange,
-        keyboardOptions = KeyboardOptions.Default.copy(imeAction = if (hideOnDone) ImeAction.Done else ImeAction.Default),
+        keyboardOptions = KeyboardOptions.Default.copy(
+            imeAction = if (hideOnDone) ImeAction.Done else ImeAction.Default,
+            keyboardType = keyboardType,
+        ),
         keyboardActions = KeyboardActions(
             onDone = onDone
         ),
@@ -250,7 +265,13 @@ fun AvatarWithBackground(
                 }
             }
 
-            Box {
+            Box(
+                modifier = Modifier
+                    .size(128.dp)
+                    .offset(y = 30.dp)
+                    .background(backgroundColor, shape = CircleShape)
+                    .padding(4.dp),
+            ) {
                 RawImageOrPlaceholder(
                     url = avatarUrl,
                     context = LocalContext.current,
@@ -258,17 +279,14 @@ fun AvatarWithBackground(
                     modifier = Modifier
                         .size(120.dp)
                         .aspectRatio(1f)
-                        .offset(y = 30.dp)
                         .clip(CircleShape)
-                        .background(backgroundColor)
-                        .border(4.dp, backgroundColor, CircleShape),
+                        .background(backgroundColor),
                 )
                 if (onEditAvatar != null) {
                     IconButton(
                         onClick = onEditAvatar,
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .offset(y = 30.dp)
                             .size(24.dp)
                             .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f), shape = CircleShape)
                     ) {
@@ -353,40 +371,46 @@ fun AvatarAndNameBlock(
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.secondaryContainer,
     avatarSize: Dp = 44.dp,
+    onClick: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .background(backgroundColor),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        RawImageOrPlaceholder(
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .padding(start = 4.dp, top = 2.dp, bottom = 2.dp, end = 8.dp)
-                .size(avatarSize)
-                .clip(CircleShape),
-            url = avatarUrl,
-            placeholderId = R.drawable.ic_account_placeholder,
-            context = LocalContext.current,
-        )
-
-        Column {
-            Text(
-                text = name,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+                .clickable(enabled = onClick != null) { onClick?.invoke() }
+        ) {
+            RawImageOrPlaceholder(
+                modifier = Modifier
+                    .padding(start = 4.dp, top = 2.dp, bottom = 2.dp, end = 8.dp)
+                    .size(avatarSize)
+                    .clip(CircleShape),
+                url = avatarUrl,
+                placeholderId = R.drawable.ic_account_placeholder,
+                context = LocalContext.current,
             )
 
-            login?.let {
+            Column {
                 Text(
-                    text = it,
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                    text = name,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+
+                login?.let {
+                    Text(
+                        text = it,
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
     }
@@ -440,5 +464,113 @@ fun MySwitch(
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(label)
+    }
+}
+
+@Composable
+fun MyFloatingButton(
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+    icon: ImageVector,
+    contentDescription: String? = null,
+) {
+    FloatingActionButton(
+        onClick = { onClick() },
+        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+        modifier = modifier
+            .padding(16.dp)
+            .clip(CircleShape)
+            .border(
+                2.dp,
+                MaterialTheme.colorScheme.onTertiaryContainer,
+                CircleShape
+            )
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = MaterialTheme.colorScheme.onTertiaryContainer,
+        )
+    }
+}
+
+@Composable
+fun CityAndGenderText(
+    city: City?,
+    gender: Gender,
+    modifier: Modifier = Modifier,
+    color: Color,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val cityText = city?.getName() ?: stringResource(R.string.profile_no_city)
+        Text(
+            text = "$cityText,",
+            color = color,
+        )
+
+        val genderIcon = when (gender) {
+            Gender.FEMALE -> Icons.Default.Female
+            Gender.MALE -> Icons.Default.Male
+            Gender.NOT_SPECIFIED -> null
+        }
+        val genderText = when (gender) {
+            Gender.FEMALE -> R.string.gender_female_icon_description
+            Gender.MALE -> R.string.gender_male_icon_description
+            Gender.NOT_SPECIFIED -> R.string.gender_not_specified_icon_description
+        }
+        genderIcon?.let {
+            Icon(
+                modifier = Modifier
+                    .size(16.dp),
+                imageVector = genderIcon,
+                tint = color,
+                contentDescription = stringResource(genderText)
+            )
+        } ?: Text(
+            text = stringResource(genderText),
+            color = color,
+        )
+    }
+}
+
+@Composable
+fun BasicErrorState(
+    onRetry: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.errorContainer),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Error,
+            contentDescription = stringResource(R.string.error_icon_description),
+            tint = MaterialTheme.colorScheme.onErrorContainer,
+            modifier = Modifier
+                .size(48.dp)
+                .padding(bottom = 8.dp)
+        )
+        Text(
+            text = stringResource(R.string.basic_error_message),
+            color = MaterialTheme.colorScheme.onErrorContainer,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ),
+            modifier = Modifier
+                .padding(top = 16.dp)
+        ) {
+            Text(text = stringResource(R.string.retry_button_text))
+        }
     }
 }

@@ -59,9 +59,9 @@ class IntroViewModel(
 
     private fun checkPastLogin() {
         viewModelScope.launch(dispatcherIO) {
-            val username = getPastLoginUseCase.execute()
+            val userId = getPastLoginUseCase.execute()
             withContext(dispatcherMain) {
-                if (username != null) {
+                if (userId != null) {
                     // todo поумнее проверка? получение инфы по пользователю? отдельный синглтон с этой инфой?
                     _action.value = IntroAction.NavigateToMatches
                 } else {

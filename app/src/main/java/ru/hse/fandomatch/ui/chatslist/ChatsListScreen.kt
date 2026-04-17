@@ -58,11 +58,12 @@ import ru.hse.fandomatch.ui.composables.RawImageOrPlaceholder
 import ru.hse.fandomatch.ui.composables.SkeletonView
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.timestampToTimeAgo
+import ru.hse.fandomatch.epochMillisToTimeAgo
+import ru.hse.fandomatch.ui.composables.BasicErrorState
 
 @Composable
 fun ChatsListScreen(
-    navigateToChat: (Long) -> Unit,
+    navigateToChat: (String) -> Unit,
     setTopBarState: (TopBarState?) -> Unit,
     viewModel: ChatsListViewModel = koinViewModel()
 ) {
@@ -95,13 +96,18 @@ fun ChatsListScreen(
         is ChatsListState.Loading -> {
             LoadingState()
         }
+        is ChatsListState.Error -> {
+            ErrorState(
+                onRetry = { viewModel.obtainEvent(ChatsListEvent.LoadChats) }
+            )
+        }
     }
 }
 
 @Composable
 private fun MainState(
     state: ChatsListState.Main,
-    onChatClicked: (Long) -> Unit,
+    onChatClicked: (String) -> Unit,
     setTopBarState: (TopBarState?) -> Unit,
     onSearch: (String?) -> Unit,
 ) {
@@ -212,7 +218,7 @@ private fun MainState(
                                 overflow = TextOverflow.Ellipsis,
                             )
                             Text(
-                                text = timestampToTimeAgo(
+                                text = epochMillisToTimeAgo(
                                     timestamp = chat.lastMessageTimestamp,
                                     context = LocalContext.current
                                 ),
@@ -299,6 +305,13 @@ private fun LoadingState() {
 
 @Composable
 private fun IdleState() = LoadingState()
+
+@Composable
+private fun ErrorState(
+    onRetry: () -> Unit,
+) {
+    BasicErrorState(onRetry)
+}
 
 @Preview(showBackground = true)
 @Composable

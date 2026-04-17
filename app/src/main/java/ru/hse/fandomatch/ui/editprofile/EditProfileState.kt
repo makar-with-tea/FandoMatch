@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.ui.editprofile
 
+import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 
 sealed class EditProfileState {
@@ -16,7 +17,7 @@ sealed class EditProfileState {
     object Idle : EditProfileState()
     object Loading : EditProfileState()
     data class Main(
-        val id: Long,
+        val id: String,
         val name: String,
         val nameError: EditProfileError = EditProfileError.IDLE,
         val login: String,
@@ -29,9 +30,10 @@ sealed class EditProfileState {
         val fandoms: List<Fandom>,
         val foundFandoms: List<Fandom>,
         val areFandomsLoading: Boolean,
-        val city: String?,
+        val city: City?,
         val cityError: EditProfileError = EditProfileError.IDLE,
     ) : EditProfileState()
+    object Error : EditProfileState()
 }
 
 sealed class EditProfileEvent {
@@ -73,7 +75,7 @@ sealed class EditProfileEvent {
     data class FandomRemoved(val fandom: Fandom) : EditProfileEvent()
     data class FandomSearched(val query: String?) : EditProfileEvent()
     data object AddFandomButtonClicked : EditProfileEvent()
-    data class CityChanged(val city: String) : EditProfileEvent()
+    data class CityChanged(val cityName: String) : EditProfileEvent()
     data object SaveButtonClicked : EditProfileEvent()
     data object LoadProfileData : EditProfileEvent()
     data object Clear : EditProfileEvent()
@@ -82,4 +84,5 @@ sealed class EditProfileEvent {
 sealed class EditProfileAction {
     object NavigateToAddFandom : EditProfileAction()
     object NavigateToMyProfile : EditProfileAction()
+    object ShowErrorToast : EditProfileAction()
 }

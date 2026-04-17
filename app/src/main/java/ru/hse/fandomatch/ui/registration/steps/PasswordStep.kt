@@ -1,14 +1,12 @@
 package ru.hse.fandomatch.ui.registration.steps
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -16,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.composables.MyCheckBox
 import ru.hse.fandomatch.ui.composables.MyPasswordField
@@ -27,7 +26,10 @@ import ru.hse.fandomatch.ui.registration.isFieldError
 @Composable
 internal fun PasswordStep(
     state: RegistrationState.Password,
-    onCompleteRegistration: (String, String, Boolean) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onPasswordRepeatChanged: (String) -> Unit,
+    onAgreedToTermsChanged: (Boolean) -> Unit,
+    onCompleteRegistration: () -> Unit,
     onBackPressed: () -> Unit,
     onPasswordVisibilityChanged: () -> Unit,
     onPasswordRepeatVisibilityChanged: () -> Unit,
@@ -41,7 +43,9 @@ internal fun PasswordStep(
     val agreed = remember { mutableStateOf(state.agreedToTerms) }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -57,7 +61,10 @@ internal fun PasswordStep(
                 label = stringResource(R.string.password_label),
                 isError = state.passwordError.isFieldError(),
                 errorText = state.passwordError.getText(),
-                onValueChange = { password.value = it },
+                onValueChange = {
+                    onPasswordChanged(it)
+                    password.value = it
+                },
                 onIconClick = onPasswordVisibilityChanged,
                 passwordVisibility = state.passwordVisibility
             )
@@ -67,20 +74,26 @@ internal fun PasswordStep(
                 label = stringResource(R.string.repeat_password_label),
                 isError = state.passwordRepeatError.isFieldError(),
                 errorText = state.passwordRepeatError.getText(),
-                onValueChange = { repeat.value = it },
+                onValueChange = {
+                    onPasswordRepeatChanged(it)
+                    repeat.value = it
+                },
                 onIconClick = onPasswordRepeatVisibilityChanged,
                 passwordVisibility = state.passwordRepeatVisibility
             )
             MyCheckBox(
                 isChecked = agreed.value,
-                onCheckedChange = { agreed.value = it },
+                onCheckedChange = {
+                    onAgreedToTermsChanged(it)
+                    agreed.value = it
+                },
                 label = stringResource(R.string.agree_terms)
             )
         }
         Button(
             modifier = Modifier.fillMaxWidth(),
-            onClick = { onCompleteRegistration(password.value, repeat.value, agreed.value) },
-            enabled = agreed.value,
+            onClick = { onCompleteRegistration() },
+            enabled = agreed.value && !state.passwordError.isFieldError() && !state.passwordRepeatError.isFieldError()
         ) { Text(stringResource(R.string.complete_registration)) }
     }
 }

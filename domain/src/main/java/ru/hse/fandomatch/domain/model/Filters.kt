@@ -6,6 +6,5 @@ data class Filters(
     val maxAge: Int = 40,
     val categories: List<FandomCategory> = listOf(),
     val fandoms: List<Fandom> = listOf(),
-    val userCity: City?,
     val onlyInUserCity: Boolean = false,
 )

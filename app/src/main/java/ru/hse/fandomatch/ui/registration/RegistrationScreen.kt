@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.ui.registration
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,8 +25,10 @@ import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.Gender
+import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.registration.steps.AvatarStep
+import ru.hse.fandomatch.ui.registration.steps.CodeStep
 import ru.hse.fandomatch.ui.registration.steps.DateStep
 import ru.hse.fandomatch.ui.registration.steps.GenderStep
 import ru.hse.fandomatch.ui.registration.steps.NameStep
@@ -36,55 +39,29 @@ import ru.hse.fandomatch.ui.registration.steps.PasswordStep
 fun RegistrationScreen(
     navigateToMatches: () -> Unit,
     navigateBack: () -> Unit,
+    setTopBarState: (TopBarState?) -> Unit,
     viewModel: RegistrationViewModel = koinViewModel()
 ) {
-    Scaffold {
-        val state = viewModel.state.collectAsState()
-        val action = viewModel.action.collectAsState()
+    val state = viewModel.state.collectAsState()
+    val action = viewModel.action.collectAsState()
+    Log.i("RegistrationScreen", "State: ${state.value}")
 
-        when (action.value) {
-            is RegistrationAction.NavigateToMatches -> {
-                navigateToMatches()
-                viewModel.obtainEvent(RegistrationEvent.Clear)
-            }
-
-            is RegistrationAction.NavigateBack -> {
-                navigateBack()
-                viewModel.obtainEvent(RegistrationEvent.Clear)
-            }
-
-            null -> {}
-        }
-
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            if (state.value != RegistrationState.Idle && state.value != RegistrationState.Loading) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    IconButton(
-                        onClick = {
-                            viewModel.obtainEvent(RegistrationEvent.Back)
-                        }
-                    ) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.ic_back),
-                            contentDescription = stringResource(R.string.arrow_back_description),
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
+    setTopBarState(
+        if (state.value != RegistrationState.Idle && state.value != RegistrationState.Loading) {
+            Log.i("RegistrationScreen", "Setting top bar state for registration")
+            TopBarState(
+                titleContent = {
                     LinearWavyProgressIndicator(
                         progress = {
                             when (state.value) {
                                 RegistrationState.Idle,
                                 RegistrationState.Loading -> 0f
 
-                                is RegistrationState.Name -> 0.2f
-                                is RegistrationState.DateOfBirth -> 0.4f
-                                is RegistrationState.GenderChoice -> 0.6f
-                                is RegistrationState.Avatar -> 0.8f
+                                is RegistrationState.Name -> 0.167f
+                                is RegistrationState.Code -> 0.333f
+                                is RegistrationState.DateOfBirth -> 0.5f
+                                is RegistrationState.GenderChoice -> 0.667f
+                                is RegistrationState.Avatar -> 0.833f
                                 is RegistrationState.Password -> 1f
                             }
                         },
@@ -94,114 +71,98 @@ fun RegistrationScreen(
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                     )
                 }
-            }
-            when (val state = state.value) {
-                RegistrationState.Idle -> LoadingBlock()
-                RegistrationState.Loading -> LoadingBlock()
-                is RegistrationState.Main -> MainState(
-                    state = state,
-                    saveName = { name, login, email ->
-                            viewModel.obtainEvent(
-                                RegistrationEvent.NameSubmitted(
-                                    name,
-                                    login,
-                                    email,
-                                )
-                            )
-                    },
-                    saveDateOfBirth = { dobMillis ->
-                        viewModel.obtainEvent(RegistrationEvent.DateSelected(dobMillis))
-                    },
-                    saveGender = { gender ->
-                        viewModel.obtainEvent(RegistrationEvent.GenderSelected(gender))
-                    },
-                    saveAvatar = { avatarByteArray ->
-                        viewModel.obtainEvent(
-                            RegistrationEvent.AvatarSelected(
-                                avatarByteArray
-                            )
-                        )
-                    },
-                    savePassword = { password, passwordRepeat, agreedToTerms ->
-                        viewModel.obtainEvent(
-                            RegistrationEvent.PasswordSubmit(
-                                password,
-                                passwordRepeat,
-                                agreedToTerms,
-                            )
-                        )
-                    },
-                    onBackPressed = {
-                        viewModel.obtainEvent(RegistrationEvent.Back)
-                    },
-                    onPasswordVisibilityChanged = {
-                        viewModel.obtainEvent(RegistrationEvent.PasswordVisibilityChanged)
-                    },
-                    onPasswordRepeatVisibilityChanged = {
-                        viewModel.obtainEvent(RegistrationEvent.PasswordRepeatVisibilityChanged)
-                    }
-                )
-            }
+            )
+        } else null.also {
+            Log.i("RegistrationScreen", "Clearing top bar state for registration")
         }
+    )
+
+    when (action.value) {
+        is RegistrationAction.NavigateToMatches -> {
+            navigateToMatches()
+            viewModel.obtainEvent(RegistrationEvent.Clear)
+        }
+
+        is RegistrationAction.NavigateBack -> {
+            navigateBack()
+            viewModel.obtainEvent(RegistrationEvent.Clear)
+        }
+
+        null -> {}
     }
-}
 
-@Composable
-private fun MainState(
-    state: RegistrationState.Main,
-    saveName: (String, String, String) -> Unit,
-    saveDateOfBirth: (Long?) -> Unit,
-    saveGender: (Gender) -> Unit,
-    saveAvatar: (ByteArray?) -> Unit,
-    savePassword: (String, String, Boolean) -> Unit,
-    onBackPressed: () -> Unit,
-    onPasswordVisibilityChanged: () -> Unit,
-    onPasswordRepeatVisibilityChanged: () -> Unit,
-) {
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
+    Column(
+        modifier = Modifier.fillMaxSize()
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            when (state) {
-                is RegistrationState.Name -> {
-                    NameStep(
-                        state = state,
-                        onNext = saveName,
+        when (val state = state.value) {
+            RegistrationState.Idle -> LoadingBlock()
+            RegistrationState.Loading -> LoadingBlock()
+            is RegistrationState.Name -> NameStep(
+                state = state,
+                onNameChanged = { viewModel.obtainEvent(RegistrationEvent.NameChanged(it)) },
+                onEmailChanged = { viewModel.obtainEvent(RegistrationEvent.EmailChanged(it)) },
+                onLoginChanged = { viewModel.obtainEvent(RegistrationEvent.LoginChanged(it)) },
+                onNext = { viewModel.obtainEvent(RegistrationEvent.NameSubmitted) },
+            )
+
+            is RegistrationState.Code -> CodeStep(
+                state = state,
+                onNext = { code -> viewModel.obtainEvent(RegistrationEvent.CodeSubmitted(code)) },
+                onBackPressed = { viewModel.obtainEvent(RegistrationEvent.Back) },
+            )
+
+            is RegistrationState.DateOfBirth -> DateStep(
+                state = state,
+                onNext = { dobMillis ->
+                    viewModel.obtainEvent(
+                        RegistrationEvent.DateSelected(
+                            dobMillis
+                        )
                     )
-                }
+                },
+                onBackPressed = { viewModel.obtainEvent(RegistrationEvent.Back) },
+            )
 
-                is RegistrationState.DateOfBirth -> {
-                    DateStep(
-                        state = state,
-                        onNext = saveDateOfBirth,
-                        onBackPressed = onBackPressed,
+            is RegistrationState.GenderChoice -> GenderStep(
+                state = state,
+                onNext = { gender -> viewModel.obtainEvent(RegistrationEvent.GenderSelected(gender)) },
+                onBackPressed = { viewModel.obtainEvent(RegistrationEvent.Back) },
+            )
+
+            is RegistrationState.Avatar -> AvatarStep(
+                state = state,
+                onNext = { avatarByteArray ->
+                    viewModel.obtainEvent(
+                        RegistrationEvent.AvatarSelected(
+                            avatarByteArray
+                        )
                     )
-                }
+                },
+                onBackPressed = { viewModel.obtainEvent(RegistrationEvent.Back) },
+            )
 
-                is RegistrationState.GenderChoice -> GenderStep(
-                    state = state,
-                    onNext = saveGender,
-                    onBackPressed = onBackPressed,
-                )
-
-                is RegistrationState.Avatar -> AvatarStep(
-                    state = state,
-                    onNext = saveAvatar,
-                    onBackPressed = onBackPressed,
-                )
-
-                is RegistrationState.Password -> PasswordStep(
-                    state = state,
-                    onCompleteRegistration = savePassword,
-                    onBackPressed = onBackPressed,
-                    onPasswordVisibilityChanged = onPasswordVisibilityChanged,
-                    onPasswordRepeatVisibilityChanged = onPasswordRepeatVisibilityChanged,
-                )
-            }
+            is RegistrationState.Password -> PasswordStep(
+                state = state,
+                onPasswordChanged = { viewModel.obtainEvent(RegistrationEvent.PasswordChanged(it)) },
+                onPasswordRepeatChanged = {
+                    viewModel.obtainEvent(
+                        RegistrationEvent.PasswordRepeatChanged(
+                            it
+                        )
+                    )
+                },
+                onAgreedToTermsChanged = {
+                    viewModel.obtainEvent(
+                        RegistrationEvent.AgreedToTermsChanged(
+                            it
+                        )
+                    )
+                },
+                onCompleteRegistration = { viewModel.obtainEvent(RegistrationEvent.PasswordSubmit) },
+                onBackPressed = { viewModel.obtainEvent(RegistrationEvent.Back) },
+                onPasswordVisibilityChanged = { viewModel.obtainEvent(RegistrationEvent.PasswordVisibilityChanged) },
+                onPasswordRepeatVisibilityChanged = { viewModel.obtainEvent(RegistrationEvent.PasswordRepeatVisibilityChanged) },
+            )
         }
     }
 }
@@ -222,6 +183,7 @@ internal fun RegistrationState.RegistrationError.getText(): String {
         RegistrationState.RegistrationError.DOB_TOO_YOUNG -> stringResource(R.string.birthdate_too_young_error)
         RegistrationState.RegistrationError.DOB_EMPTY -> stringResource(R.string.birthdate_empty_error)
         RegistrationState.RegistrationError.GENDER_NOT_SELECTED -> stringResource(R.string.gender_not_selected_error)
+        RegistrationState.RegistrationError.INVALID_CODE -> stringResource(R.string.invalid_code_error)
         RegistrationState.RegistrationError.IDLE -> ""
     }
 }
@@ -229,6 +191,7 @@ internal fun RegistrationState.RegistrationError.getText(): String {
 internal fun RegistrationState.RegistrationError.isFieldError(): Boolean {
     return when (this) {
         RegistrationState.RegistrationError.IDLE,
+        RegistrationState.RegistrationError.LOGIN_TAKEN,
         RegistrationState.RegistrationError.NETWORK -> false
         else -> true
     }

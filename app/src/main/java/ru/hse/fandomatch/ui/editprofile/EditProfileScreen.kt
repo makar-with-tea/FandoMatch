@@ -45,6 +45,9 @@ import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.getBytesFromUri
+import ru.hse.fandomatch.getName
+import ru.hse.fandomatch.ui.composables.BasicErrorState
+import ru.hse.fandomatch.ui.settings.ErrorState
 
 
 @Composable
@@ -67,6 +70,14 @@ fun EditProfileScreen(
         is EditProfileAction.NavigateToMyProfile -> {
             navigateToMyProfile()
             viewModel.obtainEvent(EditProfileEvent.Clear)
+        }
+
+        is EditProfileAction.ShowErrorToast -> {
+            Toast.makeText(
+                LocalContext.current,
+                stringResource(R.string.edit_profile_error_toast),
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
         null -> {}
@@ -115,6 +126,14 @@ fun EditProfileScreen(
         is EditProfileState.Idle -> {
             IdleState()
             viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+        }
+
+        is EditProfileState.Error -> {
+            ErrorState(
+                onRetry = {
+                    viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+                }
+            )
         }
     }
 }
@@ -227,6 +246,7 @@ private fun MainState(
                     else -> null
                 },
                 onValueChange = {
+                    name = it
                     onNameChanged(it)
                 }
             )
@@ -247,6 +267,7 @@ private fun MainState(
                     else -> null
                 },
                 onValueChange = {
+                    description = it
                     onDescriptionChanged(it)
                 },
                 hideOnDone = false,
@@ -254,13 +275,13 @@ private fun MainState(
         }
 
         item {
-            val cityInitial = state.city ?: ""
-            var city by remember { mutableStateOf(cityInitial) }
+            val cityInitialName = state.city?.getName().orEmpty()
+            var cityName by remember { mutableStateOf(cityInitialName) }
             MyTextField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp),
-                value = city,
+                value = cityName,
                 label = stringResource(R.string.city_label),
                 isError = state.cityError != EditProfileState.EditProfileError.IDLE,
                 enabled = true,
@@ -269,6 +290,7 @@ private fun MainState(
                     else -> null
                 },
                 onValueChange = {
+                    cityName = it
                     onCityChanged(it)
                 }
             )
@@ -328,4 +350,11 @@ private fun LoadingState() {
 @Composable
 private fun IdleState() {
     LoadingBlock()
+}
+
+@Composable
+private fun ErrorState(
+    onRetry: () -> Unit,
+) {
+    BasicErrorState(onRetry)
 }

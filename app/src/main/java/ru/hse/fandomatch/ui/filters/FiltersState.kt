@@ -18,6 +18,7 @@ sealed class FiltersState {
         val userCity: City?,
         val areFandomsLoading: Boolean,
     ) : FiltersState()
+    data object Error : FiltersState()
 }
 
 sealed class FiltersEvent {
@@ -36,5 +37,6 @@ sealed class FiltersEvent {
 
 sealed class FiltersAction {
     object NavigateToMatches : FiltersAction()
+    object ShowErrorToast : FiltersAction()
 }
 

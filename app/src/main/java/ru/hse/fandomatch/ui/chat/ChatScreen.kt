@@ -3,11 +3,11 @@ package ru.hse.fandomatch.ui.chat
 import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,38 +39,46 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
+import ru.hse.fandomatch.MAX_NUMBER_OF_ATTACHMENTS
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.getBytesFromUri
+import ru.hse.fandomatch.navigation.EndIconState
+import ru.hse.fandomatch.navigation.TopBarState
+import ru.hse.fandomatch.ui.composables.AttachmentsRow
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
+import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.ImagesScreen
 import ru.hse.fandomatch.ui.composables.Message
 import ru.hse.fandomatch.ui.composables.SkeletonView
-import ru.hse.fandomatch.navigation.EndIconState
-import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.BitmapHelper
-import ru.hse.fandomatch.getBytesFromUri
 import java.time.LocalDateTime
-import kotlin.collections.emptyList
 
 @Composable
 fun ChatScreen(
-    userId: Long?,
+    profileId: String?,
     setTopBarState: (TopBarState?) -> Unit,
+    goToProfile: (String) -> Unit,
     viewModel: ChatViewModel = koinViewModel(),
 ) {
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
 
     when (val action = action.value) {
-        null -> {}
+        is ChatAction.GoToProfile -> {
+            goToProfile(action.profileId)
+            viewModel.obtainEvent(ChatEvent.Clear)
+        }
+
+        null -> Unit
     }
 
     Log.d("ChatScreen", "State: $state")
@@ -88,17 +95,24 @@ fun ChatScreen(
                         timestamp = LocalDateTime.now().toEpochSecond(java.time.ZoneOffset.UTC)
                     )
                 )
+            },
+            onClickProfile = {
+                viewModel.obtainEvent(ChatEvent.ProfileClicked)
             }
         )
 
         is ChatState.Idle -> {
             IdleState()
-            viewModel.obtainEvent(ChatEvent.LoadChat(userId))
+            viewModel.obtainEvent(ChatEvent.LoadChat(profileId))
         }
 
         is ChatState.Loading -> LoadingState()
 
-        is ChatState.Error -> ErrorState()
+        is ChatState.Error -> ErrorState(
+            onRetry = {
+                viewModel.obtainEvent(ChatEvent.LoadChat(profileId))
+            },
+        )
     }
 }
 
@@ -107,30 +121,24 @@ private fun MainState(
     state: ChatState.Main,
     setTopBarState: (TopBarState?) -> Unit,
     onSendMessage: (String, List<ByteArray>) -> Unit,
+    onClickProfile: () -> Unit,
 ) {
     setTopBarState(
         TopBarState(
-            titleContent = @Composable {
+            titleContent = {
                 AvatarAndNameBlock(
                     name = state.participantName,
                     avatarUrl = state.participantAvatarUrl,
                     login = null,
+                    onClick = { onClickProfile() },
                 )
             },
-            endIcons = listOf(
-                EndIconState(
-                    iconId = R.drawable.ic_search,
-                    onClick = { /* TODO search in chat */ },
-                    descriptionId = R.string.search_icon_description
-                ),
-            ),
         )
     )
 
     val context = LocalContext.current
-    val maxNumberOfAttachments = 5
     var attachedImages by remember { mutableStateOf(mutableListOf<ByteArray>()) }
-    val pickMedia = when (maxNumberOfAttachments - attachedImages.size) {
+    val pickMedia = when (MAX_NUMBER_OF_ATTACHMENTS - attachedImages.size) {
         0 -> null
 
         1 -> rememberLauncherForActivityResult(
@@ -145,7 +153,7 @@ private fun MainState(
 
         else -> rememberLauncherForActivityResult(
             ActivityResultContracts.PickMultipleVisualMedia(
-                maxItems = maxOf(maxNumberOfAttachments - attachedImages.size)
+                maxItems = maxOf(MAX_NUMBER_OF_ATTACHMENTS - attachedImages.size)
             )
         ) { uris ->
             attachedImages =
@@ -178,70 +186,51 @@ private fun MainState(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
-            items(state.messages) { (message, needsTail) ->
-                Message(
-                    message = message,
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    needsTail = needsTail,
-                    onImageClicked = { urlList, index ->
-                        imageUrlsForScreen = urlList
-                        currentImageIndex = index
-                    }
-                )
-            }
-        }
-
-        LazyRow(
-            modifier = Modifier
-                .padding(horizontal = 8.dp)
-                .fillMaxWidth()
-        ) {
-            items(attachedImages) { byteArray ->
-                val bitmap = BitmapHelper.byteArrayToBitmap(byteArray)?.asImageBitmap()
-                bitmap?.let { imageBitmap ->
-                    Box(
-                        contentAlignment = Alignment.TopEnd,
-                    ) {
-                        Image(
-                            bitmap = imageBitmap,
-                            contentDescription = null,
+            items(state.uiElements) { uiElement ->
+                when (uiElement) {
+                    is ChatUiElement.DayElement -> {
+                        Box(
                             modifier = Modifier
-                                .size(80.dp)
-                                .padding(4.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                        )
-
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.ic_close),
-                            contentDescription = stringResource(R.string.detach_file_button_description),
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier
-                                .size(20.dp)
-                                .background(
-                                    MaterialTheme.colorScheme.background,
-                                    shape = CircleShape
-                                )
-                                .padding(2.dp)
-                                .clip(CircleShape)
-                                .align(Alignment.TopEnd)
-                                .padding(2.dp)
-                                .clickable {
-                                    attachedImages = attachedImages.toMutableList().also {
-                                        it.remove(byteArray)
-                                    }
-                                    Log.i(
-                                        "ChatScreen",
-                                        "Detached an image. ${attachedImages.size} images left."
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = uiElement.dateString,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.9f),
+                                modifier = Modifier
+                                    .background(
+                                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                                        CircleShape
                                     )
-                                }
-                        )
+                                    .padding(horizontal = 4.dp)
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.size(4.dp))
+                    is ChatUiElement.MessageElement -> {
+                        Message(
+                            message = uiElement.message,
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            needsTail = uiElement.hasTail,
+                            onImageClicked = { urlList, index ->
+                                imageUrlsForScreen = urlList
+                                currentImageIndex = index
+                            }
+                        )
+                    }
                 }
-                // todo else show error photo as placeholder
             }
         }
+
+        AttachmentsRow(
+            attachedImages = attachedImages,
+            onAttachmentsChanged = {
+                attachedImages = it.toMutableList()
+            }
+        )
 
         val newMessage: MutableState<String> = remember { mutableStateOf("") } // todo viewModel?
         OutlinedTextField(
@@ -258,10 +247,10 @@ private fun MainState(
                 IconButton(
                     modifier = Modifier
                         .size(24.dp),
-                    enabled = attachedImages.size < maxNumberOfAttachments,
+                    enabled = attachedImages.size < MAX_NUMBER_OF_ATTACHMENTS,
                     onClick = {
                         pickMedia?.launch(
-                            androidx.activity.result.PickVisualMediaRequest(
+                            PickVisualMediaRequest(
                                 ActivityResultContracts.PickVisualMedia.ImageOnly
                             )
                         )
@@ -369,7 +358,8 @@ private fun IdleState() {
 }
 
 @Composable
-private fun ErrorState() {
-    // todo
-    Text("An error occurred while loading the chat.")
+private fun ErrorState(
+    onRetry: () -> Unit,
+) {
+    BasicErrorState(onRetry)
 }
