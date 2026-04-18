@@ -48,6 +48,7 @@ import ru.hse.fandomatch.ui.composables.FeedPost
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyFloatingButton
 import ru.hse.fandomatch.ui.composables.MyTitle
+import ru.hse.fandomatch.ui.composables.VideoPlayer
 
 @Composable
 fun ProfileScreen(
@@ -384,10 +385,10 @@ private fun MainState(
                                 FeedPost(
                                     userName = post.authorName,
                                     userLogin = post.authorLogin,
-                                    userAvatarUrl = post.authorAvatarUrl,
+                                    userAvatarUrl = post.authorAvatar?.url,
                                     postDate = post.timestamp.epochMillisToDateString(),
                                     postText = post.content,
-                                    imageUrls = post.mediaItems,
+                                    mediaItems = post.mediaItems,
                                     areReactionsAvailable = state.type is ProfileType.Own
                                             || state.type is ProfileType.Friend,
                                     likeCount = post.likeCount,
@@ -429,7 +430,7 @@ private fun MainState(
                             ) {
                                 AvatarAndNameBlock(
                                     name = friend.name,
-                                    avatarUrl = friend.avatarUrl,
+                                    avatarUrl = friend.avatar?.url,
                                     login = friend.login,
                                     backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                                     avatarSize = 36.dp,
@@ -465,7 +466,7 @@ private fun MainState(
                             ) {
                                 AvatarAndNameBlock(
                                     name = possibleFriend.name,
-                                    avatarUrl = possibleFriend.avatarUrl,
+                                    avatarUrl = possibleFriend.avatar?.url,
                                     login = possibleFriend.login,
                                     backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                                     avatarSize = 36.dp,

@@ -87,7 +87,7 @@ class PostViewModel(
                         comments = currentState.fullPost.comments + Comment(
                             authorName = currentUser.name,
                             authorLogin = (currentUser.profileType as ProfileType.Own).login,
-                            authorAvatarUrl = currentUser.avatarUrl,
+                            authorAvatar = currentUser.avatar,
                             content = commentText,
                             timestamp = timestamp,
                         )

@@ -56,13 +56,14 @@ fun SwipeableCardContent(
                 .weight(1f),
             contentAlignment = Alignment.BottomStart
         ) {
-            RawImageOrPlaceholder(
-                url = profile.avatarUrl,
-                context = LocalContext.current,
+            val placeholderIcon = ImageVector.vectorResource(R.drawable.ic_account_placeholder)
+            ImageOrPlaceholder(
+                url = profile.avatar?.url,
                 contentScale = ContentScale.FillHeight,
-                placeholderId = R.drawable.ic_account_placeholder,
+                placeholderIcon = placeholderIcon,
+                background = MaterialTheme.colorScheme.primaryContainer,
                 modifier = modifier
-                    .fillMaxHeight()
+                    .fillMaxSize()
                     .clip(RoundedCornerShape(12.dp)),
             )
 

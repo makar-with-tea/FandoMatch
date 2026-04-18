@@ -4,18 +4,23 @@ import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import ru.hse.fandomatch.data.AuthInterceptor
+import ru.hse.fandomatch.data.GlobalRepositoryImpl
 import ru.hse.fandomatch.data.SharedPrefRepositoryImpl
+import ru.hse.fandomatch.data.api.ChatApiService
 import ru.hse.fandomatch.data.api.CoreApiService
 import ru.hse.fandomatch.data.mock.GlobalRepositoryMock
+import ru.hse.fandomatch.data.api.S3UploadApiService
+import ru.hse.fandomatch.data.api.UserApiService
 import ru.hse.fandomatch.data.model.BaseUserProfileDTO
 import ru.hse.fandomatch.data.serialization.BaseUserProfileDeserializer
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
-import ru.hse.fandomatch.domain.usecase.chat.GetUploadMediaUrlUseCase
+import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
@@ -35,6 +40,8 @@ import ru.hse.fandomatch.domain.usecase.user.GetPastLoginUseCase
 import ru.hse.fandomatch.domain.usecase.posts.GetUserPostsUseCase
 import ru.hse.fandomatch.domain.usecase.posts.LikePostUseCase
 import ru.hse.fandomatch.domain.usecase.posts.SendCommentUseCase
+import ru.hse.fandomatch.domain.usecase.user.EditProfileUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetCitiesByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetVerificationCodeUseCase
@@ -84,7 +91,7 @@ val appModule = module {
     viewModel<ChatViewModel> { ChatViewModel(get(), get(), get()) }
     viewModel<FiltersViewModel> { FiltersViewModel(get(), get(), get(), get()) }
     viewModel<FeedViewModel> { FeedViewModel(get(), get()) }
-    viewModel<EditProfileViewModel> { EditProfileViewModel(get(), get(), get(), get()) }
+    viewModel<EditProfileViewModel> { EditProfileViewModel(get(), get(), get(), get(), get()) }
     viewModel<SettingsViewModel> { SettingsViewModel(get()) }
     viewModel<AddFandomViewModel> { AddFandomViewModel(get(), get()) }
     viewModel<NewPostViewModel> { NewPostViewModel() }
@@ -95,32 +102,50 @@ val appModule = module {
 val dataModule = module {
     single<GlobalRepository> { GlobalRepositoryMock() }
     single<SharedPrefRepository> { SharedPrefRepositoryImpl(androidContext()) }
-//    single<SharedPrefRepository> { SharedPrefRepositoryMock() }
 
-    single {
+    single(named("apiClient")) {
         OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(get<SharedPrefRepository>()))
             .build()
     }
 
-    single {
-        val gson = GsonBuilder()
+    single(named("s3Client")) {
+        OkHttpClient.Builder()
+            .build()
+    }
+
+    single(named("gson")) {
+        GsonBuilder()
             .registerTypeAdapter(
                 BaseUserProfileDTO::class.java,
                 BaseUserProfileDeserializer()
             )
             .create()
+    }
 
+    single(named("apiRetrofit")) {
         Retrofit.Builder()
             .baseUrl("http://192.168.0.106:8000/") // todo damn
-            .client(get<OkHttpClient>())
-            .addConverterFactory(GsonConverterFactory.create(gson))
+            .client(get(named("apiClient")))
+            .addConverterFactory(GsonConverterFactory.create(get(named("gson"))))
             .build()
     }
 
-    single<CoreApiService> { get<Retrofit>().create(CoreApiService::class.java) }
+    // Base URL is required by Retrofit, real destination comes from @Url in upload method.
+    single(named("s3Retrofit")) {
+        Retrofit.Builder()
+            .baseUrl("https://s3.amazonaws.com/")
+            .client(get(named("s3Client")))
+            .addConverterFactory(GsonConverterFactory.create(get(named("gson"))))
+            .build()
+    }
 
-//    single<GlobalRepository> { GlobalRepositoryImpl(get()) }
+    single<CoreApiService> { get<Retrofit>(named("apiRetrofit")).create(CoreApiService::class.java) }
+    single<UserApiService> { get<Retrofit>(named("apiRetrofit")).create(UserApiService::class.java) }
+    single<ChatApiService> { get<Retrofit>(named("apiRetrofit")).create(ChatApiService::class.java) }
+    single<S3UploadApiService> { get<Retrofit>(named("s3Retrofit")).create(S3UploadApiService::class.java) }
+
+//    single<GlobalRepository> { GlobalRepositoryImpl(get(), get(), get(), get()) }
     single<GlobalRepository> { GlobalRepositoryMock() }
 }
 
@@ -132,6 +157,8 @@ val domainModule = module {
     factory<CheckVerificationCodeUseCase> { CheckVerificationCodeUseCase(get()) }
     factory<ResetPasswordUseCase> { ResetPasswordUseCase(get()) }
     factory<GetUserIdUseCase> { GetUserIdUseCase(get()) }
+    factory<GetCitiesByQueryUseCase> { GetCitiesByQueryUseCase(get()) }
+    factory<EditProfileUseCase> { EditProfileUseCase(get()) }
 
     factory<GetUserUseCase> { GetUserUseCase(get(), get()) }
     factory<LoadSuggestedProfilesUseCase> { LoadSuggestedProfilesUseCase(get()) }
@@ -144,7 +171,7 @@ val domainModule = module {
     factory<SendMessageUseCase> { SendMessageUseCase(get()) }
     factory<LoadChatInfoUseCase> { LoadChatInfoUseCase(get()) }
     factory<SubscribeToChatPreviewsUseCase> { SubscribeToChatPreviewsUseCase(get()) }
-    factory<GetUploadMediaUrlUseCase> { GetUploadMediaUrlUseCase(get()) }
+    factory<UploadMediaUseCase> { UploadMediaUseCase(get()) }
 
     factory<GetFeedUseCase> { GetFeedUseCase(get(), get()) }
     factory<GetFullPostUseCase> { GetFullPostUseCase(get()) }

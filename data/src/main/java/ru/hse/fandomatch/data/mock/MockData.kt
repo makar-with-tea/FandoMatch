@@ -84,6 +84,34 @@ internal val mockFandoms = listOf(
     )
 )
 
+internal fun String.getMediaByName() : MediaItem {
+    return when (this) {
+        "noenor_edit" -> MediaItem(
+            id = this,
+            url = "https://github.com/makar-with-tea/FandoMatch/blob/main/app/src/main/res/raw/noenor_edit.mp4?raw=true",
+            mediaType = MediaType.VIDEO,
+        )
+
+        "video" -> MediaItem(
+            id = this,
+            url = "https://media.geeksforgeeks.org/wp-content/uploads/20201217163353/Screenrecorder-2020-12-17-16-32-03-350.mp4",
+            mediaType = MediaType.VIDEO,
+        )
+
+        "luffy", "lidros" -> MediaItem(
+            id = this,
+            url = "https://github.com/makar-with-tea/FandoMatch/blob/main/app/src/main/res/raw/$this.png?raw=true",
+            mediaType = MediaType.IMAGE,
+        )
+
+        else -> MediaItem(
+            id = this,
+            url = "https://github.com/makar-with-tea/FandoMatch/blob/main/app/src/main/res/raw/$this.jpg?raw=true",
+            mediaType = MediaType.IMAGE,
+        )
+    }
+}
+
 internal val mockProfileCards = listOf(
     ProfileCard(
         id = "12345",
@@ -96,7 +124,7 @@ internal val mockProfileCards = listOf(
         """.trimIndent(),
         name = "Алиса",
         gender = Gender.FEMALE,
-        avatarUrl = "luffy",
+        avatar = "luffy".getMediaByName(),
         age = 21,
         compatibilityPercentage = 95,
         city = City(
@@ -110,7 +138,7 @@ internal val mockProfileCards = listOf(
         description = "Пират в поисках своего личного приключения.",
         name = "Пользователь",
         gender = Gender.MALE,
-        avatarUrl = "peace_was_never_an_option",
+        avatar = "peace_was_never_an_option".getMediaByName(),
         age = 17,
         compatibilityPercentage = 80,
         city = City(
@@ -124,7 +152,7 @@ internal val mockProfileCards = listOf(
         description = "Обожаю рок-музыку и долгие прогулки по ночному городу.",
         name = "Лесное нечто",
         gender = Gender.NOT_SPECIFIED,
-        avatarUrl = "pet_the_forbidden_dog",
+        avatar = "pet_the_forbidden_dog".getMediaByName(),
         age = 25,
         compatibilityPercentage = 70,
         city = null,
@@ -135,7 +163,7 @@ internal val mockProfileCards = listOf(
         description = "Просто загадочный человек.",
         name = "Дана",
         gender = Gender.FEMALE,
-        avatarUrl = "ne_poluchaetsya",
+        avatar = "ne_poluchaetsya".getMediaByName(),
         age = 30,
         compatibilityPercentage = 60,
         city = null,
@@ -144,9 +172,9 @@ internal val mockProfileCards = listOf(
         id = "44557",
         fandoms = listOf(mockFandoms[1]),
         description = "Пожалуйста, давайте поговорим о Лидросе",
-        name = "Но-энор мой но-энор",
+        name = "Но-энор",
         gender = Gender.FEMALE,
-        avatarUrl = "lidros",
+        avatar = "lidros".getMediaByName(),
         age = 21,
         compatibilityPercentage = 60,
         city = City(
@@ -159,7 +187,7 @@ internal var mockChat = Chat(
     chatId = "1",
     participantId = mockProfileCards[0].id,
     participantName = mockProfileCards[0].name,
-    participantAvatarUrl = mockProfileCards[0].avatarUrl
+    participantAvatarUrl = mockProfileCards[0].avatar?.url,
 )
 internal val mockMessages: MutableStateFlow<List<Message>> = MutableStateFlow(listOf(
     Message(
@@ -223,7 +251,7 @@ internal val mockMessages: MutableStateFlow<List<Message>> = MutableStateFlow(li
         content = "Но хочу пересмотреть когда-нибудь заново)",
         timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
             .toEpochSecond(ZoneOffset.UTC) * 1000,
-        imageUrls = listOf("dzimbei", "luffy")
+        mediaItems = listOf("video", "luffy").map { it.getMediaByName() },
     ),
     Message(
         messageId = "10",
@@ -261,7 +289,7 @@ internal var mockChatPreviews = MutableStateFlow(
         ChatPreview(
             chatId = "5",
             participantName = mockProfileCards[4].name,
-            participantAvatarUrl = mockProfileCards[4].avatarUrl,
+            participantAvatarUrl = mockProfileCards[4].avatar?.url,
             lastMessage = "Как вы допустили смерть Лидроса на зимке?..",
             isLastMessageFromThisUser = false,
             lastMessageTimestamp = LocalDateTime.now().minusMinutes(25)
@@ -271,7 +299,7 @@ internal var mockChatPreviews = MutableStateFlow(
         ChatPreview(
             chatId = "3",
             participantName = mockProfileCards[2].name,
-            participantAvatarUrl = mockProfileCards[2].avatarUrl,
+            participantAvatarUrl = mockProfileCards[2].avatar?.url,
             lastMessage = "Привет! Как дела?",
             isLastMessageFromThisUser = false,
             lastMessageTimestamp = LocalDateTime.now().minusMinutes(30)
@@ -281,7 +309,7 @@ internal var mockChatPreviews = MutableStateFlow(
         ChatPreview(
             chatId = "2",
             participantName = mockProfileCards[1].name,
-            participantAvatarUrl = mockProfileCards[1].avatarUrl,
+            participantAvatarUrl = mockProfileCards[1].avatar?.url,
             lastMessage = "Я тоже люблю аниме!",
             isLastMessageFromThisUser = false,
             lastMessageTimestamp = LocalDateTime.now().minusHours(5)
@@ -291,7 +319,7 @@ internal var mockChatPreviews = MutableStateFlow(
         ChatPreview(
             chatId = "1",
             participantName = mockProfileCards[0].name,
-            participantAvatarUrl = mockProfileCards[0].avatarUrl,
+            participantAvatarUrl = mockProfileCards[0].avatar?.url,
             lastMessage = mockMessages.value[mockMessages.value.size - 1].content,
             isLastMessageFromThisUser = mockMessages.value[mockMessages.value.size - 1].isFromThisUser,
             lastMessageTimestamp = mockMessages.value[mockMessages.value.size - 1].timestamp,
@@ -300,7 +328,7 @@ internal var mockChatPreviews = MutableStateFlow(
         ChatPreview(
             chatId = "4",
             participantName = mockProfileCards[3].name,
-            participantAvatarUrl = mockProfileCards[3].avatarUrl,
+            participantAvatarUrl = mockProfileCards[3].avatar?.url,
             lastMessage = "Посмотрела новый эпизод Токийского Гуля, очень понравилось!",
             isLastMessageFromThisUser = true,
             lastMessageTimestamp = LocalDateTime.now().minusDays(10)
@@ -317,8 +345,8 @@ internal var mockUser = User(
     name = "John",
     gender = Gender.MALE,
     age = 25,
-    avatarUrl = "dzimbei",
-    backgroundUrl = "peace_was_never_an_option",
+    avatar = "dzimbei".getMediaByName(),
+    background = "peace_was_never_an_option".getMediaByName(),
     city = City(
         nameRussian = "Москва",
         nameEnglish = "Moscow",
@@ -335,9 +363,9 @@ internal var mockUserPosts = listOf(
         authorId = mockUser.id,
         authorName = mockUser.name,
         authorLogin = (mockUser.profileType as ProfileType.Own).login,
-        authorAvatarUrl = mockUser.avatarUrl,
+        authorAvatar = mockUser.avatar,
         content = "Вау, я умею писать посты!",
-        mediaItems = listOf("dzimbei"),
+        mediaItems = listOf("dzimbei".getMediaByName()),
         likeCount = 100,
         commentCount = 50,
         isLikedByCurrentUser = false,
@@ -349,7 +377,7 @@ internal var mockUserPosts = listOf(
         authorId = mockUser.id,
         authorName = mockUser.name,
         authorLogin = (mockUser.profileType as ProfileType.Own).login,
-        authorAvatarUrl = mockUser.avatarUrl,
+        authorAvatar = mockUser.avatar,
         content = "Еще один пост от меня.",
         mediaItems = listOf(),
         likeCount = 150,
@@ -363,9 +391,9 @@ internal var mockUserPosts = listOf(
         authorId = mockUser.id,
         authorName = mockUser.name,
         authorLogin = (mockUser.profileType as ProfileType.Own).login,
-        authorAvatarUrl = mockUser.avatarUrl,
+        authorAvatar = mockUser.avatar,
         content = "Люблю это приложение!",
-        mediaItems = listOf("what_is_written_here"),
+        mediaItems = listOf("what_is_written_here").map { it.getMediaByName() },
         likeCount = 200,
         commentCount = 100,
         isLikedByCurrentUser = true,
@@ -378,21 +406,21 @@ val mockComments = listOf(
     Comment(
         authorName = "Алиса",
         authorLogin = "alice",
-        authorAvatarUrl = "luffy",
+        authorAvatar = "luffy".getMediaByName(),
         timestamp = System.currentTimeMillis() - 1800_000, // 30 minutes ago
         content = "Отличный пост! Я тоже люблю аниме и музыку!"
     ),
     Comment(
         authorName = "Пользователь",
         authorLogin = "pirate123",
-        authorAvatarUrl = "peace_was_never_an_option",
+        authorAvatar = "peace_was_never_an_option".getMediaByName(),
         timestamp = System.currentTimeMillis() - 1200_000, // 20 minutes ago
         content = "Приветствую! Рада видеть новых людей, которые любят аниме! Какие у вас любимые серии?"
     ),
     Comment(
         authorName = "Лесное нечто",
         authorLogin = "forestentity",
-        authorAvatarUrl = "pet_the_forbidden_dog",
+        authorAvatar = "pet_the_forbidden_dog".getMediaByName(),
         timestamp = System.currentTimeMillis() - 600_000, // 10 minutes ago
         content = "Привет! Я тоже обожаю аниме, особенно One Piece"
     ),
@@ -404,9 +432,9 @@ var mockPosts = listOf(
         authorId = "12345",
         authorName = "Алиса",
         authorLogin = "alice",
-        authorAvatarUrl = "luffy",
+        authorAvatar = "luffy".getMediaByName(),
         content = "Привет! Я только что зарегистрировалась и хочу поделиться своей любовью к аниме и музыке!",
-        mediaItems = listOf("luffy", "peace_was_never_an_option"),
+        mediaItems = listOf("noenor_edit", "peace_was_never_an_option").map { it.getMediaByName() },
         likeCount = 10,
         commentCount = 5,
         isLikedByCurrentUser = false,
@@ -418,9 +446,9 @@ var mockPosts = listOf(
         authorId = "67890",
         authorName = "Пользователь",
         authorLogin = "pirate123",
-        authorAvatarUrl = "peace_was_never_an_option",
+        authorAvatar = "peace_was_never_an_option".getMediaByName(),
         content = "Приветствую всех! Я пират в поисках своего личного приключения. Кто еще здесь любит аниме? Давайте обмениваться рекомендациями и обсуждать любимые серии! А может, даже устроим совместный просмотр? :)",
-        mediaItems = listOf("peace_was_never_an_option"),
+        mediaItems = listOf("peace_was_never_an_option").map { it.getMediaByName() },
         likeCount = 20,
         commentCount = 10,
         isLikedByCurrentUser = true,
@@ -432,7 +460,7 @@ var mockPosts = listOf(
         authorId = "11223",
         authorName = "Лесное нечто",
         authorLogin = "forestentity",
-        authorAvatarUrl = "pet_the_forbidden_dog",
+        authorAvatar = "pet_the_forbidden_dog".getMediaByName(),
         content = "Хочется на концерт брингов...",
         mediaItems = listOf(),
         likeCount = 5,
@@ -446,9 +474,9 @@ var mockPosts = listOf(
         authorId = "44556",
         authorName = "Дана",
         authorLogin = "dana",
-        authorAvatarUrl = "ne_poluchaetsya",
+        authorAvatar = "ne_poluchaetsya".getMediaByName(),
         content = "Просто загадочный человек.",
-        mediaItems = listOf("what_is_written_here", "what_is_written_here", "what_is_written_here", "what_is_written_here", "what_is_written_here"),
+        mediaItems = listOf("what_is_written_here", "what_is_written_here", "what_is_written_here", "what_is_written_here", "what_is_written_here").map { it.getMediaByName() },
         likeCount = 0,
         commentCount = 0,
         isLikedByCurrentUser = false,
@@ -474,8 +502,8 @@ internal val mockUsers = mockProfileCards.map {
         name = it.name,
         gender = it.gender,
         age = it.age,
-        avatarUrl = it.avatarUrl,
-        backgroundUrl = "what_is_written_here",
+        avatar = it.avatar,
+        background = "what_is_written_here".getMediaByName(),
         city = it.city,
         profileType = when (it.id) {
             "12345" -> ProfileType.Friend("alice")

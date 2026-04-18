@@ -54,12 +54,12 @@ import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.composables.NewMessagesIndicator
-import ru.hse.fandomatch.ui.composables.RawImageOrPlaceholder
 import ru.hse.fandomatch.ui.composables.SkeletonView
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.epochMillisToTimeAgo
 import ru.hse.fandomatch.ui.composables.BasicErrorState
+import ru.hse.fandomatch.ui.composables.ImageOrPlaceholder
 
 @Composable
 fun ChatsListScreen(
@@ -189,14 +189,14 @@ private fun MainState(
                     .clickable { onChatClicked(chat.chatId) }
             ) {
                 Row {
-                    RawImageOrPlaceholder(
+                    val placeholderIcon: ImageVector = ImageVector.vectorResource(R.drawable.ic_account_placeholder)
+                    ImageOrPlaceholder(
                         modifier = Modifier
                             .size(60.dp)
                             .padding(top = 2.dp, bottom = 2.dp, end = 2.dp)
                             .clip(CircleShape),
+                        placeholderIcon = placeholderIcon,
                         url = chat.participantAvatarUrl,
-                        placeholderId = R.drawable.ic_account_placeholder,
-                        context = LocalContext.current,
                     )
 
                     Column(

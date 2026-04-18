@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.MAX_NUMBER_OF_ATTACHMENTS
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.getBytesFromUri
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
@@ -160,11 +161,11 @@ private fun MainState(
                 (attachedImages + uris.mapNotNull { getBytesFromUri(context, it) }).toMutableList()
         }
     }
-    var imageUrlsForScreen by remember { mutableStateOf<List<String>>(emptyList()) }
-    var currentImageIndex by remember { mutableStateOf(0) }
-    BackHandler(enabled = imageUrlsForScreen.isNotEmpty()) {
-        imageUrlsForScreen = emptyList()
-        currentImageIndex = 0
+    var mediaItemsForScreen by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
+    var currentItemIndex by remember { mutableStateOf(0) }
+    BackHandler(enabled = mediaItemsForScreen.isNotEmpty()) {
+        mediaItemsForScreen = emptyList()
+        currentItemIndex = 0
     }
 
     Column(
@@ -215,9 +216,9 @@ private fun MainState(
                             message = uiElement.message,
                             modifier = Modifier.padding(vertical = 4.dp),
                             needsTail = uiElement.hasTail,
-                            onImageClicked = { urlList, index ->
-                                imageUrlsForScreen = urlList
-                                currentImageIndex = index
+                            onItemClicked = { itemsList, index ->
+                                mediaItemsForScreen = itemsList
+                                currentItemIndex = index
                             }
                         )
                     }
@@ -288,10 +289,10 @@ private fun MainState(
         )
     }
 
-    if (imageUrlsForScreen.isNotEmpty()) {
+    if (mediaItemsForScreen.isNotEmpty()) {
         ImagesScreen(
-            urls = imageUrlsForScreen,
-            initialPage = currentImageIndex,
+            items = mediaItemsForScreen,
+            initialPage = currentItemIndex,
             titleContent = {
                 // todo: from <user>, <time>
             },

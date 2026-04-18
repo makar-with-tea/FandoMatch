@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
@@ -68,10 +67,10 @@ private fun MainState(
             FeedPost(
                 userName = post.authorName,
                 userLogin = post.authorLogin,
-                userAvatarUrl = post.authorAvatarUrl,
+                userAvatarUrl = post.authorAvatar?.url,
                 postDate = post.timestamp.epochMillisToDateString(),
                 postText = post.content,
-                imageUrls = post.mediaItems,
+                mediaItems = post.mediaItems,
                 areReactionsAvailable = true,
                 likeCount = post.likeCount,
                 commentCount = post.commentCount,

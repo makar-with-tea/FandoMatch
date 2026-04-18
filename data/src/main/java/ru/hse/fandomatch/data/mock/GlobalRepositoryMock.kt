@@ -1,26 +1,24 @@
 package ru.hse.fandomatch.data.mock
 
 import android.util.Log
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
+import ru.hse.fandomatch.domain.model.AuthInfo
 import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
+import ru.hse.fandomatch.domain.model.Filters
+import ru.hse.fandomatch.domain.model.FullPost
 import ru.hse.fandomatch.domain.model.Gender
+import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.Message
+import ru.hse.fandomatch.domain.model.OtherProfileItem
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.ProfileType
-import ru.hse.fandomatch.domain.model.AuthInfo
-import ru.hse.fandomatch.domain.model.Comment
-import ru.hse.fandomatch.domain.model.Filters
-import ru.hse.fandomatch.domain.model.FullPost
-import ru.hse.fandomatch.domain.model.MediaItem
-import ru.hse.fandomatch.domain.model.MediaType
-import ru.hse.fandomatch.domain.model.OtherProfileItem
+import ru.hse.fandomatch.domain.model.UploadMedia
 import ru.hse.fandomatch.domain.model.User
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import java.time.LocalDateTime
@@ -81,11 +79,17 @@ class GlobalRepositoryMock: GlobalRepository {
         mockUser = mockUser.copy(
             name = name,
             description = bio,
-            avatarUrl = avatarMediaId,
-            backgroundUrl = backgroundMediaId,
+            avatar = avatarMediaId?.let { mockUser.avatar?.copy(id = avatarMediaId) },
+            background = backgroundMediaId?.let { mockUser.background?.copy(id = backgroundMediaId) },
             fandoms = fandoms,
             city = city,
         )
+        mockUserPosts = mockUserPosts.map {
+            it.copy(
+                authorName = name,
+                authorAvatar = mockUser.avatar,
+            )
+        }
         Log.d("GlobalRepositoryMock", "updateUser: successful for user $name")
     }
 
@@ -110,7 +114,7 @@ class GlobalRepositoryMock: GlobalRepository {
                     id = it.id,
                     name = it.name,
                     login = (it.profileType as ProfileType.Friend).login,
-                    avatarUrl = it.avatarUrl,
+                    avatar = it.avatar,
                 )
             }
             .also {
@@ -129,7 +133,7 @@ class GlobalRepositoryMock: GlobalRepository {
                     id = it.id,
                     name = it.name,
                     login = null,
-                    avatarUrl = it.avatarUrl,
+                    avatar = it.avatar,
                 )
             }
             .also {
@@ -163,6 +167,18 @@ class GlobalRepositoryMock: GlobalRepository {
         } else {
             Log.d("GlobalRepositoryMock", "resetPassword: invalid code $code")
             throw IllegalArgumentException("Invalid verification code")
+        }
+    }
+
+    override suspend fun getCitiesByQuery(query: String): List<City> {
+        return mockCities.filter {
+            it.nameRussian.contains(query, ignoreCase = true)
+                    || it.nameEnglish.contains(query, ignoreCase = true)
+        }.also {
+            Log.d(
+                "GlobalRepositoryMock",
+                "getCitiesByQuery: returned ${it.size} cities for query \"$query\""
+            )
         }
     }
 
@@ -253,12 +269,12 @@ class GlobalRepositoryMock: GlobalRepository {
         timestamp: Long
     ) {
         mockMessages.value += Message(
-                    messageId = (mockMessages.value.size + 1).toString(),
-                    isFromThisUser = true,
-                    content = content,
-                    imageUrls = images.map { "luffy" }, // todo upload images and get urls
-                    timestamp = timestamp,
-                )
+            messageId = (mockMessages.value.size + 1).toString(),
+            isFromThisUser = true,
+            content = content,
+            mediaItems = images.map { "luffy".getMediaByName() },
+            timestamp = timestamp,
+        )
 
         mockChatPreviews.value = mockChatPreviews.value.map {
             if (it.participantName == mockChat.participantName) {
@@ -274,13 +290,24 @@ class GlobalRepositoryMock: GlobalRepository {
             }
     }
 
-    override suspend fun getUploadMediaUrl(mediaType: MediaType): String {
+    override suspend fun getUploadMediaUrl(mediaType: MediaType): UploadMedia {
         val url = when (mediaType) {
             MediaType.IMAGE -> "https://example.com/upload/image"
             MediaType.VIDEO -> "https://example.com/upload/video"
         }
         Log.d("GlobalRepositoryMock", "getUploadMediaUrl: returned url $url for media type ${mediaType.name}")
-        return url
+        return UploadMedia(
+            url = url,
+            mediaId = "mock_media_id_${System.currentTimeMillis()}",
+            expiresAt = LocalDateTime.now().plusHours(1).toEpochSecond(ZoneOffset.UTC) * 1000,
+        )
+    }
+
+    override suspend fun uploadToPresignedUrl(url: String, bytes: ByteArray, contentType: String) {
+        Log.d(
+            "GlobalRepositoryMock",
+            "uploadToPresignedUrl: uploaded media to url $url with content type $contentType and size ${bytes.size} bytes"
+        )
     }
 
     override suspend fun getFeedPosts(

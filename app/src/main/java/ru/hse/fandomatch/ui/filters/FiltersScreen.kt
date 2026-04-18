@@ -43,13 +43,13 @@ import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.getColor
-import ru.hse.fandomatch.getName
 import ru.hse.fandomatch.stringId
 import ru.hse.fandomatch.toStringId
 import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.FandomInput
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MySwitch
+import ru.hse.fandomatch.ui.composables.getName
 import ru.hse.fandomatch.ui.theme.FandoMatchTheme
 import kotlin.math.roundToInt
 

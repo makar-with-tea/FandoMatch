@@ -112,14 +112,6 @@ fun FandomCategory.toStringId(): Int = when (this) {
     FandomCategory.OTHER -> R.string.fandom_category_other
 }
 
-@Composable
-fun City.getName(): String {
-    val context = LocalContext.current
-    val locale = context.resources.configuration.locales[0]
-    val isRussianLocale = locale.language.equals("ru", ignoreCase = true)
-    return if (isRussianLocale) this.nameRussian else this.nameEnglish
-}
-
 private const val LATIN = "abcdefghijklmnopqrstuvwxyz"
 private const val LOGIN_SPECIAL_SYMBOLS = "_-"
 private const val SPECIAL_SYMBOLS = "!@#$%^*()-_"

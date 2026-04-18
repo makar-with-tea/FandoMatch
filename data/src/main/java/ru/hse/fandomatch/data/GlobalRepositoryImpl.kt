@@ -2,9 +2,12 @@ package ru.hse.fandomatch.data
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import okhttp3.MediaType as OkHttpMediaType
+import okhttp3.RequestBody
 import retrofit2.HttpException
 import ru.hse.fandomatch.data.api.ChatApiService
 import ru.hse.fandomatch.data.api.CoreApiService
+import ru.hse.fandomatch.data.api.S3UploadApiService
 import ru.hse.fandomatch.data.api.UserApiService
 import ru.hse.fandomatch.data.model.ChangePasswordRequestDTO
 import ru.hse.fandomatch.data.model.ChatMessagesRequestDTO
@@ -49,6 +52,7 @@ import ru.hse.fandomatch.domain.model.Filters
 import ru.hse.fandomatch.domain.model.FullPost
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.OtherProfileItem
+import ru.hse.fandomatch.domain.model.UploadMedia
 import ru.hse.fandomatch.domain.model.User
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import kotlin.Int
@@ -58,6 +62,7 @@ class GlobalRepositoryImpl(
     private val coreApiService: CoreApiService,
     private val chatApiService: ChatApiService,
     private val userApiService: UserApiService,
+    private val s3UploadApiService: S3UploadApiService,
 ): GlobalRepository {
     override suspend fun getUser(profileId: String): User {
         val response = coreApiService.getUserProfile(
@@ -76,8 +81,8 @@ class GlobalRepositoryImpl(
                             name = userDTO.name,
                             gender = Gender.FEMALE, // todo даша
                             age = 0, // todo даша
-                            avatarUrl = userDTO.avatar?.url,
-                            backgroundUrl = userDTO.background?.url,
+                            avatar = userDTO.avatar?.toDomain(),
+                            background = userDTO.background?.toDomain(),
                             city = userDTO.city?.toDomain(),
                             profileType = ProfileType.Friend(login = userDTO.username)
                         )
@@ -90,8 +95,8 @@ class GlobalRepositoryImpl(
                             gender = userDTO.gender?.toDomain()
                                 ?: Gender.NOT_SPECIFIED, // todo даша
                             age = userDTO.age.toInt(),
-                            avatarUrl = userDTO.avatar?.url,
-                            backgroundUrl = userDTO.background?.url,
+                            avatar = userDTO.avatar?.toDomain(),
+                            background = userDTO.background?.toDomain(),
                             city = userDTO.city?.toDomain(),
                             profileType = ProfileType.Own(
                                 login = userDTO.username,
@@ -106,8 +111,8 @@ class GlobalRepositoryImpl(
                             name = userDTO.name,
                             gender = Gender.NOT_SPECIFIED, // todo даша
                             age = 0, // todo даша
-                            avatarUrl = userDTO.avatar?.url,
-                            backgroundUrl = userDTO.background?.url,
+                            avatar = userDTO.avatar?.toDomain(),
+                            background = userDTO.background?.toDomain(),
                             city = userDTO.city?.toDomain(),
                             profileType = ProfileType.Stranger(userDTO.hasCurrentUserReacted)
                         )
@@ -235,7 +240,7 @@ class GlobalRepositoryImpl(
                         id = friendDTO.uid,
                         name = friendDTO.name,
                         login = friendDTO.username,
-                        avatarUrl = friendDTO.avatar?.url
+                        avatar = friendDTO.avatar?.toDomain(),
                     )
                 }
             }
@@ -261,7 +266,7 @@ class GlobalRepositoryImpl(
                         id = requestDTO.uid,
                         name = requestDTO.name,
                         login = null,
-                        avatarUrl = requestDTO.avatar?.url
+                        avatar = requestDTO.avatar?.toDomain(),
                     )
                 }
             }
@@ -287,6 +292,10 @@ class GlobalRepositoryImpl(
         // todo даша
     }
 
+    override suspend fun getCitiesByQuery(query: String): List<City> {
+        return emptyList()
+    }
+
     override suspend fun getSuggestedProfiles(
         size: Int
     ): List<ProfileCard> {
@@ -302,7 +311,7 @@ class GlobalRepositoryImpl(
                         id = candidateDTO.uuid,
                         name = candidateDTO.name,
                         age = candidateDTO.age,
-                        avatarUrl = candidateDTO.avatar?.url,
+                        avatar = candidateDTO.avatar?.toDomain(),
                         fandoms = candidateDTO.fandoms.map { it.toDomain() },
                         gender = Gender.FEMALE, // todo даша
                         compatibilityPercentage = candidateDTO.compatibility,
@@ -426,7 +435,7 @@ class GlobalRepositoryImpl(
                 isFromThisUser = messageDTO.isFromThisUser,
                 content = messageDTO.content,
                 timestamp = messageDTO.timestamp,
-                imageUrls = messageDTO.mediaItems?.map { it.url } ?: emptyList(),
+                mediaItems = messageDTO.mediaItems?.map { it.toDomain() } ?: emptyList(),
             )
         } ?: emptyList()
         ) // todo websocket somehow
@@ -474,7 +483,7 @@ class GlobalRepositoryImpl(
         }
     }
 
-    override suspend fun getUploadMediaUrl(mediaType: MediaType): String {
+    override suspend fun getUploadMediaUrl(mediaType: MediaType): UploadMedia {
         val response = chatApiService.getPresignedUploadUrl(
             PresignedUploadRequestDTO(
                 mediaType = MediaTypeDTO.fromDomain(mediaType)
@@ -482,7 +491,7 @@ class GlobalRepositoryImpl(
         )
         when (response.status) {
             ResponseStatusDTO.SUCCESS -> {
-                return response.successResponse!!.uploadUrl
+                return response.successResponse!!.toDomain()
             }
 
             ResponseStatusDTO.ERROR -> {
@@ -490,6 +499,19 @@ class GlobalRepositoryImpl(
                     throw Exception("Failed to get upload media url: $errorCode, $errorMessage")
                 }
             }
+        }
+    }
+
+    override suspend fun uploadToPresignedUrl(
+        url: String,
+        bytes: ByteArray,
+        contentType: String
+    ) {
+        val mediaType = OkHttpMediaType.parse(contentType)
+        val body = RequestBody.create(mediaType, bytes)
+        val response = s3UploadApiService.upload(url, body)
+        if (!response.isSuccessful) {
+            throw HttpException(response)
         }
     }
 
@@ -515,10 +537,10 @@ class GlobalRepositoryImpl(
                         authorId = postDTO.author.uuid,
                         authorName = postDTO.author.name!!, // todo даша
                         authorLogin = postDTO.author.username,
-                        authorAvatarUrl = postDTO.author.avatar?.url,
+                        authorAvatar = postDTO.author.avatar?.toDomain(),
                         timestamp = postDTO.createdAt,
                         content = postDTO.content,
-                        mediaItems = postDTO.mediaItems?.map { it.url } ?: emptyList(),
+                        mediaItems = postDTO.mediaItems?.map { it.toDomain() } ?: emptyList(),
                         likeCount = postDTO.likeCount ?: 0, // todo даша
                         commentCount = postDTO.commentCount ?: 0, // todo даша
                         isLikedByCurrentUser = false, // todo даша
@@ -557,10 +579,10 @@ class GlobalRepositoryImpl(
                         authorId = postDTO.author.uuid,
                         authorName = postDTO.author.name!!, // todo даша
                         authorLogin = postDTO.author.username,
-                        authorAvatarUrl = postDTO.author.avatar?.url,
+                        authorAvatar = postDTO.author.avatar?.toDomain(),
                         timestamp = postDTO.createdAt,
                         content = postDTO.content,
-                        mediaItems = postDTO.mediaItems?.map { it.url } ?: emptyList(),
+                        mediaItems = postDTO.mediaItems?.map { it.toDomain() } ?: emptyList(),
                         likeCount = postDTO.likeCount ?: 0, // todo даша
                         commentCount = postDTO.commentCount ?: 0, // todo даша
                         isLikedByCurrentUser = false, // todo даша

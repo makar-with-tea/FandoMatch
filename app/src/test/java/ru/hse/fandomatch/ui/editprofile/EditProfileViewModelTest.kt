@@ -3,7 +3,6 @@ package ru.hse.fandomatch.ui.editprofile
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -14,7 +13,6 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import ru.hse.fandomatch.data.mock.mockFandoms
 import ru.hse.fandomatch.data.mock.mockUser
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
@@ -104,7 +102,7 @@ class EditProfileViewModelTest {
     fun `CityChanged with unknown city sets error`() = runTest {
         viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
         advanceUntilIdle()
-        viewModel.obtainEvent(EditProfileEvent.CityChanged("Atlantis"))
+        viewModel.obtainEvent(EditProfileEvent.CitySearched("Atlantis"))
         val state = viewModel.state.value as EditProfileState.Main
         assertEquals(EditProfileState.EditProfileError.CITY_NOT_FOUND, state.cityError)
     }
@@ -114,7 +112,7 @@ class EditProfileViewModelTest {
         viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
         advanceUntilIdle()
         val city = "Москва"
-        viewModel.obtainEvent(EditProfileEvent.CityChanged(city))
+        viewModel.obtainEvent(EditProfileEvent.CitySearched(city))
         val state = viewModel.state.value as EditProfileState.Main
         assertEquals(EditProfileState.EditProfileError.IDLE, state.cityError)
         assertEquals(city, state.city)

@@ -1,6 +1,7 @@
 package ru.hse.fandomatch.data.model
 
 import com.google.gson.annotations.SerializedName
+import ru.hse.fandomatch.domain.model.UploadMedia
 
 data class PresignedUploadRequestDTO(
     @SerializedName("media_type")
@@ -14,7 +15,13 @@ data class PresignedUploadDataDTO(
     val uploadUrl: String,
     @SerializedName("expires_at")
     val expiresAt: Long
-)
+) {
+    fun toDomain() = UploadMedia(
+        url = uploadUrl,
+        mediaId = mediaId,
+        expiresAt = expiresAt
+    )
+}
 
 data class PresignedUploadResponseDTO(
     val status: ResponseStatusDTO,

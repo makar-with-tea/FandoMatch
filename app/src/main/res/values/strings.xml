@@ -163,10 +163,12 @@
     <string name="description_length_error">Описание должно быть не длиннее 500 символов</string>
     <string name="city_label">Ваш город</string>
     <string name="save_profile_button">Сохранить</string>
-    <string name="city_not_found_error">Город не найден</string>
+    <string name="city_not_found_error">Города не найдены</string>
+    <string name="search_city_label">Введите название города...</string>
     <string name="did_not_found_fandom_label">Не нашли фандом?</string>
     <string name="here_you_go_button">Вам сюда!</string>
     <string name="edit_profile_error_toast">Не удалось сохранить изменения профиля</string>
+    <string name="your_fandoms_label">Ваши фандомы</string>
 
     <string name="settings_title">Настройки</string>
     <string name="change_email_title">Смена почты</string>

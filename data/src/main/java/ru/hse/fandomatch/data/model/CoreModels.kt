@@ -61,22 +61,22 @@ data class MediaItemDTO(
     val url: String
 ) {
     fun toDomain() = MediaItem(
-        mediaId = mediaId,
+        id = mediaId,
         mediaType = when (mediaType) {
             MediaTypeDTO.IMAGE -> MediaType.IMAGE
             MediaTypeDTO.VIDEO -> MediaType.VIDEO
         },
-        mediaUrl = url
+        url = url
     )
 
     companion object {
         fun fromDomain(mediaItem: MediaItem) = MediaItemDTO(
-            mediaId = mediaItem.mediaId,
+            mediaId = mediaItem.id,
             mediaType = when (mediaItem.mediaType) {
                 MediaType.IMAGE -> MediaTypeDTO.IMAGE
                 MediaType.VIDEO -> MediaTypeDTO.VIDEO
             },
-            url = mediaItem.mediaUrl
+            url = mediaItem.url
         )
     }
 }
@@ -551,10 +551,10 @@ data class ExtendedPostDTO(
             authorId = author.uuid,
             authorName = author.name ?: "",
             authorLogin = author.username,
-            authorAvatarUrl = author.avatar?.url,
+            authorAvatar = author.avatar?.toDomain(),
             timestamp = createdAt,
             content = content,
-            mediaItems = mediaItems?.map { it.url } ?: listOf(),
+            mediaItems = mediaItems?.map { it.toDomain() } ?: listOf(),
             likeCount = likeCount ?: 0,
             commentCount = commentCount ?: 0,
             isLikedByCurrentUser = false, // todo даша
@@ -607,7 +607,7 @@ data class CommentDTO(
     fun toDomain() = Comment(
         authorName = authorName ?: "",
         authorLogin = authorUsername,
-        authorAvatarUrl = authorAvatar?.url,
+        authorAvatar = authorAvatar?.toDomain(),
         timestamp = createdAt,
         content = content
     )

@@ -7,8 +7,8 @@ data class User(
     val name: String,
     val gender: Gender,
     val age: Int,
-    val avatarUrl: String? = null,
-    val backgroundUrl: String? = null,
+    val avatar: MediaItem? = null,
+    val background: MediaItem? = null,
     val city: City? = null,
     val profileType: ProfileType,
 )
@@ -49,5 +49,5 @@ data class OtherProfileItem(
     val id: String,
     val name: String,
     val login: String?,
-    val avatarUrl: String?,
+    val avatar: MediaItem?,
 )

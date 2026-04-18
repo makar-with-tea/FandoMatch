@@ -15,6 +15,7 @@ import ru.hse.fandomatch.domain.model.Filters
 import ru.hse.fandomatch.domain.model.FullPost
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.OtherProfileItem
+import ru.hse.fandomatch.domain.model.UploadMedia
 import ru.hse.fandomatch.domain.model.User
 
 interface GlobalRepository {
@@ -47,6 +48,7 @@ interface GlobalRepository {
     suspend fun getVerificationCode(email: String)
     suspend fun checkVerificationCode(code: String, email: String): Boolean
     suspend fun resetPassword(code: String, newPassword: String)
+    suspend fun getCitiesByQuery(query: String): List<City>
 
     // Matches
 
@@ -81,7 +83,13 @@ interface GlobalRepository {
         images: List<ByteArray>,
         timestamp: Long,
     )
-    suspend fun getUploadMediaUrl(mediaType: MediaType): String
+    suspend fun getUploadMediaUrl(mediaType: MediaType): UploadMedia
+
+    suspend fun uploadToPresignedUrl(
+        url: String,
+        bytes: ByteArray,
+        contentType: String
+    )
 
     // Posts
     suspend fun getFeedPosts(

@@ -32,6 +32,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.epochMillisToDateString
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
@@ -103,7 +104,7 @@ private fun MainState(
             titleContent = {
                 AvatarAndNameBlock(
                     name = state.fullPost.post.authorName,
-                    avatarUrl = state.fullPost.post.authorAvatarUrl,
+                    avatarUrl = state.fullPost.post.authorAvatar?.url,
                     login = state.fullPost.post.authorLogin,
                     onClick = { onClickProfile() },
                 )
@@ -111,11 +112,11 @@ private fun MainState(
         )
     )
 
-    var imageUrlsForScreen by remember { mutableStateOf<List<String>>(emptyList()) }
-    var currentImageIndex by remember { mutableStateOf(0) }
-    BackHandler(enabled = imageUrlsForScreen.isNotEmpty()) {
-        imageUrlsForScreen = emptyList()
-        currentImageIndex = 0
+    var itemsForScreen by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
+    var currentItemIndex by remember { mutableStateOf(0) }
+    BackHandler(enabled = itemsForScreen.isNotEmpty()) {
+        itemsForScreen = emptyList()
+        currentItemIndex = 0
     }
 
     Column(
@@ -130,16 +131,16 @@ private fun MainState(
                 FullPost(
                     postDate = state.fullPost.post.timestamp.epochMillisToDateString(),
                     postText = state.fullPost.post.content,
-                    imageUrls = state.fullPost.post.mediaItems,
+                    mediaItems = state.fullPost.post.mediaItems,
                     areReactionsAvailable = true,
                     likeCount = state.fullPost.post.likeCount,
                     commentCount = state.fullPost.post.commentCount,
                     fandoms = state.fullPost.post.fandoms,
                     isLiked = state.fullPost.post.isLikedByCurrentUser,
                     onLikeClick = { onClickLike() },
-                    onImageClick = { urls, index ->
-                        imageUrlsForScreen = urls // todo move to view model
-                        currentImageIndex = index
+                    onItemClick = { urls, index ->
+                        itemsForScreen = urls // todo move to view model
+                        currentItemIndex = index
                     },
                     modifier = Modifier,
                     backgroundColor = MaterialTheme.colorScheme.background,
@@ -204,10 +205,10 @@ private fun MainState(
         )
     }
 
-    if (imageUrlsForScreen.isNotEmpty()) {
+    if (itemsForScreen.isNotEmpty()) {
         ImagesScreen(
-            urls = imageUrlsForScreen,
-            initialPage = currentImageIndex,
+            items = itemsForScreen,
+            initialPage = currentItemIndex,
             titleContent = {
                 // todo: from <user>, <time>
             },
