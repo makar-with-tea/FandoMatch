@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.exception.LoginAlreadyInUseException
 import ru.hse.fandomatch.domain.model.Gender
-import ru.hse.fandomatch.domain.usecase.user.RegisterUseCase
+import ru.hse.fandomatch.domain.usecase.auth.RegisterUseCase
 import ru.hse.fandomatch.checkEmailContent
 import ru.hse.fandomatch.checkLoginContent
 import ru.hse.fandomatch.checkLoginLength
@@ -20,8 +20,8 @@ import ru.hse.fandomatch.checkPasswordContent
 import ru.hse.fandomatch.checkPasswordLength
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
-import ru.hse.fandomatch.domain.usecase.user.CheckVerificationCodeUseCase
-import ru.hse.fandomatch.domain.usecase.user.GetVerificationCodeUseCase
+import ru.hse.fandomatch.domain.usecase.auth.CheckVerificationCodeUseCase
+import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -175,15 +175,8 @@ class RegistrationViewModel(
         }
 
         viewModelScope.launch(dispatcherIO) {
-            try {
-                getVerificationCodeUseCase.execute(currentState.email)
-                withContext(dispatcherMain) {
-                    form.name = currentState.name
-                    form.email = currentState.email
-                    form.login = currentState.login
-                    _state.value = RegistrationState.Code()
-                }
-            } catch (_: Exception) {
+            val result = getVerificationCodeUseCase.execute(currentState.email)
+            if (result.isFailure) {
                 withContext(dispatcherMain) {
                     _state.value = currentState.copy(
                         nameError = RegistrationState.RegistrationError.NETWORK,
@@ -191,6 +184,13 @@ class RegistrationViewModel(
                         loginError = RegistrationState.RegistrationError.NETWORK
                     )
                 }
+                return@launch
+            }
+            withContext(dispatcherMain) {
+                form.name = currentState.name
+                form.email = currentState.email
+                form.login = currentState.login
+                _state.value = RegistrationState.Code()
             }
         }
     }
@@ -199,22 +199,22 @@ class RegistrationViewModel(
         _state.value = (state.value as? RegistrationState.Code)?.copy(isLoading = true) ?: return
 
         viewModelScope.launch(dispatcherIO) {
-            try {
-                val isValid = checkVerificationCodeUseCase.execute(code, form.email)
-                withContext(dispatcherMain) {
-                    if (isValid) {
-                        _state.value = RegistrationState.DateOfBirth(form.dateOfBirthMillis)
-                    } else {
-                        _state.value = RegistrationState.Code(
-                            codeError = RegistrationState.RegistrationError.INVALID_CODE,
-                            isLoading = false
-                        )
-                    }
-                }
-            } catch (_: Exception) {
+            val result = checkVerificationCodeUseCase.execute(code, form.email)
+            val isValid = result.getOrNull() ?: run {
                 withContext(dispatcherMain) {
                     _state.value = RegistrationState.Code(
                         codeError = RegistrationState.RegistrationError.NETWORK,
+                        isLoading = false
+                    )
+                }
+                return@launch
+            }
+            withContext(dispatcherMain) {
+                if (isValid) {
+                    _state.value = RegistrationState.DateOfBirth(form.dateOfBirthMillis)
+                } else {
+                    _state.value = RegistrationState.Code(
+                        codeError = RegistrationState.RegistrationError.INVALID_CODE,
                         isLoading = false
                     )
                 }

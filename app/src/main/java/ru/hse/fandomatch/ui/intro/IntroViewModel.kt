@@ -8,9 +8,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.time.delay
 import kotlinx.coroutines.withContext
-import ru.hse.fandomatch.domain.usecase.user.GetPastLoginUseCase
+import ru.hse.fandomatch.domain.usecase.auth.GetPastLoginUseCase
 
 class IntroViewModel(
     private val getPastLoginUseCase: GetPastLoginUseCase,

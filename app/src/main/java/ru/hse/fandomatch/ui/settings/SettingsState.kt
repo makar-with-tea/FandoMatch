@@ -10,6 +10,7 @@ sealed class SettingsState {
         NETWORK_FATAL,
         NETWORK,
         EMAIL_CONTENT,
+        INVALID_CODE,
         IDLE
     }
     data object Idle : SettingsState()
@@ -54,7 +55,8 @@ sealed class SettingsState {
         val hideMyPostsFromNonMatches: Boolean = false,
         val isLoading: Boolean = false,
         val emailError: SettingsError = SettingsError.IDLE,
-        val loading: Boolean = false
+        val isCode: Boolean = false,
+        val codeError: SettingsError = SettingsError.IDLE,
     ) : SettingsState()
 }
 
@@ -65,9 +67,9 @@ sealed class SettingsEvent {
         val oldPassword: String,
         val newPasswordRepeat: String
     ): SettingsEvent()
-    data class SaveEmailButtonClicked(
-        val email: String
-    ): SettingsEvent()
+    data object SaveEmailButtonClicked: SettingsEvent()
+    data class EmailChanged(val email: String): SettingsEvent()
+    data class CodeSubmitted(val code: String): SettingsEvent()
 
     data object ShowOldPasswordButtonClicked : SettingsEvent()
     data object ShowNewPasswordButtonClicked : SettingsEvent()

@@ -115,7 +115,10 @@ class ProfileViewModel(
 
     private fun likeOrDislikeProfile(profileId: String, isLike: Boolean) {
         viewModelScope.launch(dispatcherIO) {
-            likeOrDislikeProfileUseCase.execute(profileId, isLike)
+            val result = likeOrDislikeProfileUseCase.execute(profileId, isLike)
+            if (result.isFailure) {
+                Log.e("ProfileViewModel", "Failed to ${if (isLike) "like" else "dislike"} profile $profileId", result.exceptionOrNull())
+            }
             withContext(dispatcherMain) {
                 _action.value = ProfileAction.GoToMatches
             }

@@ -5,7 +5,7 @@ import ru.hse.fandomatch.domain.repos.GlobalRepository
 class LikeOrDislikeProfileUseCase(
     private val globalRepository: GlobalRepository,
 ) {
-    suspend fun execute(userId: String, isLike: Boolean) {
+    suspend fun execute(userId: String, isLike: Boolean): Result<Unit> = runCatching {
         globalRepository.likeOrDislikeProfile(userId, isLike)
     }
 }

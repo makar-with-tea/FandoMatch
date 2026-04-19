@@ -6,10 +6,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import okhttp3.MediaType as OkHttpMediaType
 import okhttp3.RequestBody
 import retrofit2.HttpException
 import ru.hse.fandomatch.data.api.ChatApiService
@@ -47,28 +45,26 @@ import ru.hse.fandomatch.data.model.UserLoginRequestDTO
 import ru.hse.fandomatch.data.model.UserProfileRequestDTO
 import ru.hse.fandomatch.data.model.UserRegistrationRequestDTO
 import ru.hse.fandomatch.data.socket.ChatSocketService
+import ru.hse.fandomatch.domain.model.AuthInfo
 import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
+import ru.hse.fandomatch.domain.model.Filters
+import ru.hse.fandomatch.domain.model.FullPost
 import ru.hse.fandomatch.domain.model.Gender
+import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.Message
+import ru.hse.fandomatch.domain.model.OtherProfileItem
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.ProfileType
-import ru.hse.fandomatch.domain.model.AuthInfo
-import ru.hse.fandomatch.domain.model.Filters
-import ru.hse.fandomatch.domain.model.FullPost
-import ru.hse.fandomatch.domain.model.MediaType
-import ru.hse.fandomatch.domain.model.OtherProfileItem
 import ru.hse.fandomatch.domain.model.UploadMedia
 import ru.hse.fandomatch.domain.model.User
+import ru.hse.fandomatch.domain.model.UserPreferences
 import ru.hse.fandomatch.domain.repos.GlobalRepository
-import kotlin.Int
-import kotlin.String
-import kotlin.text.get
-import kotlin.text.set
+import okhttp3.MediaType as OkHttpMediaType
 
 class GlobalRepositoryImpl(
     private val coreApiService: CoreApiService,
@@ -243,7 +239,7 @@ class GlobalRepositoryImpl(
         }
     }
 
-    override suspend fun deleteUser(login: String) {
+    override suspend fun deleteUser() {
         // todo даша
     }
 
@@ -315,6 +311,27 @@ class GlobalRepositoryImpl(
     override suspend fun getCitiesByQuery(query: String): List<City> {
         // todo даша
         return emptyList()
+    }
+
+    override suspend fun getUserPreferences(): UserPreferences {
+        // todo даша
+        return UserPreferences(
+            matchesEnabled = true,
+            messagesEnabled = true,
+            hideMyPostsFromNonMatches = true
+        )
+    }
+
+    override suspend fun updateUserPreferences(
+        matchNotificationsEnabled: Boolean,
+        messageNotificationsEnabled: Boolean,
+        hideMyPostsFromNonMatches: Boolean
+    ) {
+        // todo даша
+    }
+
+    override suspend fun changeEmail(newEmail: String) {
+        // todo даша
     }
 
     override suspend fun getSuggestedProfiles(

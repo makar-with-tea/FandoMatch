@@ -10,13 +10,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.checkDescriptionLength
-import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.checkFandomNameLength
+import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.usecase.fandoms.RequestNewFandomUseCase
-import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
 
 class AddFandomViewModel(
-    private val getUserIdUseCase: GetUserIdUseCase,
     private val requestNewFandomUseCase: RequestNewFandomUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,

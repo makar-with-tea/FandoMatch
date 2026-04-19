@@ -1,4 +1,4 @@
-package ru.hse.fandomatch.domain.usecase.user
+package ru.hse.fandomatch.domain.usecase.auth
 
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
 

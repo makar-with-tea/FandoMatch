@@ -12,8 +12,8 @@ import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.checkEmailContent
 import ru.hse.fandomatch.checkPasswordContent
 import ru.hse.fandomatch.checkPasswordLength
-import ru.hse.fandomatch.domain.usecase.user.GetVerificationCodeUseCase
-import ru.hse.fandomatch.domain.usecase.user.ResetPasswordUseCase
+import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
+import ru.hse.fandomatch.domain.usecase.auth.ResetPasswordUseCase
 import java.lang.IllegalArgumentException
 
 class PasswordRecoveryViewModel(
@@ -63,18 +63,21 @@ class PasswordRecoveryViewModel(
             )
             return
         }
-        try {
-            viewModelScope.launch(dispatcherIO) {
-                getVerificationCodeUseCase.execute(currentState.email)
+        viewModelScope.launch(dispatcherIO) {
+            val result = getVerificationCodeUseCase.execute(currentState.email)
+            if (result.isFailure) {
+                Log.e("PasswordRecoveryViewModel", "Failed to send verification code", result.exceptionOrNull())
+                withContext(dispatcherMain) {
+                    _state.value = currentState.copy(
+                        emailError = PasswordRecoveryState.PasswordRecoveryError.NETWORK
+                    )
+                }
+                return@launch
             }
-        } catch (e: Exception) {
-            Log.e("PasswordRecoveryViewModel", "Failed to send verification code", e)
-             _state.value = currentState.copy(
-                emailError = PasswordRecoveryState.PasswordRecoveryError.NETWORK
-            )
-            return
+            withContext(dispatcherMain) {
+                _state.value = PasswordRecoveryState.Main()
+            }
         }
-        _state.value = PasswordRecoveryState.Main()
     }
 
     private fun newPasswordChanged(password: String) {
@@ -155,27 +158,35 @@ class PasswordRecoveryViewModel(
 
         _state.value = resetState.copy(isLoading = true)
         viewModelScope.launch(dispatcherIO) {
-            try {
-                resetPasswordUseCase.execute(code, resetState.newPassword)
-                withContext(dispatcherMain) {
-                    _action.value = PasswordRecoveryAction.NavigateToAuthorization
+            val result = resetPasswordUseCase.execute(code, resetState.newPassword)
+            if (result.isFailure) {
+                val exception = result.exceptionOrNull()
+                Log.e("PasswordRecoveryViewModel", "Failed to reset password", exception)
+
+                // todo normal check
+                if (exception is IllegalArgumentException) {
+                    withContext(dispatcherMain) {
+                        val latestState =
+                            _state.value as? PasswordRecoveryState.Main ?: return@withContext
+                        _state.value = latestState.copy(
+                            isLoading = false,
+                            codeError = PasswordRecoveryState.PasswordRecoveryError.INVALID_CODE,
+                        )
+                    }
+                } else {
+                    withContext(dispatcherMain) {
+                        val latestState =
+                            _state.value as? PasswordRecoveryState.Main ?: return@withContext
+                        _state.value = latestState.copy(
+                            isLoading = false,
+                            codeError = PasswordRecoveryState.PasswordRecoveryError.NETWORK,
+                        )
+                    }
                 }
-            } catch (_: IllegalArgumentException) {
-                withContext(dispatcherMain) {
-                    val latestState = _state.value as? PasswordRecoveryState.Main ?: return@withContext
-                    _state.value = latestState.copy(
-                        isLoading = false,
-                        codeError = PasswordRecoveryState.PasswordRecoveryError.INVALID_CODE,
-                    )
-                }
-            } catch (_: Exception) {
-                withContext(dispatcherMain) {
-                    val latestState = _state.value as? PasswordRecoveryState.Main ?: return@withContext
-                    _state.value = latestState.copy(
-                        isLoading = false,
-                        codeError = PasswordRecoveryState.PasswordRecoveryError.NETWORK,
-                    )
-                }
+                return@launch
+            }
+            withContext(dispatcherMain) {
+                _action.value = PasswordRecoveryAction.NavigateToAuthorization
             }
         }
     }

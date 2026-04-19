@@ -16,7 +16,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.*
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
-import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
+import ru.hse.fandomatch.domain.usecase.auth.LoginUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AuthorizationViewModelTest {

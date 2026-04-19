@@ -10,8 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
-import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
-import java.lang.RuntimeException
+import ru.hse.fandomatch.domain.usecase.auth.LoginUseCase
 
 class AuthorizationViewModel(
     private val loginUseCase: LoginUseCase,
@@ -91,11 +90,12 @@ class AuthorizationViewModel(
             val result = loginUseCase.execute(currentState.login, currentState.password)
             if (result.isFailure) {
                 withContext(dispatcherMain) {
-                    val e = result.exceptionOrNull() ?: RuntimeException("Unknown error")
+                    val e = result.exceptionOrNull()
+                    Log.e("AuthorizationViewModel", "Login failed", e)
+                    // todo корректная ошибка (даша?)
                     if (e is InvalidCredentialsException) {
                         _state.value = currentState.copy(
                             loginError = AuthorizationState.AuthorizationError.IDLE,
-                            // todo обработать разные ошибки для логина и пароля
                             passwordError = AuthorizationState.AuthorizationError.INVALID_CREDENTIALS,
                             isLoading = false,
                         )

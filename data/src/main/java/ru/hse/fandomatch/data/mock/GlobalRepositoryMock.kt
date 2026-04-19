@@ -20,6 +20,7 @@ import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.domain.model.UploadMedia
 import ru.hse.fandomatch.domain.model.User
+import ru.hse.fandomatch.domain.model.UserPreferences
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -103,8 +104,8 @@ class GlobalRepositoryMock: GlobalRepository {
         }
     }
 
-    override suspend fun deleteUser(login: String) {
-        Log.d("GlobalRepositoryMock", "deleteUser: successful for user $login")
+    override suspend fun deleteUser() {
+        Log.d("GlobalRepositoryMock", "deleteUser: successful")
     }
 
     override suspend fun getFriends(id: String): List<OtherProfileItem> {
@@ -183,6 +184,43 @@ class GlobalRepositoryMock: GlobalRepository {
         }
     }
 
+    override suspend fun getUserPreferences(): UserPreferences {
+        return mockUserPreferences.also {
+            Log.d(
+                "GlobalRepositoryMock",
+                "getUserPreferences: returned preferences: $it"
+            )
+        }
+    }
+
+    override suspend fun updateUserPreferences(
+        matchNotificationsEnabled: Boolean,
+        messageNotificationsEnabled: Boolean,
+        hideMyPostsFromNonMatches: Boolean
+    ) {
+        mockUserPreferences = mockUserPreferences.copy(
+            matchesEnabled = matchNotificationsEnabled,
+            messagesEnabled = messageNotificationsEnabled,
+            hideMyPostsFromNonMatches = hideMyPostsFromNonMatches
+        ).also {
+            Log.d(
+                "GlobalRepositoryMock",
+                "updateUserPreferences: updated preferences to: $it"
+            )
+        }
+    }
+
+    override suspend fun changeEmail(newEmail: String) {
+        val currentLogin = (mockUser.profileType as? ProfileType.Own)?.login ?: return
+        mockUser = mockUser.copy(
+            profileType = ProfileType.Own(
+                login = currentLogin,
+                email = newEmail,
+            )
+        )
+        Log.d("GlobalRepositoryMock", "changeEmail: changed email to $newEmail")
+    }
+
     override suspend fun getSuggestedProfiles(size: Int): List<ProfileCard> {
         return mockProfileCards.shuffled().take(size).also {
             Log.d(
@@ -240,21 +278,10 @@ class GlobalRepositoryMock: GlobalRepository {
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<Message>> {
-//        val messages = if (beforeTimestamp == null) {
-//            mockMessages.value
-//        } else {
-//            mockMessages.value.filter { it.timestamp < beforeTimestamp }
-//        }
-//        val result = messages
-//            .sortedByDescending { it.timestamp }
-//            .take(size)
-//            .also {
-//                Log.d(
-//                    "GlobalRepositoryMock",
-//                    "loadChatMessages: returned <= ${it.size} messages for userId $userId before $beforeTimestamp"
-//                )
-//            }
-//        mockMessages.value = result todo пагинация
+        Log.d(
+            "GlobalRepositoryMock",
+            "subscribeToChatMessages: subscribed to chat $chatId for user $userId with size $size"
+        )
         return mockMessages
     }
 
@@ -276,7 +303,7 @@ class GlobalRepositoryMock: GlobalRepository {
             mediaItems = mediaIdsWithTypes.map { (mediaId, type) ->
                 when (type) {
                     MediaType.IMAGE -> "luffy".getMediaByName().copy(id = mediaId)
-                    MediaType.VIDEO -> "video".getMediaByName().copy(id = mediaId)
+                    MediaType.VIDEO -> "noenor_edit".getMediaByName().copy(id = mediaId)
                 }
             },
             timestamp = timestamp,

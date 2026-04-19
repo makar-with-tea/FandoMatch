@@ -58,49 +58,49 @@ class MatchesViewModel(
         )
         Log.i("MatchesViewModel", "Starting initial load of suggested profiles")
         viewModelScope.launch(dispatcherIO) {
-            try {
-                val result = loadSuggestedProfilesUseCase.execute(batchSize)
-                val profiles = result.getOrNull() ?: run {
-                    Log.e("MatchesViewModel", "Failed to load suggested profiles: ${result.exceptionOrNull()}")
-                    withContext(dispatcherMain) {
-                        _state.value = MatchesState.Main(
-                            profileStack = buffer.toList(),
-                            isLoading = false,
-                            error = if (buffer.isEmpty()) MatchesState.MatchesError.NO_PROFILES_FOUND else MatchesState.MatchesError.NETWORK
-                        )
-                    }
-                    return@launch
-                }
-                buffer.clear()
-                profiles.forEach { buffer.addLast(it) }
+            val result = loadSuggestedProfilesUseCase.execute(batchSize)
+            val profiles = result.getOrNull() ?: run {
+                Log.e(
+                    "MatchesViewModel",
+                    "Failed to load suggested profiles: ${result.exceptionOrNull()}"
+                )
                 withContext(dispatcherMain) {
                     _state.value = MatchesState.Main(
                         profileStack = buffer.toList(),
                         isLoading = false,
-                        error = if (buffer.isEmpty()) MatchesState.MatchesError.NO_PROFILES_FOUND else MatchesState.MatchesError.IDLE
-                    )
-                }
-            } catch (_: Exception) {
-                withContext(dispatcherMain) {
-                    _state.value = MatchesState.Main(
-                        isLoading = false,
                         error = MatchesState.MatchesError.NETWORK
                     )
                 }
+                return@launch
+            }
+            buffer.clear()
+            profiles.forEach { buffer.addLast(it) }
+            withContext(dispatcherMain) {
+                _state.value = MatchesState.Main(
+                    profileStack = buffer.toList(),
+                    isLoading = false,
+                    error = if (buffer.isEmpty()) MatchesState.MatchesError.NO_PROFILES_FOUND else MatchesState.MatchesError.IDLE
+                )
             }
         }
     }
 
     private fun likeProfile(profileId: String) {
         viewModelScope.launch(dispatcherIO) {
-            likeOrDislikeProfileUseCase.execute(profileId, isLike = true)
+            val result = likeOrDislikeProfileUseCase.execute(profileId, isLike = true)
+            if (result.isFailure) {
+                Log.e("MatchesViewModel", "Failed to like profile $profileId: ${result.exceptionOrNull()}")
+            }
         }
         popAndMaybePrefetch()
     }
 
     private fun dislikeProfile(profileId: String) {
         viewModelScope.launch(dispatcherIO) {
-            likeOrDislikeProfileUseCase.execute(profileId, isLike = false)
+            val result = likeOrDislikeProfileUseCase.execute(profileId, isLike = false)
+            if (result.isFailure) {
+                Log.e("MatchesViewModel", "Failed to dislike profile $profileId: ${result.exceptionOrNull()}")
+            }
         }
         popAndMaybePrefetch()
     }

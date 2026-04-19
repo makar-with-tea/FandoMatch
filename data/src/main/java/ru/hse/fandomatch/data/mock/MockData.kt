@@ -547,8 +547,7 @@ internal val mockCities = listOf(
     ),
 )
 
-// still external :(
-val mockUserPreferences = UserPreferences(
+var mockUserPreferences = UserPreferences(
     matchesEnabled = true,
     messagesEnabled = false,
     hideMyPostsFromNonMatches = true,

@@ -19,13 +19,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -39,6 +42,8 @@ import ru.hse.fandomatch.ui.composables.MySwitch
 import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.navigation.TopBarState
+import ru.hse.fandomatch.ui.registration.RegistrationState
+import ru.hse.fandomatch.ui.registration.getText
 import ru.hse.fandomatch.ui.theme.FandoMatchTheme
 
 @Composable
@@ -130,8 +135,14 @@ fun SettingsScreen(
             ChangeEmailState(
                 state.value as SettingsState.ChangeEmail,
                 setTopBarState = setTopBarState,
-                onSaveEmail = { email ->
-                    viewModel.obtainEvent(SettingsEvent.SaveEmailButtonClicked(email))
+                onSubmitEmail = {
+                    viewModel.obtainEvent(SettingsEvent.SaveEmailButtonClicked)
+                },
+                onEmailChanged = { email ->
+                    viewModel.obtainEvent(SettingsEvent.EmailChanged(email))
+                },
+                onSubmitCode = { code ->
+                    viewModel.obtainEvent(SettingsEvent.CodeSubmitted(code))
                 },
                 onBackPressed = {
                     viewModel.obtainEvent(SettingsEvent.Back)
@@ -423,7 +434,9 @@ fun ChangePasswordState(
 fun ChangeEmailState(
     state: SettingsState.ChangeEmail,
     setTopBarState: (TopBarState) -> Unit,
-    onSaveEmail: (String) -> Unit,
+    onSubmitEmail: () -> Unit,
+    onEmailChanged: (String) -> Unit,
+    onSubmitCode: (String) -> Unit,
     onBackPressed: () -> Unit
 ) {
     setTopBarState(
@@ -437,24 +450,62 @@ fun ChangeEmailState(
     BackHandler {
         onBackPressed()
     }
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top,
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = 16.dp, bottom = 0.dp, start = 16.dp, end = 16.dp)
-    ) {
-        val email = remember { mutableStateOf(state.email) }
-        MyTextField(
-            value = email.value,
-            onValueChange = { email.value = it },
-            label = stringResource(id = R.string.email_label),
-            isError = state.emailError != SettingsState.SettingsError.IDLE,
-            errorText = state.emailError.toText(),
-            keyboardType = KeyboardType.Email,
-        )
-        Button(onClick = { onSaveEmail(email.value) }) {
-            Text(stringResource(id = R.string.save_button))
+
+    if (state.isCode) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            var code by remember { mutableStateOf("") }
+
+            Text(
+                text = stringResource(id = R.string.code_verification_description),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .align(Alignment.CenterHorizontally),
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            MyTextField(
+                value = code,
+                label = stringResource(id = R.string.verification_code_label),
+                isError = state.codeError != SettingsState.SettingsError.IDLE,
+                errorText = state.codeError.toText(),
+                onValueChange = { code = it.filter { ch -> ch.isDigit() } },
+                keyboardType = KeyboardType.NumberPassword,
+            )
+
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !state.isLoading,
+                onClick = { onSubmitCode(code) }
+            ) { Text(stringResource(R.string.change_email_button)) }
+        }
+    } else {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Top,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 16.dp, bottom = 0.dp, start = 16.dp, end = 16.dp)
+        ) {
+            MyTextField(
+                value = state.email,
+                onValueChange = {
+                    onEmailChanged(it)
+                },
+                label = stringResource(id = R.string.email_label),
+                isError = state.emailError != SettingsState.SettingsError.IDLE,
+                errorText = state.emailError.toText(),
+                keyboardType = KeyboardType.Email,
+            )
+            Button(onClick = { onSubmitEmail() }) {
+                Text(stringResource(id = R.string.next_step))
+            }
         }
     }
 }
@@ -515,6 +566,9 @@ fun SettingsState.SettingsError.toText() = when (this) {
 
     SettingsState.SettingsError.EMAIL_CONTENT ->
         stringResource(id = R.string.email_content_error)
+
+    SettingsState.SettingsError.INVALID_CODE ->
+        stringResource(id = R.string.invalid_code_error)
 }
 
 @Preview(showBackground = true)

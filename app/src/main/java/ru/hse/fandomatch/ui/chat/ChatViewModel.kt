@@ -76,11 +76,15 @@ class ChatViewModel(
                 return@launch
             }
 
-            // todo error handling
-            val messagesFlow = subscribeToChatMessagesUseCase.execute(
+            val messagesResult = subscribeToChatMessagesUseCase.execute(
                 userId = profileId,
                 chatId = chat.chatId
             )
+            val messagesFlow = messagesResult.getOrNull() ?: run {
+                Log.e("ChatViewModel", "Failed to subscribe to chat messages", result.exceptionOrNull())
+                setState { ChatState.Error }
+                return@launch
+            }
             _messages = messagesFlow
 
             setState {

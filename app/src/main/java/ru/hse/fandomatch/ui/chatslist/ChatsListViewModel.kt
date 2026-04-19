@@ -45,9 +45,16 @@ class ChatsListViewModel(
     }
 
     private fun loadChats() {
-        // todo error handling
         viewModelScope.launch(dispatcherIO) {
-            _allChats = subscribeToChatPreviewsUseCase.execute()
+            val result = subscribeToChatPreviewsUseCase.execute()
+            val chatPreviewsFlow = result.getOrNull() ?: run {
+                Log.e("ChatsListViewModel", "Failed to subscribe to chat previews: ${result.exceptionOrNull()}")
+                withContext(dispatcherMain) {
+                    _state.value = ChatsListState.Error
+                }
+                return@launch
+            }
+            _allChats = chatPreviewsFlow
             _allChats.collect {
                 Log.d("ChatsListViewModel", "Loaded chat previews: $it")
                 val query = when (val currentState = _state.value) {

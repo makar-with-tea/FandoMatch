@@ -1,4 +1,4 @@
-package ru.hse.fandomatch.domain.usecase.user
+package ru.hse.fandomatch.domain.usecase.auth
 
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 
@@ -8,7 +8,7 @@ class ResetPasswordUseCase(
     suspend fun execute(
         code: String,
         newPassword: String
-    ) {
+    ): Result<Unit> = runCatching {
         globalRepository.resetPassword(code, newPassword)
     }
 }

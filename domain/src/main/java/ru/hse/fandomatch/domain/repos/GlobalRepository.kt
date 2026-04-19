@@ -17,6 +17,7 @@ import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.OtherProfileItem
 import ru.hse.fandomatch.domain.model.UploadMedia
 import ru.hse.fandomatch.domain.model.User
+import ru.hse.fandomatch.domain.model.UserPreferences
 
 interface GlobalRepository {
     // User
@@ -42,13 +43,20 @@ interface GlobalRepository {
     )
     suspend fun changePassword(oldPassword: String, newPassword: String)
 
-    suspend fun deleteUser(login: String)
+    suspend fun deleteUser()
     suspend fun getFriends(id: String): List<OtherProfileItem>
     suspend fun getFriendRequests(id: String): List<OtherProfileItem>
     suspend fun getVerificationCode(email: String)
     suspend fun checkVerificationCode(code: String, email: String): Boolean
     suspend fun resetPassword(code: String, newPassword: String)
     suspend fun getCitiesByQuery(query: String): List<City>
+    suspend fun getUserPreferences(): UserPreferences
+    suspend fun updateUserPreferences(
+        matchNotificationsEnabled: Boolean,
+        messageNotificationsEnabled: Boolean,
+        hideMyPostsFromNonMatches: Boolean
+    )
+    suspend fun changeEmail(newEmail: String)
 
     // Matches
 
