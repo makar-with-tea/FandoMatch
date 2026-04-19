@@ -9,9 +9,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.hse.fandomatch.checkEmailContent
-import ru.hse.fandomatch.checkPasswordContent
-import ru.hse.fandomatch.checkPasswordLength
+import ru.hse.fandomatch.utils.checkEmailContent
+import ru.hse.fandomatch.utils.checkPasswordContent
+import ru.hse.fandomatch.utils.checkPasswordLength
 import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.auth.ResetPasswordUseCase
 import java.lang.IllegalArgumentException

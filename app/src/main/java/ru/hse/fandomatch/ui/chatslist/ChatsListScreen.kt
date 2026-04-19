@@ -57,7 +57,7 @@ import ru.hse.fandomatch.ui.composables.NewMessagesIndicator
 import ru.hse.fandomatch.ui.composables.SkeletonView
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.epochMillisToTimeAgo
+import ru.hse.fandomatch.utils.epochMillisToTimeAgo
 import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.ImageOrPlaceholder
 
@@ -284,7 +284,6 @@ private fun LoadingState() {
             .fillMaxSize()
     ) {
         repeat(5) {
-            // todo avatars separately from text blocks?
             SkeletonView(
                 modifier = Modifier
                     .fillMaxWidth()

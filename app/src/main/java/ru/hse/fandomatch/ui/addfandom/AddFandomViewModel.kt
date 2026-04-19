@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.hse.fandomatch.checkDescriptionLength
-import ru.hse.fandomatch.checkFandomNameLength
+import ru.hse.fandomatch.utils.checkDescriptionLength
+import ru.hse.fandomatch.utils.checkFandomNameLength
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.usecase.fandoms.RequestNewFandomUseCase
 

@@ -1,4 +1,4 @@
-package ru.hse.fandomatch
+package ru.hse.fandomatch.utils
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -6,8 +6,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import ru.hse.fandomatch.domain.model.City
+import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.ui.theme.CustomColors

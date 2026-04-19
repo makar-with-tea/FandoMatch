@@ -38,11 +38,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
-import ru.hse.fandomatch.MAX_NUMBER_OF_ATTACHMENTS
+import ru.hse.fandomatch.utils.MAX_NUMBER_OF_ATTACHMENTS
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.MediaType
-import ru.hse.fandomatch.getBytesFromUri
+import ru.hse.fandomatch.utils.getBytesFromUri
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.ui.composables.AttachmentsRow
 import ru.hse.fandomatch.ui.composables.FandomInput

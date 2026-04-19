@@ -48,7 +48,7 @@ import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.Comment
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.MediaItem
-import ru.hse.fandomatch.epochMillisToTimeString
+import ru.hse.fandomatch.utils.epochMillisToTimeString
 
 @Composable
 fun FeedPost(

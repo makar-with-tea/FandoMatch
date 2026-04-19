@@ -25,8 +25,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.Female
-import androidx.compose.material.icons.filled.Male
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -60,10 +58,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ru.hse.fandomatch.BitmapHelper
+import ru.hse.fandomatch.utils.BitmapHelper
 import ru.hse.fandomatch.R
-import ru.hse.fandomatch.domain.model.City
-import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.navigation.EndIconState
 
 @Composable

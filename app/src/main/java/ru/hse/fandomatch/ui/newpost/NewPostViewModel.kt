@@ -9,14 +9,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.hse.fandomatch.MAX_NUMBER_OF_ATTACHMENTS
-import ru.hse.fandomatch.checkPostContentLength
+import ru.hse.fandomatch.utils.MAX_NUMBER_OF_ATTACHMENTS
+import ru.hse.fandomatch.utils.checkPostContentLength
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.posts.CreatePostUseCase
-import ru.hse.fandomatch.ui.editprofile.EditProfileState
 
 class NewPostViewModel(
     private val createPostUseCase: CreatePostUseCase,

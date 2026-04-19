@@ -1,7 +1,6 @@
 package ru.hse.fandomatch.navigation
 
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -14,7 +13,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -34,7 +32,7 @@ import ru.hse.fandomatch.ui.matches.MatchesScreen
 import ru.hse.fandomatch.ui.profile.ProfileScreen
 import ru.hse.fandomatch.ui.registration.RegistrationScreen
 import ru.hse.fandomatch.ui.settings.SettingsScreen
-import ru.hse.fandomatch.orFalse
+import ru.hse.fandomatch.utils.orFalse
 import ru.hse.fandomatch.ui.newpost.NewPostScreen
 import ru.hse.fandomatch.ui.passwordrecovery.PasswordRecoveryScreen
 import ru.hse.fandomatch.ui.post.PostScreen

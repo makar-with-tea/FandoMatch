@@ -44,7 +44,7 @@ import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.getBytesFromUri
+import ru.hse.fandomatch.utils.getBytesFromUri
 import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.CityInput
 import ru.hse.fandomatch.ui.composables.getName

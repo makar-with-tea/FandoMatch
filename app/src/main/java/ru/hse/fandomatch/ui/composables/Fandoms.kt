@@ -53,7 +53,7 @@ import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.navigation.EndIconState
-import ru.hse.fandomatch.getColor
+import ru.hse.fandomatch.utils.getColor
 
 
 @Composable

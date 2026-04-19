@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.Message
-import ru.hse.fandomatch.epochMillisToTimeString
+import ru.hse.fandomatch.utils.epochMillisToTimeString
 
 @Composable
 internal fun Message(

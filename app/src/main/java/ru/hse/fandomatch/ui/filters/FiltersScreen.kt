@@ -42,9 +42,9 @@ import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Gender
-import ru.hse.fandomatch.getColor
-import ru.hse.fandomatch.stringId
-import ru.hse.fandomatch.toStringId
+import ru.hse.fandomatch.utils.getColor
+import ru.hse.fandomatch.utils.stringId
+import ru.hse.fandomatch.utils.toStringId
 import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.FandomInput
 import ru.hse.fandomatch.ui.composables.LoadingBlock

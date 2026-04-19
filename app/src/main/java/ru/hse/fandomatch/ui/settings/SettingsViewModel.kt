@@ -8,9 +8,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.hse.fandomatch.checkEmailContent
-import ru.hse.fandomatch.checkPasswordContent
-import ru.hse.fandomatch.checkPasswordLength
+import ru.hse.fandomatch.utils.checkEmailContent
+import ru.hse.fandomatch.utils.checkPasswordContent
+import ru.hse.fandomatch.utils.checkPasswordLength
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.domain.usecase.auth.ChangeEmailUseCase

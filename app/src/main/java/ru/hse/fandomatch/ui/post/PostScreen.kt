@@ -34,7 +34,7 @@ import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.epochMillisToDateString
+import ru.hse.fandomatch.utils.epochMillisToDateString
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.FullPost
