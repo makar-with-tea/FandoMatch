@@ -1,6 +1,10 @@
 package ru.hse.fandomatch.data.model
 
 import com.google.gson.annotations.SerializedName
+import ru.hse.fandomatch.domain.model.ChatPreview
+import ru.hse.fandomatch.domain.model.MediaItem
+import ru.hse.fandomatch.domain.model.MediaType
+import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.model.UploadMedia
 
 data class PresignedUploadRequestDTO(
@@ -55,7 +59,17 @@ data class ChatPreviewDTO(
     val lastMessageTimestamp: Long,
     @SerializedName("new_messages_count")
     val newMessagesCount: Int
-)
+) {
+    fun toDomain() = ChatPreview(
+        chatId = chatId,
+        participantName = participantName,
+        participantAvatarUrl = participantAvatarUrl,
+        lastMessage = lastMessage,
+        isLastMessageFromThisUser = isLastMessageFromThisUser,
+        lastMessageTimestamp = lastMessageTimestamp,
+        newMessagesCount = newMessagesCount
+    )
+}
 
 data class MessageDTO(
     @SerializedName("message_id")
@@ -66,7 +80,24 @@ data class MessageDTO(
     val timestamp: Long,
     @SerializedName("media_items")
     val mediaItems: List<MediaItemDTO>? = null
-)
+) {
+    fun toDomain() = Message(
+        messageId = messageId,
+        isFromThisUser = isFromThisUser,
+        content = content,
+        timestamp = timestamp,
+        mediaItems = mediaItems?.map {
+            MediaItem(
+                id = it.mediaId,
+                mediaType = when (it.mediaType.toDomain()) {
+                    MediaType.IMAGE -> MediaType.IMAGE
+                    MediaType.VIDEO -> MediaType.VIDEO
+                },
+                url = it.url
+            )
+        } ?: emptyList()
+    )
+}
 
 data class ChatPreviewsRequestDTO(
     @SerializedName("before_timestamp")

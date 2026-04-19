@@ -17,6 +17,8 @@ import ru.hse.fandomatch.data.api.UserApiService
 import ru.hse.fandomatch.data.mock.GlobalRepositoryMock
 import ru.hse.fandomatch.data.model.BaseUserProfileDTO
 import ru.hse.fandomatch.data.serialization.BaseUserProfileDeserializer
+import ru.hse.fandomatch.data.socket.ChatSocketService
+import ru.hse.fandomatch.data.socket.ChatSocketServiceImpl
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
@@ -132,7 +134,14 @@ val dataModule = module {
             .build()
     }
 
-    // Base URL is required by Retrofit, real destination comes from @Url in upload method.
+    single<ChatSocketService> {
+        ChatSocketServiceImpl(
+            okHttpClient = get(named("apiClient")),
+            gson = get(named("gson")),
+            wsBaseUrl = "ws://192.168.0.106:8000" // todo ws host
+        )
+    }
+
     single(named("s3Retrofit")) {
         Retrofit.Builder()
             .baseUrl("https://s3.amazonaws.com/")

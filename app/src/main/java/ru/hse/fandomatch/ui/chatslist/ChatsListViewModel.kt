@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
 
@@ -53,7 +54,7 @@ class ChatsListViewModel(
                     is ChatsListState.Main -> currentState.filteredByQuery
                     else -> null
                 }
-                searchChats(query)
+                withContext(dispatcherMain) { searchChats(query) }
             }
         }
     }

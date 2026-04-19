@@ -1,7 +1,14 @@
 package ru.hse.fandomatch.data
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import okhttp3.MediaType as OkHttpMediaType
 import okhttp3.RequestBody
 import retrofit2.HttpException
@@ -39,6 +46,7 @@ import ru.hse.fandomatch.data.model.TimestampPaginationRequestDTO
 import ru.hse.fandomatch.data.model.UserLoginRequestDTO
 import ru.hse.fandomatch.data.model.UserProfileRequestDTO
 import ru.hse.fandomatch.data.model.UserRegistrationRequestDTO
+import ru.hse.fandomatch.data.socket.ChatSocketService
 import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.model.City
@@ -59,13 +67,23 @@ import ru.hse.fandomatch.domain.model.User
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import kotlin.Int
 import kotlin.String
+import kotlin.text.get
+import kotlin.text.set
 
 class GlobalRepositoryImpl(
     private val coreApiService: CoreApiService,
     private val chatApiService: ChatApiService,
     private val userApiService: UserApiService,
     private val s3UploadApiService: S3UploadApiService,
+    private val chatSocketService: ChatSocketService,
 ): GlobalRepository {
+    private val repositoryScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.IO
+    )
+
+    private val chatMessagesJobs = mutableMapOf<String, Job>()
+    private var chatPreviewsJob: Job? = null
+
     override suspend fun getUser(profileId: String): User {
         val response = coreApiService.getUserProfile(
             UserProfileRequestDTO(
@@ -295,6 +313,7 @@ class GlobalRepositoryImpl(
     }
 
     override suspend fun getCitiesByQuery(query: String): List<City> {
+        // todo даша
         return emptyList()
     }
 
@@ -397,24 +416,32 @@ class GlobalRepositoryImpl(
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<ChatPreview>> {
-        val response = chatApiService.getChatPreviews(
-            ChatPreviewsRequestDTO(
-                beforeTimestamp = beforeTimestamp,
-                size = size
-            )
-        )
-        return MutableStateFlow(response.successResponse?.previews?.map { previewDTO ->
+        val initial = chatApiService.getChatPreviews(
+            ChatPreviewsRequestDTO(beforeTimestamp = beforeTimestamp, size = size)
+        ).successResponse?.previews?.map { dto ->
             ChatPreview(
-                chatId = previewDTO.chatId,
-                participantName = previewDTO.participantName,
-                participantAvatarUrl = previewDTO.participantAvatarUrl,
-                lastMessage = previewDTO.lastMessage,
-                isLastMessageFromThisUser = previewDTO.isLastMessageFromThisUser,
-                lastMessageTimestamp = previewDTO.lastMessageTimestamp,
-                newMessagesCount = previewDTO.newMessagesCount,
+                chatId = dto.chatId,
+                participantName = dto.participantName,
+                participantAvatarUrl = dto.participantAvatarUrl,
+                lastMessage = dto.lastMessage,
+                isLastMessageFromThisUser = dto.isLastMessageFromThisUser,
+                lastMessageTimestamp = dto.lastMessageTimestamp,
+                newMessagesCount = dto.newMessagesCount,
             )
         } ?: emptyList()
-        ) // todo websocket somehow
+
+        val state = MutableStateFlow(initial)
+
+        chatPreviewsJob?.cancel()
+        chatPreviewsJob = chatSocketService.observeChatPreviews()
+            .onEach { incoming ->
+                val updated = state.value
+                    .filterNot { it.chatId == incoming.chatId } + incoming
+                state.value = updated.sortedByDescending { it.lastMessageTimestamp }
+            }
+            .launchIn(repositoryScope)
+
+        return state
     }
 
     override suspend fun subscribeToChatMessages(
@@ -423,24 +450,35 @@ class GlobalRepositoryImpl(
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<Message>> {
-        val response = chatApiService.getChatMessages(
+        val initial = chatApiService.getChatMessages(
             userId = userId,
             request = ChatMessagesRequestDTO(
                 chatId = chatId,
                 beforeTimestamp = beforeTimestamp,
                 size = size
             )
-        )
-        return MutableStateFlow(response.successResponse?.messages?.map { messageDTO ->
+        ).successResponse?.messages?.map { dto ->
             Message(
-                messageId = messageDTO.messageId,
-                isFromThisUser = messageDTO.isFromThisUser,
-                content = messageDTO.content,
-                timestamp = messageDTO.timestamp,
-                mediaItems = messageDTO.mediaItems?.map { it.toDomain() } ?: emptyList(),
+                messageId = dto.messageId,
+                isFromThisUser = dto.isFromThisUser,
+                content = dto.content,
+                timestamp = dto.timestamp,
+                mediaItems = dto.mediaItems?.map { it.toDomain() } ?: emptyList(),
             )
         } ?: emptyList()
-        ) // todo websocket somehow
+
+        val state = MutableStateFlow(initial)
+
+        chatMessagesJobs[userId]?.cancel()
+        chatMessagesJobs[userId] = chatSocketService.observeChatMessages(userId)
+            .onEach { incoming ->
+                state.value = (state.value + incoming)
+                    .distinctBy { it.messageId }
+                    .sortedBy { it.timestamp }
+            }
+            .launchIn(repositoryScope)
+
+        return state
     }
 
     override suspend fun loadChatInfo(userId: String): Chat {
