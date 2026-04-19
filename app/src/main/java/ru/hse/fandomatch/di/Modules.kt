@@ -47,6 +47,7 @@ import ru.hse.fandomatch.domain.usecase.user.GetCitiesByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetFriendRequestsUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetFriendsUseCase
 import ru.hse.fandomatch.domain.usecase.auth.GetPastLoginUseCase
+import ru.hse.fandomatch.domain.usecase.auth.GetPermissionShownUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
@@ -54,6 +55,7 @@ import ru.hse.fandomatch.domain.usecase.auth.LoginUseCase
 import ru.hse.fandomatch.domain.usecase.auth.LogoutUseCase
 import ru.hse.fandomatch.domain.usecase.auth.RegisterUseCase
 import ru.hse.fandomatch.domain.usecase.auth.ResetPasswordUseCase
+import ru.hse.fandomatch.domain.usecase.auth.SetPermissionShownUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserPreferencesUseCase
 import ru.hse.fandomatch.domain.usecase.user.UpdateUserPreferencesUseCase
 import ru.hse.fandomatch.ui.addfandom.AddFandomViewModel
@@ -171,11 +173,13 @@ val domainModule = module {
     factory<CheckVerificationCodeUseCase> { CheckVerificationCodeUseCase(get()) }
     factory<DeleteAccountUseCase> { DeleteAccountUseCase(get(), get()) }
     factory<GetPastLoginUseCase> { GetPastLoginUseCase(get()) }
+    factory<GetPermissionShownUseCase> { GetPermissionShownUseCase(get()) }
     factory<GetVerificationCodeUseCase> { GetVerificationCodeUseCase(get()) }
     factory<LoginUseCase> { LoginUseCase(get(), get()) }
     factory<LogoutUseCase> { LogoutUseCase(get()) }
     factory<RegisterUseCase> { RegisterUseCase(get(), get()) }
     factory<ResetPasswordUseCase> { ResetPasswordUseCase(get()) }
+    factory<SetPermissionShownUseCase> { SetPermissionShownUseCase(get()) }
 
     factory<LoadChatInfoUseCase> { LoadChatInfoUseCase(get()) }
     factory<SendMessageUseCase> { SendMessageUseCase(get()) }

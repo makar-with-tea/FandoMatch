@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,8 +77,12 @@ sealed class Route(val route: String) {
 }
 
 @Composable
-fun MainView() {
-    Log.d("MainView", "SetUpNavHost")
+fun MainView(
+    navigateTo: String? = null,
+    id: String? = null,
+    onNotificationConsumed: () -> Unit = {},
+) {
+    Log.d("MainView", "MainView created: navigateTo=$navigateTo, id=$id")
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -87,7 +92,7 @@ fun MainView() {
             launchSingleTop = true
             restoreState = true
         }
-        Log.d("Navigation", "MainView to ${route.route} from $currentRoute")
+        Log.d("Navigation", "Navigate to ${route.route} from $currentRoute")
     }
 
     fun navigateToRouteWithArgs(route: String) {
@@ -95,10 +100,8 @@ fun MainView() {
             launchSingleTop = true
             restoreState = true
         }
-        Log.d("Navigation", "MainView to $route from $currentRoute")
+        Log.d("Navigation", "Navigate to $route from $currentRoute")
     }
-
-    // todo go back from the first screen??
 
     val screenTitleId =
         when (currentRoute) {
@@ -177,6 +180,24 @@ fun MainView() {
     }
 
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+
+    LaunchedEffect(navigateTo, id) {
+        val targetRoute = id?.let {
+            when (navigateTo) {
+                "chat" -> Route.Chat.createRoute(chatId = id)
+                "match" -> Route.Profile.createRoute(profileId = id)
+                else -> null
+            }
+        }
+        if (targetRoute != null) {
+            navController.navigate(targetRoute) {
+                launchSingleTop = true
+                restoreState = false
+            }
+            onNotificationConsumed()
+        }
+    }
+
     Scaffold(
         topBar = {
             topBarState.value?.let {
@@ -336,7 +357,6 @@ fun MainView() {
                             )
                         },
                         goToPost = { postId ->
-                            Log.d("Navigation", "Navigate to post $postId from profile $profileId")
                             navigateToRouteWithArgs(
                                 Route.Post.createRoute(postId)
                             )
@@ -349,7 +369,6 @@ fun MainView() {
                         profileId = chatId,
                         setTopBarState = { setTopBarState(it, Route.Chat.route) },
                         goToProfile = { profileId ->
-                            Log.d("Navigation", "Navigate to profile $profileId from chat")
                             navigateToRouteWithArgs(
                                 Route.Profile.createRoute(profileId)
                             )
@@ -368,7 +387,6 @@ fun MainView() {
                     updateTopBar()
                     FeedScreen(
                         navigateToPost = { postId ->
-                            Log.d("Navigation", "Navigate to post $postId from feed")
                             navigateToRouteWithArgs(
                                 Route.Post.createRoute(postId)
                             )
@@ -434,7 +452,6 @@ fun MainView() {
                         postId = postId,
                         setTopBarState = { setTopBarState(it, Route.Post.route) },
                         goToProfile = { profileId ->
-                            Log.d("Navigation", "Navigate to profile $profileId from post")
                             navigateToRouteWithArgs(
                                 Route.Profile.createRoute(profileId)
                             )

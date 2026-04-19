@@ -3,7 +3,7 @@ package ru.hse.fandomatch
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -24,6 +24,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
+import org.koin.android.ext.android.inject
+import ru.hse.fandomatch.domain.usecase.auth.GetPermissionShownUseCase
+import ru.hse.fandomatch.domain.usecase.auth.SetPermissionShownUseCase
 import ru.hse.fandomatch.navigation.MainView
 import ru.hse.fandomatch.ui.theme.FandoMatchTheme
 
@@ -35,6 +38,16 @@ class MainActivity : ComponentActivity() {
     }
 
     private var showNotificationRationale by mutableStateOf(false)
+    private var navigateToTarget by mutableStateOf<String?>(null)
+    private var targetId by mutableStateOf<String?>(null)
+
+    private val getPermissionShownUseCase: GetPermissionShownUseCase by inject()
+    private val setPermissionShownUseCase: SetPermissionShownUseCase by inject()
+
+    private fun updateNotificationTarget(intent: Intent?) {
+        navigateToTarget = intent?.getStringExtra("navigateTo")
+        targetId = intent?.getStringExtra("id")
+    }
 
     private fun askNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -48,7 +61,7 @@ class MainActivity : ComponentActivity() {
                 val channel = NotificationChannel(channelId, channelName, importance).apply {
                     description = channelDescription
                 }
-                val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
                 manager.createNotificationChannel(channel)
             } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
                 showNotificationRationale = true
@@ -60,11 +73,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // todo прокинуть в compose
-        val navigateTo = intent.getStringExtra("navigateTo")
-        val userId = intent.getLongExtra("userId", -1)
+        updateNotificationTarget(intent)
 
-        askNotificationPermission()
+        if (!getPermissionShownUseCase.execute()) {
+            askNotificationPermission()
+            setPermissionShownUseCase.execute(true)
+        }
 
         enableEdgeToEdge()
         setContent {
@@ -94,9 +108,22 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainView()
+                    MainView(
+                        navigateTo = navigateToTarget,
+                        id = targetId,
+                        onNotificationConsumed = {
+                            navigateToTarget = null
+                            targetId = null
+                        }
+                    )
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        updateNotificationTarget(intent)
     }
 }
