@@ -45,7 +45,7 @@ fun rawResId(name: String, context: Context): Int {
 fun nameAndAgeString(name: String, age: Int): String = "$name, $age"
 
 fun epochMillisToTimeAgo(timestamp: Long, context: Context) : String {
-    val dateTime = LocalDateTime.ofEpochSecond(timestamp / 1000, 0, ZoneOffset.UTC)
+    val dateTime = LocalDateTime.ofEpochSecond(timestamp / 1000, 0, currentZoneOffset())
     val secondsAgo = (System.currentTimeMillis() - timestamp) / 1000
     val minutesAgo = secondsAgo / 60
     val hoursAgo = minutesAgo / 60
@@ -81,10 +81,13 @@ fun Long.isSameDayAs(other: Long): Boolean {
             dateTime1.dayOfMonth == dateTime2.dayOfMonth
 }
 
-private fun Long.epochMillisToDateTime(): LocalDateTime {
+fun currentZoneOffset(): ZoneOffset {
     val zoneId: ZoneId = ZoneId.systemDefault()
-    val offset = ZonedDateTime.now(zoneId).offset
-    return LocalDateTime.ofEpochSecond(this / 1000, 0, offset)
+    return ZonedDateTime.now(zoneId).offset
+}
+
+private fun Long.epochMillisToDateTime(): LocalDateTime {
+    return LocalDateTime.ofEpochSecond(this / 1000, 0, currentZoneOffset())
 }
 
 fun Gender.stringId(): Int = when (this) {

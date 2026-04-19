@@ -28,7 +28,7 @@ interface GlobalRepository {
         login: String,
         dateOfBirthMillis: Long,
         gender: Gender,
-        avatarByteArray: ByteArray?,
+        avatarMediaId: String?,
         password: String
     ): AuthInfo // todo
 
@@ -80,7 +80,7 @@ interface GlobalRepository {
     suspend fun sendMessage(
         receiverId: String,
         content: String,
-        images: List<ByteArray>,
+        mediaIdsWithTypes: List<Pair<String, MediaType>>,
         timestamp: Long,
     )
     suspend fun getUploadMediaUrl(mediaType: MediaType): UploadMedia
@@ -104,6 +104,11 @@ interface GlobalRepository {
     ): List<Post>
     suspend fun getFullPost(postId: String): FullPost
     suspend fun likePost(postId: String)
+    suspend fun createPost(
+        content: String,
+        mediaIdsWithTypes: List<Pair<String, MediaType>>,
+        fandomIds: List<String>,
+    )
 
     // Fandoms
     suspend fun getFandomCategories(): List<FandomCategory>

@@ -74,6 +74,7 @@ fun FiltersScreen(
                 stringResource(R.string.filters_error_toast),
                 Toast.LENGTH_SHORT
             ).show()
+            viewModel.obtainEvent(FiltersEvent.ToastShown)
         }
 
         null -> {}

@@ -13,6 +13,7 @@ import ru.hse.fandomatch.data.model.ChangePasswordRequestDTO
 import ru.hse.fandomatch.data.model.ChatMessagesRequestDTO
 import ru.hse.fandomatch.data.model.ChatPreviewsRequestDTO
 import ru.hse.fandomatch.data.model.CityDTO
+import ru.hse.fandomatch.data.model.CreatePostRequestDTO
 import ru.hse.fandomatch.data.model.EditUserProfileRequestDTO
 import ru.hse.fandomatch.data.model.FandomCategoryDTO
 import ru.hse.fandomatch.data.model.FandomDTO
@@ -28,6 +29,7 @@ import ru.hse.fandomatch.data.model.MatchBatchRequestDTO
 import ru.hse.fandomatch.data.model.MatchFilterDTO
 import ru.hse.fandomatch.data.model.MatchFilterRequestDTO
 import ru.hse.fandomatch.data.model.MediaTypeDTO
+import ru.hse.fandomatch.data.model.PostMediaInputDTO
 import ru.hse.fandomatch.data.model.PostsGetRequestDTO
 import ru.hse.fandomatch.data.model.PresignedUploadRequestDTO
 import ru.hse.fandomatch.data.model.PublicUserProfileResponseDTO
@@ -150,7 +152,7 @@ class GlobalRepositoryImpl(
             }
 
             ResponseStatusDTO.ERROR -> {
-                throw Exception("Registration failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}") // todo error handling
+                throw Exception("Login failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}") // todo error handling
             }
         }
     }
@@ -161,7 +163,7 @@ class GlobalRepositoryImpl(
         login: String,
         dateOfBirthMillis: Long,
         gender: Gender,
-        avatarByteArray: ByteArray?,
+        avatarMediaId: String?,
         password: String
     ): AuthInfo {
         val response = userApiService.register(
@@ -466,15 +468,14 @@ class GlobalRepositoryImpl(
     override suspend fun sendMessage(
         receiverId: String,
         content: String,
-        images: List<ByteArray>,
+        mediaIdsWithTypes: List<Pair<String, MediaType>>,
         timestamp: Long
     ) {
-        // todo upload images and get mediaIds
         val response = chatApiService.sendMessage(
             userId = receiverId,
             request = SendMessageRequestDTO(
                 content = content,
-                mediaIds = emptyList(),
+                mediaIds = mediaIdsWithTypes.map { it.first },
                 timestamp = timestamp,
             )
         )
@@ -619,6 +620,29 @@ class GlobalRepositoryImpl(
         val response = coreApiService.likePost(postId)
         if (response.errorResponse != null) {
             throw Exception("Failed to like post: ${response.errorResponse.errorCode}, ${response.errorResponse.errorMessage}")
+        }
+    }
+
+    override suspend fun createPost(
+        content: String,
+        mediaIdsWithTypes: List<Pair<String, MediaType>>,
+        fandomIds: List<String>
+    ) {
+        val response = coreApiService.createPost(
+            CreatePostRequestDTO(
+                title = "", // todo даша убрать
+                content = content,
+                mediaItems = mediaIdsWithTypes.map { (mediaId, mediaType) ->
+                    PostMediaInputDTO(
+                        mediaId = mediaId,
+                        mediaType = MediaTypeDTO.fromDomain(mediaType)
+                    )
+                },
+                fandomId = fandomIds.firstOrNull() // todo даша multiple fandoms
+            )
+        )
+        if (response.errorResponse != null) {
+            throw Exception("Failed to create post: ${response.errorResponse.errorCode}, ${response.errorResponse.errorMessage}")
         }
     }
 

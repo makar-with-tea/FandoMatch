@@ -84,6 +84,7 @@ sealed class EditProfileEvent {
     data class CitySelected(val city: City) : EditProfileEvent()
     data object SaveButtonClicked : EditProfileEvent()
     data object LoadProfileData : EditProfileEvent()
+    data object ToastShown : EditProfileEvent()
     data object Clear : EditProfileEvent()
 }
 

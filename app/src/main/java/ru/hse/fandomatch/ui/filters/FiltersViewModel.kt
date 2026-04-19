@@ -46,6 +46,7 @@ class FiltersViewModel(
             is FiltersEvent.LocationToggled -> toggleLocation(event.isChecked)
             is FiltersEvent.ResetFilters -> resetFilters()
             is FiltersEvent.ApplyFilters -> applyFilters()
+            FiltersEvent.ToastShown -> _action.value = null
             is FiltersEvent.Clear -> clear()
         }
     }

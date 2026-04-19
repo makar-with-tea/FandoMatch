@@ -14,17 +14,17 @@ class RegisterUseCase(
         login: String,
         dateOfBirthMillis: Long,
         gender: Gender,
-        avatarByteArray: ByteArray?,
+        avatarMediaId: String?,
         password: String
-    ) {
-        // todo use all info
+    ): Result<Unit> = runCatching {
+        // todo use LoginAlreadyInUseException
         val res = globalRepository.register(
             name = name,
             email = email,
             login = login,
             dateOfBirthMillis = dateOfBirthMillis,
             gender = gender,
-            avatarByteArray = avatarByteArray,
+            avatarMediaId = avatarMediaId,
             password = password
         )
         sharedPrefRepository.saveUserId(res.userId)

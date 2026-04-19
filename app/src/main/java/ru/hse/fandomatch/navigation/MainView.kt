@@ -62,7 +62,11 @@ sealed class Route(val route: String) {
     data object EditProfile : Route("edit_profile")
     data object Settings : Route("settings")
     data object AddFandom : Route("add_fandom")
-    data object NewPost : Route("new_post")
+    data object NewPost : Route("new_post/{prev_screen}") {
+        fun createRoute(prevScreen: String): String {
+            return "new_post/$prevScreen"
+        }
+    }
     data object PasswordRecovery : Route("password_recovery")
     data object Post : Route("post/{post_id}") {
         fun createRoute(postId: String): String {
@@ -254,7 +258,9 @@ fun MainView() {
                             navigateToRoute(Route.Settings)
                         },
                         goToAddPost = {
-                            navigateToRoute(Route.NewPost)
+                            navigateToRouteWithArgs(
+                                Route.NewPost.createRoute("my_profile")
+                            )
                         },
                         goToMatches = {
                             /* do nothing */
@@ -366,7 +372,12 @@ fun MainView() {
                             navigateToRouteWithArgs(
                                 Route.Post.createRoute(postId)
                             )
-                        }
+                        },
+                        navigateToNewPost = {
+                            navigateToRouteWithArgs(
+                                Route.NewPost.createRoute("feed")
+                            )
+                        },
                     )
                 }
                 composable(Route.EditProfile.route) {
@@ -393,9 +404,22 @@ fun MainView() {
                     )
                 }
                 composable(Route.NewPost.route) {
+                    val prevScreen = it.arguments?.getString("prev_screen")
                     NewPostScreen(
-                        navigateToPreviousScreen = { navController.popBackStack() },
-                        setTopBarState = { setTopBarState(it, Route.NewPost.route) },
+                        navigateToPreviousScreen = {
+                            when (prevScreen) {
+                                "feed" -> navigateToRoute(Route.Feed)
+                                "my_profile" -> navigateToRoute(Route.MyProfile)
+                                else -> {
+                                    Log.d(
+                                        "Navigation",
+                                        "Navigate back from NewPost with unknown prevScreen $prevScreen"
+                                    )
+                                    navController.popBackStack()
+                                }
+                            }
+                        },
+                        setTopBarState = { state -> setTopBarState(state, Route.NewPost.route) },
                     )
                 }
                 composable(Route.PasswordRecovery.route) {

@@ -18,6 +18,8 @@ import ru.hse.fandomatch.checkNameContent
 import ru.hse.fandomatch.checkNameLength
 import ru.hse.fandomatch.checkPasswordContent
 import ru.hse.fandomatch.checkPasswordLength
+import ru.hse.fandomatch.domain.model.MediaType
+import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.user.CheckVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetVerificationCodeUseCase
 import java.time.Instant
@@ -28,6 +30,7 @@ class RegistrationViewModel(
     private val registerUseCase: RegisterUseCase,
     private val getVerificationCodeUseCase: GetVerificationCodeUseCase,
     private val checkVerificationCodeUseCase: CheckVerificationCodeUseCase,
+    private val uploadMediaUseCase: UploadMediaUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main
 ) : ViewModel() {
@@ -330,30 +333,27 @@ class RegistrationViewModel(
         }
 
         viewModelScope.launch(dispatcherIO) {
-            try {
-                registerUseCase.execute(
-                    form.name,
-                    form.email,
-                    form.login,
-                    form.dateOfBirthMillis!!,
-                    form.gender,
-                    form.avatarByteArray,
-                    form.password
-                )
+            val avatarId = form.avatarByteArray?.let {
+                uploadMediaUseCase.execute(
+                    it,
+                    MediaType.IMAGE
+                ).getOrNull()
+            }
+            val result = registerUseCase.execute(
+                form.name,
+                form.email,
+                form.login,
+                form.dateOfBirthMillis!!,
+                form.gender,
+                avatarId,
+                form.password
+            )
+            if (result.isFailure) {
+                val e = result.exceptionOrNull()
+                val loginErr = if (e is LoginAlreadyInUseException)
+                    RegistrationState.RegistrationError.LOGIN_TAKEN
+                else RegistrationState.RegistrationError.NETWORK
                 withContext(dispatcherMain) {
-                    _state.value = RegistrationState.Password(
-                        password = form.password,
-                        passwordRepeat = form.passwordRepeat,
-                        agreedToTerms = form.agreed,
-                        isLoading = false
-                    )
-                    _action.value = RegistrationAction.NavigateToMatches
-                }
-            } catch (e: Exception) {
-                withContext(dispatcherMain) {
-                    val loginErr = if (e is LoginAlreadyInUseException)
-                        RegistrationState.RegistrationError.LOGIN_TAKEN
-                    else RegistrationState.RegistrationError.NETWORK
                     _state.value = RegistrationState.Name(
                         name = form.name,
                         email = form.email,
@@ -364,6 +364,17 @@ class RegistrationViewModel(
                         isLoading = false
                     )
                 }
+                return@launch
+            }
+
+            withContext(dispatcherMain) {
+                _state.value = RegistrationState.Password(
+                    password = form.password,
+                    passwordRepeat = form.passwordRepeat,
+                    agreedToTerms = form.agreed,
+                    isLoading = false
+                )
+                _action.value = RegistrationAction.NavigateToMatches
             }
         }
     }

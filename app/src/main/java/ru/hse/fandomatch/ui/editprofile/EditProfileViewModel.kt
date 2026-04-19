@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.hse.fandomatch.data.mock.mockCities
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.checkDescriptionLength
@@ -57,6 +56,7 @@ class EditProfileViewModel(
             is EditProfileEvent.NameChanged -> updateName(event.name)
             EditProfileEvent.SaveButtonClicked -> saveData()
             EditProfileEvent.LoadProfileData -> loadProfileData()
+            EditProfileEvent.ToastShown -> _action.value = null
             EditProfileEvent.Clear -> clear()
         }
     }

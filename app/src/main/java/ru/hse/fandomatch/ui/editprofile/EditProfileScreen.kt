@@ -78,6 +78,7 @@ fun EditProfileScreen(
                 stringResource(R.string.edit_profile_error_toast),
                 Toast.LENGTH_SHORT
             ).show()
+            viewModel.obtainEvent(EditProfileEvent.ToastShown)
         }
 
         null -> {}

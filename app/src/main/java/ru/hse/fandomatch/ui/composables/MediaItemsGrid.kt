@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import ru.hse.fandomatch.BitmapHelper
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.MediaItem
+import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.navigation.TopBarState
 
 @Composable
@@ -381,56 +383,70 @@ fun ImagesScreen(
 
 @Composable
 fun AttachmentsRow(
-    attachedImages: List<ByteArray>,
-    onAttachmentsChanged: (List<ByteArray>) -> Unit,
+    attachedFilesWithTypes: List<Pair<ByteArray, MediaType>>,
+    onAttachmentsChanged: (List<Pair<ByteArray, MediaType>>) -> Unit,
 ) {
     LazyRow(
         modifier = Modifier
             .padding(horizontal = 8.dp)
             .fillMaxWidth()
     ) {
-        items(attachedImages) { byteArray ->
-            val bitmap = BitmapHelper.byteArrayToBitmap(byteArray)?.asImageBitmap()
-            bitmap?.let { imageBitmap ->
-                Box(
-                    contentAlignment = Alignment.TopEnd,
-                ) {
-                    Image(
-                        bitmap = imageBitmap,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(80.dp)
-                            .padding(4.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                    )
-
-                    Icon(
-                        imageVector = ImageVector.vectorResource(id = R.drawable.ic_close),
-                        contentDescription = stringResource(R.string.detach_file_button_description),
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .background(
-                                MaterialTheme.colorScheme.background,
-                                shape = CircleShape
+        itemsIndexed(attachedFilesWithTypes) { index, (byteArray, type) ->
+            Box(
+                contentAlignment = Alignment.TopEnd,
+            ) {
+                when (type) {
+                    MediaType.IMAGE -> {
+                        val bitmap = BitmapHelper.byteArrayToBitmap(byteArray)?.asImageBitmap()
+                        bitmap?.let {
+                            Image(
+                                bitmap = bitmap,
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .padding(4.dp)
+                                    .clip(RoundedCornerShape(8.dp))
                             )
-                            .padding(2.dp)
-                            .clip(CircleShape)
-                            .align(Alignment.TopEnd)
-                            .padding(2.dp)
-                            .clickable {
-                                onAttachmentsChanged(
-                                    attachedImages.toMutableList().also {
-                                        it.remove(byteArray)
-                                    }
-                                )
-                            }
-                    )
+                        }
+                    }
+
+                    MediaType.VIDEO -> {
+                        VideoThumbnailFromBytes(
+                            videoBytes = byteArray,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(80.dp)
+                                .padding(4.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.size(4.dp))
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.ic_close),
+                    contentDescription = stringResource(R.string.detach_file_button_description),
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .background(
+                            MaterialTheme.colorScheme.background,
+                            shape = CircleShape
+                        )
+                        .padding(2.dp)
+                        .clip(CircleShape)
+                        .align(Alignment.TopEnd)
+                        .padding(2.dp)
+                        .clickable {
+                            onAttachmentsChanged(
+                                attachedFilesWithTypes.toMutableList().also {
+                                    it.removeAt(index)
+                                }
+                            )
+                        }
+                )
             }
-            // todo else show error photo as placeholder
+
+            Spacer(modifier = Modifier.size(4.dp))
         }
     }
 }

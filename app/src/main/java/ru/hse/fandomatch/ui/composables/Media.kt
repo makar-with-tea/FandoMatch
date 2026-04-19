@@ -1,26 +1,13 @@
 package ru.hse.fandomatch.ui.composables
 
-import android.content.Context
-import android.graphics.BitmapFactory
+import android.media.MediaDataSource
 import android.media.MediaMetadataRetriever
 import android.util.Log
-import androidx.annotation.DrawableRes
 import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
-import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
-import androidx.media3.common.PlaybackException
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.ui.PlayerView
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -31,7 +18,6 @@ import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -46,19 +32,20 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.MediaType
-import ru.hse.fandomatch.rawResId
 import ru.hse.fandomatch.domain.model.MediaItem as DomainMediaItem
 
 @Composable
@@ -210,11 +197,10 @@ fun VideoThumbnail(
                         .fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Image(
+                    Icon(
                         imageVector = placeholderIcon ?: Icons.Default.OndemandVideo,
                         contentDescription = "Video thumbnail failed to load",
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = contentScale
                     )
                 }
             }
@@ -241,6 +227,98 @@ fun VideoThumbnail(
             modifier = Modifier
                 .size(48.dp)
                 .align(Alignment.Center)
+                .background(
+                    color = Color.Black.copy(alpha = 0.6f),
+                    shape = CircleShape
+                )
+                .padding(8.dp)
+        )
+    }
+}
+
+private class ByteArrayMediaDataSource(
+    private val bytes: ByteArray,
+) : MediaDataSource() {
+    override fun getSize(): Long = bytes.size.toLong()
+
+    override fun readAt(position: Long, buffer: ByteArray, offset: Int, size: Int): Int {
+        if (position < 0 || position >= bytes.size) return -1
+        val count = minOf(size.toLong(), bytes.size - position).toInt()
+        System.arraycopy(bytes, position.toInt(), buffer, offset, count)
+        return count
+    }
+
+    override fun close() = Unit
+}
+
+@Composable
+fun VideoThumbnailFromBytes(
+    videoBytes: ByteArray,
+    modifier: Modifier = Modifier,
+    contentScale: ContentScale = ContentScale.Crop,
+    placeholderIcon: ImageVector? = null,
+    background: Color = MaterialTheme.colorScheme.background,
+) {
+    var thumbnailBitmap by remember(videoBytes) {
+        mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
+    }
+    var isLoading by remember(videoBytes) { mutableStateOf(true) }
+    var error by remember(videoBytes) { mutableStateOf<Exception?>(null) }
+
+    LaunchedEffect(videoBytes) {
+        try {
+            val bitmap = withContext(Dispatchers.IO) {
+                val retriever = MediaMetadataRetriever()
+                try {
+                    retriever.setDataSource(ByteArrayMediaDataSource(videoBytes))
+                    retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+                        ?.asImageBitmap()
+                } catch (e: Exception) {
+                    Log.e("VideoThumbnailFromBytes", "Error extracting thumbnail", e)
+                    error = e
+                    null
+                } finally {
+                    retriever.release()
+                }
+            }
+            thumbnailBitmap = bitmap
+            isLoading = false
+        } catch (e: Exception) {
+            Log.e("VideoThumbnailFromBytes", "Error loading video thumbnail", e)
+            error = e
+            isLoading = false
+        }
+    }
+
+    Box(
+        modifier = modifier.background(background),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (error != null) {
+            Icon(
+                imageVector = placeholderIcon ?: Icons.Default.OndemandVideo,
+                contentDescription = "Video thumbnail failed to load",
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else if (thumbnailBitmap != null) {
+            Image(
+                bitmap = thumbnailBitmap!!,
+                contentDescription = "Video thumbnail",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = contentScale,
+            )
+        } else {
+            if (isLoading) {
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            }
+        }
+
+        Icon(
+            imageVector = Icons.Filled.PlayCircle,
+            contentDescription = "Play video",
+            tint = Color.White,
+            modifier = Modifier
+                .size(48.dp)
                 .background(
                     color = Color.Black.copy(alpha = 0.6f),
                     shape = CircleShape

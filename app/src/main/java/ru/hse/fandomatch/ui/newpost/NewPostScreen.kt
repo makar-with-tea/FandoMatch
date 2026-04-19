@@ -1,35 +1,27 @@
 package ru.hse.fandomatch.ui.newpost
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -47,15 +38,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
-import ru.hse.fandomatch.BitmapHelper
 import ru.hse.fandomatch.MAX_NUMBER_OF_ATTACHMENTS
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.domain.model.Fandom
+import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.getBytesFromUri
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.ui.composables.AttachmentsRow
+import ru.hse.fandomatch.ui.composables.FandomInput
 import ru.hse.fandomatch.ui.composables.LoadingBlock
-import ru.hse.fandomatch.ui.composables.MyFloatingButton
-import ru.hse.fandomatch.ui.composables.MyPasswordField
 import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
 import kotlin.collections.plus
@@ -76,6 +67,11 @@ fun NewPostScreen(
             viewModel.obtainEvent(NewPostEvent.Clear)
         }
 
+        is NewPostAction.ShowErrorToast -> {
+            Toast.makeText(LocalContext.current, R.string.network_error, Toast.LENGTH_SHORT).show()
+            viewModel.obtainEvent(NewPostEvent.ToastShown)
+        }
+
         null -> {}
     }
 
@@ -86,6 +82,9 @@ fun NewPostScreen(
                 onContentChanged = { viewModel.obtainEvent(NewPostEvent.ContentChanged(it)) },
                 onAttachmentsChanged = { viewModel.obtainEvent(NewPostEvent.AttachmentsChanged(it)) },
                 onPostClick = { viewModel.obtainEvent(NewPostEvent.PostButtonClicked) },
+                onFandomAdded = { viewModel.obtainEvent(NewPostEvent.FandomAdded(it)) },
+                onFandomRemoved = { viewModel.obtainEvent(NewPostEvent.FandomRemoved(it)) },
+                onFandomSearched = { viewModel.obtainEvent(NewPostEvent.FandomSearched(it)) },
                 setTopBarState = setTopBarState,
             )
         }
@@ -99,8 +98,11 @@ fun NewPostScreen(
 fun MainState(
     state: NewPostState.Main,
     onContentChanged: (String) -> Unit,
-    onAttachmentsChanged: (List<ByteArray>) -> Unit,
+    onAttachmentsChanged: (List<Pair<ByteArray, MediaType>>) -> Unit,
     onPostClick: () -> Unit,
+    onFandomAdded: (Fandom) -> Unit,
+    onFandomRemoved: (Fandom) -> Unit,
+    onFandomSearched: (String?) -> Unit,
     setTopBarState: (TopBarState) -> Unit,
 ) {
     setTopBarState(
@@ -130,31 +132,47 @@ fun MainState(
     )
 
     var content by remember { mutableStateOf(state.content) }
-    var attachedImages by remember { mutableStateOf(state.attachedImages) }
+    var attachedFiles by remember { mutableStateOf(state.attachedFilesWithTypes) }
 
     val context = LocalContext.current
-    val pickMedia = when (MAX_NUMBER_OF_ATTACHMENTS - attachedImages.size) {
+    val pickMedia = when (MAX_NUMBER_OF_ATTACHMENTS - attachedFiles.size) {
         0 -> null
 
         1 -> rememberLauncherForActivityResult(
             ActivityResultContracts.PickVisualMedia()
         ) { uri ->
-            uri?.let {
+            val type = context.contentResolver.getType(uri ?: return@rememberLauncherForActivityResult)
+                ?: return@rememberLauncherForActivityResult
+            val mediaType = when {
+                type.startsWith("image") -> MediaType.IMAGE
+                type.startsWith("video") -> MediaType.VIDEO
+                else -> return@rememberLauncherForActivityResult
+            }
+            uri.let {
                 getBytesFromUri(context, it)?.let { byteArray ->
-                    attachedImages = attachedImages + byteArray
-                    onAttachmentsChanged(attachedImages)
+                    attachedFiles = attachedFiles + (byteArray to mediaType)
+                    onAttachmentsChanged(attachedFiles)
                 }
             }
         }
 
         else -> rememberLauncherForActivityResult(
             ActivityResultContracts.PickMultipleVisualMedia(
-                maxItems = maxOf(MAX_NUMBER_OF_ATTACHMENTS - attachedImages.size)
+                maxItems = maxOf(MAX_NUMBER_OF_ATTACHMENTS - attachedFiles.size)
             )
         ) { uris ->
-            attachedImages = attachedImages + uris.mapNotNull { getBytesFromUri(context, it) }
+            attachedFiles = attachedFiles + uris.mapNotNull {
+                val type = context.contentResolver.getType(it) ?: return@mapNotNull null
+                val mediaType = when {
+                    type.startsWith("image") -> MediaType.IMAGE
+                    type.startsWith("video") -> MediaType.VIDEO
+                    else -> return@mapNotNull null
+                }
+                val bytes = getBytesFromUri(context, it) ?: return@mapNotNull null
+                bytes to mediaType
+            }
             onAttachmentsChanged(
-                attachedImages
+                attachedFiles
             )
         }
     }
@@ -176,7 +194,8 @@ fun MainState(
                 value = content,
                 label = null,
                 placeholder = stringResource(id = R.string.post_content_label),
-                isError = false,
+                isError = state.contentError != NewPostState.NewPostError.IDLE,
+                errorText = state.contentError.toText(),
                 hideOnDone = false
             ) {
                 onContentChanged(it)
@@ -191,11 +210,11 @@ fun MainState(
                         MaterialTheme.colorScheme.primaryContainer,
                         shape = CircleShape
                     ),
-                enabled = attachedImages.size < MAX_NUMBER_OF_ATTACHMENTS,
+                enabled = attachedFiles.size < MAX_NUMBER_OF_ATTACHMENTS,
                 onClick = {
                     pickMedia?.launch(
                         PickVisualMediaRequest(
-                            ActivityResultContracts.PickVisualMedia.ImageOnly
+                            ActivityResultContracts.PickVisualMedia.ImageAndVideo
                         )
                     )
                 },
@@ -208,11 +227,30 @@ fun MainState(
         }
 
         AttachmentsRow(
-            attachedImages = attachedImages,
+            attachedFilesWithTypes = attachedFiles,
             onAttachmentsChanged = {
                 onAttachmentsChanged(it)
-                attachedImages = it
+                attachedFiles = it
             },
+        )
+
+        Text(
+            text = stringResource(id = R.string.post_fandoms_label),
+            fontSize = 16.sp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+        FandomInput(
+            foundFandoms = state.foundFandoms,
+            selectedFandoms = state.fandoms,
+            onFandomAdded = onFandomAdded,
+            onFandomRemoved = onFandomRemoved,
+            onSearch = onFandomSearched,
+            areFandomsLoading = state.areFandomsLoading,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
         )
     }
 

@@ -88,7 +88,7 @@ internal fun String.getMediaByName() : MediaItem {
     return when (this) {
         "noenor_edit" -> MediaItem(
             id = this,
-            url = "https://github.com/makar-with-tea/FandoMatch/blob/main/app/src/main/res/raw/noenor_edit.mp4?raw=true",
+            url = "https://github.com/makar-with-tea/FandoMatch/blob/develop/app/src/main/res/raw/noenor_edit.mp4?raw=true",
             mediaType = MediaType.VIDEO,
         )
 
@@ -370,7 +370,7 @@ internal var mockUserPosts = listOf(
         commentCount = 50,
         isLikedByCurrentUser = false,
         timestamp = System.currentTimeMillis() - 3600_000, // 1 hour ago
-        fandoms = listOf(),
+        fandoms = listOf(mockFandoms[0], mockFandoms[2], mockFandoms[4])
     ),
     Post(
         id = "6",
@@ -524,9 +524,7 @@ internal val mockAuthInfo = AuthInfo(
     userId = mockUser.id,
 )
 
-// still external :(
-
-val mockCities = listOf(
+internal val mockCities = listOf(
     City(
         nameRussian = "Москва",
         nameEnglish = "Moscow",
@@ -549,6 +547,7 @@ val mockCities = listOf(
     ),
 )
 
+// still external :(
 val mockUserPreferences = UserPreferences(
     matchesEnabled = true,
     messagesEnabled = false,

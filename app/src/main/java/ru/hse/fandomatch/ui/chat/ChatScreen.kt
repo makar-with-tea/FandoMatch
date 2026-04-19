@@ -9,7 +9,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,9 +50,10 @@ import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.MAX_NUMBER_OF_ATTACHMENTS
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.currentZoneOffset
 import ru.hse.fandomatch.domain.model.MediaItem
+import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.getBytesFromUri
-import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.ui.composables.AttachmentsRow
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
@@ -62,6 +62,7 @@ import ru.hse.fandomatch.ui.composables.ImagesScreen
 import ru.hse.fandomatch.ui.composables.Message
 import ru.hse.fandomatch.ui.composables.SkeletonView
 import java.time.LocalDateTime
+import kotlin.collections.plus
 
 @Composable
 fun ChatScreen(
@@ -88,18 +89,22 @@ fun ChatScreen(
         is ChatState.Main -> MainState(
             state = state.value as ChatState.Main,
             setTopBarState = setTopBarState,
-            onSendMessage = { message, images ->
+            onSendMessage = {
                 viewModel.obtainEvent(
                     ChatEvent.SendMessage(
-                        message = message,
-                        images = images,
-                        timestamp = LocalDateTime.now().toEpochSecond(java.time.ZoneOffset.UTC)
+                        timestamp = LocalDateTime.now().toEpochSecond(currentZoneOffset())
                     )
                 )
             },
             onClickProfile = {
                 viewModel.obtainEvent(ChatEvent.ProfileClicked)
-            }
+            },
+            onMessageDraftChanged = { draft ->
+                viewModel.obtainEvent(ChatEvent.MessageDraftChanged(draft))
+            },
+            onAttachmentsChanged = { filesWithTypes ->
+                viewModel.obtainEvent(ChatEvent.AttachmentsChanged(filesWithTypes))
+            },
         )
 
         is ChatState.Idle -> {
@@ -121,7 +126,9 @@ fun ChatScreen(
 private fun MainState(
     state: ChatState.Main,
     setTopBarState: (TopBarState?) -> Unit,
-    onSendMessage: (String, List<ByteArray>) -> Unit,
+    onAttachmentsChanged: (List<Pair<ByteArray, MediaType>>) -> Unit,
+    onMessageDraftChanged: (String) -> Unit,
+    onSendMessage: () -> Unit,
     onClickProfile: () -> Unit,
 ) {
     setTopBarState(
@@ -138,27 +145,44 @@ private fun MainState(
     )
 
     val context = LocalContext.current
-    var attachedImages by remember { mutableStateOf(mutableListOf<ByteArray>()) }
-    val pickMedia = when (MAX_NUMBER_OF_ATTACHMENTS - attachedImages.size) {
+    val pickMedia = when (MAX_NUMBER_OF_ATTACHMENTS - state.attachedFilesWithTypes.size) {
         0 -> null
 
         1 -> rememberLauncherForActivityResult(
             ActivityResultContracts.PickVisualMedia()
         ) { uri ->
-            uri?.let {
+            val type = context.contentResolver.getType(uri ?: return@rememberLauncherForActivityResult)
+                ?: return@rememberLauncherForActivityResult
+            val mediaType = when {
+                type.startsWith("image") -> MediaType.IMAGE
+                type.startsWith("video") -> MediaType.VIDEO
+                else -> return@rememberLauncherForActivityResult
+            }
+            uri.let {
                 getBytesFromUri(context, it)?.let { byteArray ->
-                    attachedImages = (attachedImages + listOf(byteArray)).toMutableList()
+                    onAttachmentsChanged(state.attachedFilesWithTypes + (byteArray to mediaType))
                 }
             }
         }
 
         else -> rememberLauncherForActivityResult(
             ActivityResultContracts.PickMultipleVisualMedia(
-                maxItems = maxOf(MAX_NUMBER_OF_ATTACHMENTS - attachedImages.size)
+                maxItems = maxOf(MAX_NUMBER_OF_ATTACHMENTS - state.attachedFilesWithTypes.size)
             )
         ) { uris ->
-            attachedImages =
-                (attachedImages + uris.mapNotNull { getBytesFromUri(context, it) }).toMutableList()
+            val newAttachedFiles = state.attachedFilesWithTypes + uris.mapNotNull {
+                val type = context.contentResolver.getType(it) ?: return@mapNotNull null
+                val mediaType = when {
+                    type.startsWith("image") -> MediaType.IMAGE
+                    type.startsWith("video") -> MediaType.VIDEO
+                    else -> return@mapNotNull null
+                }
+                val bytes = getBytesFromUri(context, it) ?: return@mapNotNull null
+                bytes to mediaType
+            }
+            onAttachmentsChanged(
+                newAttachedFiles
+            )
         }
     }
     var mediaItemsForScreen by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
@@ -227,16 +251,17 @@ private fun MainState(
         }
 
         AttachmentsRow(
-            attachedImages = attachedImages,
+            attachedFilesWithTypes = state.attachedFilesWithTypes,
             onAttachmentsChanged = {
-                attachedImages = it.toMutableList()
+                onAttachmentsChanged(it)
             }
         )
 
-        val newMessage: MutableState<String> = remember { mutableStateOf("") } // todo viewModel?
         OutlinedTextField(
-            value = newMessage.value,
-            onValueChange = { newMessage.value = it },
+            value = state.messageDraft,
+            onValueChange = {
+                onMessageDraftChanged(it)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 4.dp),
@@ -248,11 +273,11 @@ private fun MainState(
                 IconButton(
                     modifier = Modifier
                         .size(24.dp),
-                    enabled = attachedImages.size < MAX_NUMBER_OF_ATTACHMENTS,
+                    enabled = state.attachedFilesWithTypes.size < MAX_NUMBER_OF_ATTACHMENTS,
                     onClick = {
                         pickMedia?.launch(
                             PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                                ActivityResultContracts.PickVisualMedia.ImageAndVideo
                             )
                         )
                     },
@@ -269,15 +294,13 @@ private fun MainState(
                         .size(24.dp)
                         .clip(CircleShape)
                         .background(
-                            if (newMessage.value.isBlank() && attachedImages.isEmpty())
+                            if (state.messageDraft.isBlank() && state.attachedFilesWithTypes.isEmpty())
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                             else MaterialTheme.colorScheme.primaryContainer
                         ),
-                    enabled = newMessage.value.isNotBlank() || attachedImages.isNotEmpty(),
+                    enabled = state.messageDraft.isNotBlank() || state.attachedFilesWithTypes.isNotEmpty(),
                     onClick = {
-                        onSendMessage(newMessage.value, attachedImages)
-                        attachedImages = mutableListOf()
-                        newMessage.value = ""
+                        onSendMessage()
                     },
                 ) {
                     Icon(

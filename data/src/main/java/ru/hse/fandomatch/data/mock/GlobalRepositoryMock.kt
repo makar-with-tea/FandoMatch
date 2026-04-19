@@ -51,7 +51,7 @@ class GlobalRepositoryMock: GlobalRepository {
         login: String,
         dateOfBirthMillis: Long,
         gender: Gender,
-        avatarByteArray: ByteArray?,
+        avatarMediaId: String?,
         password: String
     ): AuthInfo {
         mockUser = mockUser.copy(
@@ -61,7 +61,8 @@ class GlobalRepositoryMock: GlobalRepository {
             profileType = ProfileType.Own(
                 email = email,
                 login = login,
-            )
+            ),
+            avatar = avatarMediaId?.let { mockUser.avatar?.copy(id = avatarMediaId) }
         )
         return mockAuthInfo.also {
             Log.d("GlobalRepositoryMock", "register: successful for user $login")
@@ -265,14 +266,19 @@ class GlobalRepositoryMock: GlobalRepository {
     override suspend fun sendMessage(
         receiverId: String,
         content: String,
-        images: List<ByteArray>,
+        mediaIdsWithTypes: List<Pair<String, MediaType>>,
         timestamp: Long
     ) {
         mockMessages.value += Message(
             messageId = (mockMessages.value.size + 1).toString(),
             isFromThisUser = true,
             content = content,
-            mediaItems = images.map { "luffy".getMediaByName() },
+            mediaItems = mediaIdsWithTypes.map { (mediaId, type) ->
+                when (type) {
+                    MediaType.IMAGE -> "luffy".getMediaByName().copy(id = mediaId)
+                    MediaType.VIDEO -> "video".getMediaByName().copy(id = mediaId)
+                }
+            },
             timestamp = timestamp,
         )
 
@@ -395,6 +401,34 @@ class GlobalRepositoryMock: GlobalRepository {
             } else it
         }
         Log.d("GlobalRepositoryMock", "likePost: liked post $postId")
+    }
+
+    override suspend fun createPost(
+        content: String,
+        mediaIdsWithTypes: List<Pair<String, MediaType>>,
+        fandomIds: List<String>
+    ) {
+        val newPost = Post(
+            id = (mockPosts.size + mockUserPosts.size + 1).toString(),
+            authorId = mockUser.id,
+            authorName = mockUser.name,
+            authorLogin = (mockUser.profileType as ProfileType.Own).login,
+            authorAvatar = mockUser.avatar,
+            content = content,
+            mediaItems = mediaIdsWithTypes.map { (mediaId, type) ->
+                when (type) {
+                    MediaType.IMAGE -> "luffy".getMediaByName().copy(id = mediaId)
+                    MediaType.VIDEO -> "video".getMediaByName().copy(id = mediaId)
+                }
+            },
+            fandoms = fandomIds.mapNotNull { id -> mockFandoms.find { it.id == id } },
+            likeCount = 0,
+            isLikedByCurrentUser = false,
+            timestamp = System.currentTimeMillis(),
+            commentCount = 0,
+        )
+        mockUserPosts = listOf(newPost) + mockUserPosts
+        Log.d("GlobalRepositoryMock", "createPost: created new post with id ${newPost.id}")
     }
 
     override suspend fun getFandomCategories(): List<FandomCategory> {
