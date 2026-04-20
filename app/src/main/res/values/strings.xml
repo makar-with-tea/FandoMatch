@@ -222,4 +222,7 @@
 
     <string name="error_icon_description">Ошибка</string>
     <string name="basic_error_message">Произошла ошибка загрузки :(\nПожалуйста, проверьте свое интернет-соединение</string>
+
+    <string name="success_downloading_media_toast">Медиа успешно загружено</string>
+    <string name="error_downloading_media_toast">Ошибка загрузки медиа</string>
 </resources>

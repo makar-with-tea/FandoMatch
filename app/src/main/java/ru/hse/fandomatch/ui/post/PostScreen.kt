@@ -1,6 +1,7 @@
 package ru.hse.fandomatch.ui.post
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -27,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -34,6 +36,8 @@ import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.navigation.TopBarState
+import ru.hse.fandomatch.ui.chat.ChatAction
+import ru.hse.fandomatch.ui.chat.ChatEvent
 import ru.hse.fandomatch.utils.epochMillisToDateString
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.BasicErrorState
@@ -58,6 +62,24 @@ fun PostScreen(
             viewModel.obtainEvent(PostEvent.Clear)
         }
 
+        PostAction.ShowErrorDownloadToast -> {
+            Toast.makeText(
+                LocalContext.current,
+                R.string.error_downloading_media_toast,
+                Toast.LENGTH_SHORT
+            ).show()
+            viewModel.obtainEvent(PostEvent.ToastShown)
+        }
+
+        PostAction.ShowSuccessDownloadToast -> {
+            Toast.makeText(
+                LocalContext.current,
+                R.string.success_downloading_media_toast,
+                Toast.LENGTH_SHORT
+            ).show()
+            viewModel.obtainEvent(PostEvent.ToastShown)
+        }
+
         null -> Unit
     }
 
@@ -70,8 +92,7 @@ fun PostScreen(
             onSendComment = { viewModel.obtainEvent(PostEvent.SendComment) },
             onClickProfile = { viewModel.obtainEvent(PostEvent.ProfileClicked) },
             onClickLike = { viewModel.obtainEvent(PostEvent.LikeClicked) },
-            onClickImages = { viewModel.obtainEvent(PostEvent.ImagesClicked) },
-            onCloseImages = { viewModel.obtainEvent(PostEvent.ImagesClosed) },
+            onDownloadMediaItem = { mediaItem -> viewModel.obtainEvent(PostEvent.DownloadMediaItem(mediaItem)) },
             onUpdateCommentDraft = { commentDraft -> viewModel.obtainEvent(PostEvent.UpdateCommentDraft(commentDraft)) },
         )
 
@@ -95,8 +116,7 @@ private fun MainState(
     onSendComment: () -> Unit,
     onClickProfile: () -> Unit,
     onClickLike: () -> Unit,
-    onClickImages: () -> Unit,
-    onCloseImages: () -> Unit,
+    onDownloadMediaItem: (MediaItem) -> Unit,
     onUpdateCommentDraft: (String) -> Unit,
 ) {
     setTopBarState(
@@ -212,6 +232,7 @@ private fun MainState(
             titleContent = {
                 // todo: from <user>, <time>
             },
+            onDownloadItem = onDownloadMediaItem,
             setTopBarState = setTopBarState,
         )
     }

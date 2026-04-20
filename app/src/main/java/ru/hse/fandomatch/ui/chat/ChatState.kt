@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.ui.chat
 
+import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.Message
 
@@ -34,11 +35,15 @@ sealed class ChatEvent {
     data object ProfileClicked: ChatEvent()
     data class MessageDraftChanged(val draft: String) : ChatEvent()
     data class AttachmentsChanged(val filesWithTypes: List<Pair<ByteArray, MediaType>>) : ChatEvent()
+    data class DownloadMediaItem(val mediaItem: MediaItem) : ChatEvent()
+    data object ToastShown : ChatEvent()
     data object Clear : ChatEvent()
 }
 
 sealed class ChatAction {
     data class GoToProfile(val profileId: String) : ChatAction()
+    data object ShowSuccessDownloadToast : ChatAction()
+    data object ShowErrorDownloadToast : ChatAction()
 }
 
 sealed class ChatUiElement {

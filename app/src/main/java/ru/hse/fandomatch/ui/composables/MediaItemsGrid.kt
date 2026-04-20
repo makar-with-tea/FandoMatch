@@ -1,5 +1,12 @@
 package ru.hse.fandomatch.ui.composables
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,7 +23,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -29,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,14 +45,20 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import ru.hse.fandomatch.BitmapHelper
+import androidx.core.content.ContextCompat
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
+import ru.hse.fandomatch.utils.BitmapHelper
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
+import ru.hse.fandomatch.domain.usecase.media.DownloadMediaToGalleryUseCase
+import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
 
 @Composable
@@ -328,25 +341,54 @@ fun ImagesScreen(
     items: List<MediaItem>,
     initialPage: Int = 0,
     titleContent: @Composable () -> Unit,
+    onDownloadItem: (MediaItem) -> Unit,
     setTopBarState: (TopBarState?) -> Unit,
 ) {
-    setTopBarState(
-        TopBarState(
-            titleContent = titleContent,
-            endIcons = listOf(
-//                EndIconState(
-//                    iconId = R.drawable.ic_download,
-//                    onClick = { /* TODO download current image */ },
-//                    descriptionId = R.string.download_media_button_description,
-//                )
-            )
-        )
-    )
-
+    val context = LocalContext.current
     val pagerState = rememberPagerState(
         initialPage = initialPage,
         pageCount = { items.size }
     )
+    var pendingDownloadItem by remember { mutableStateOf<MediaItem?>(null) }
+
+    val requestStoragePermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        val item = pendingDownloadItem
+        pendingDownloadItem = null
+        if (granted && item != null) {
+            onDownloadItem(item)
+        }
+    }
+
+    val currentItem = items.getOrNull(pagerState.currentPage)
+
+    setTopBarState(
+        TopBarState(
+            titleContent = titleContent,
+            endIcons = listOf(
+                EndIconState(
+                    iconId = R.drawable.ic_download,
+                    onClick = {
+                        val item = currentItem ?: return@EndIconState
+                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
+                            ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            pendingDownloadItem = item
+                            requestStoragePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        } else {
+                            onDownloadItem(item)
+                        }
+                    },
+                    descriptionId = R.string.download_media_button_description,
+                )
+            )
+        )
+    )
+
 
     Box(
         modifier = Modifier

@@ -9,6 +9,7 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import ru.hse.fandomatch.data.AuthInterceptor
+import ru.hse.fandomatch.data.MediaRepositoryImpl
 import ru.hse.fandomatch.data.SharedPrefRepositoryImpl
 import ru.hse.fandomatch.data.api.ChatApiService
 import ru.hse.fandomatch.data.api.CoreApiService
@@ -20,6 +21,7 @@ import ru.hse.fandomatch.data.serialization.BaseUserProfileDeserializer
 import ru.hse.fandomatch.data.socket.ChatSocketService
 import ru.hse.fandomatch.data.socket.ChatSocketServiceImpl
 import ru.hse.fandomatch.domain.repos.GlobalRepository
+import ru.hse.fandomatch.domain.repos.MediaRepository
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
 import ru.hse.fandomatch.domain.usecase.auth.ChangeEmailUseCase
 import ru.hse.fandomatch.domain.usecase.auth.ChangePasswordUseCase
@@ -34,6 +36,7 @@ import ru.hse.fandomatch.domain.usecase.matches.ApplyFiltersUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LoadInitialFiltersUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LoadSuggestedProfilesUseCase
+import ru.hse.fandomatch.domain.usecase.media.DownloadMediaToGalleryUseCase
 import ru.hse.fandomatch.domain.usecase.posts.CreatePostUseCase
 import ru.hse.fandomatch.domain.usecase.posts.GetFeedUseCase
 import ru.hse.fandomatch.domain.usecase.posts.GetFullPostUseCase
@@ -99,7 +102,7 @@ val appModule = module {
         likePostUseCase = get(),
     ) }
     viewModel<ChatsListViewModel> { ChatsListViewModel(get()) }
-    viewModel<ChatViewModel> { ChatViewModel(get(), get(), get(), get()) }
+    viewModel<ChatViewModel> { ChatViewModel(get(), get(), get(), get(), get()) }
     viewModel<FiltersViewModel> { FiltersViewModel(get(), get(), get(), get()) }
     viewModel<FeedViewModel> { FeedViewModel(get(), get()) }
     viewModel<EditProfileViewModel> { EditProfileViewModel(get(), get(), get(), get(), get()) }
@@ -107,12 +110,13 @@ val appModule = module {
     viewModel<AddFandomViewModel> { AddFandomViewModel(get(), get()) }
     viewModel<NewPostViewModel> { NewPostViewModel(get(), get(), get()) }
     viewModel<PasswordRecoveryViewModel> { PasswordRecoveryViewModel(get(), get()) }
-    viewModel<PostViewModel> { PostViewModel(get(), get(), get(), get()) }
+    viewModel<PostViewModel> { PostViewModel(get(), get(), get(), get(), get()) }
 }
 
 val dataModule = module {
     single<GlobalRepository> { GlobalRepositoryMock() }
     single<SharedPrefRepository> { SharedPrefRepositoryImpl(androidContext()) }
+    single<MediaRepository> { MediaRepositoryImpl(androidContext()) }
 
     single(named("apiClient")) {
         OkHttpClient.Builder()
@@ -186,6 +190,7 @@ val domainModule = module {
     factory<SubscribeToChatMessagesUseCase> { SubscribeToChatMessagesUseCase(get()) }
     factory<SubscribeToChatPreviewsUseCase> { SubscribeToChatPreviewsUseCase(get()) }
     factory<UploadMediaUseCase> { UploadMediaUseCase(get()) }
+    factory<DownloadMediaToGalleryUseCase> { DownloadMediaToGalleryUseCase(get()) }
 
     factory<GetFandomsByQueryUseCase> { GetFandomsByQueryUseCase(get()) }
     factory<RequestNewFandomUseCase> { RequestNewFandomUseCase(get(), get()) }

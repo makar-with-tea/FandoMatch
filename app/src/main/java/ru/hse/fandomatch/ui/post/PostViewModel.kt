@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.model.Comment
+import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.ProfileType
+import ru.hse.fandomatch.domain.usecase.media.DownloadMediaToGalleryUseCase
 import ru.hse.fandomatch.domain.usecase.posts.GetFullPostUseCase
 import ru.hse.fandomatch.domain.usecase.posts.LikePostUseCase
 import ru.hse.fandomatch.domain.usecase.posts.SendCommentUseCase
@@ -22,6 +24,7 @@ class PostViewModel(
     private val sendCommentUseCase: SendCommentUseCase,
     private val getUserUseCase: GetUserUseCase,
     private val likePostUseCase: LikePostUseCase,
+    private val downloadMediaToGalleryUseCase: DownloadMediaToGalleryUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -37,8 +40,8 @@ class PostViewModel(
             is PostEvent.LoadPost -> loadPost(event.postId)
             PostEvent.ProfileClicked -> goToProfile()
             PostEvent.LikeClicked -> onLikeClicked()
-            PostEvent.ImagesClicked -> onImagesClicked()
-            PostEvent.ImagesClosed -> onImagesClosed()
+            is PostEvent.DownloadMediaItem -> downloadMediaItem(event.mediaItem)
+            PostEvent.ToastShown -> toastShown()
             is PostEvent.UpdateCommentDraft -> updateCommentDraft(event.commentDraft)
             PostEvent.SendComment -> sendComment()
         }
@@ -130,19 +133,29 @@ class PostViewModel(
         }
     }
 
-    private fun onImagesClicked() {
-        val currentState = (_state.value as? PostState.Main) ?: return
-        _state.value = currentState.copy(imagesOpen = true)
-    }
-
-    private fun onImagesClosed() {
-        val currentState = (_state.value as? PostState.Main) ?: return
-        _state.value = currentState.copy(imagesOpen = false)
-    }
-
     private fun updateCommentDraft(commentDraft: String) {
         val currentState = (_state.value as? PostState.Main) ?: return
         _state.value = currentState.copy(commentDraft = commentDraft)
+    }
+
+    private fun downloadMediaItem(mediaItem: MediaItem) {
+        viewModelScope.launch(dispatcherIO) {
+            downloadMediaToGalleryUseCase.execute(
+                mediaUrl = mediaItem.url,
+                mediaType = mediaItem.mediaType
+            )
+                .onFailure {
+                    Log.e("PostViewModel", "Failed to download media item", it)
+                    _action.value = PostAction.ShowErrorDownloadToast
+                }
+                .onSuccess {
+                    _action.value = PostAction.ShowSuccessDownloadToast
+                }
+        }
+    }
+
+    private fun toastShown() {
+        _action.value = null
     }
 
     private fun clear() {

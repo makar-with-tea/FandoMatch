@@ -1,6 +1,7 @@
 package ru.hse.fandomatch.ui.chat
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -46,6 +47,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.utils.MAX_NUMBER_OF_ATTACHMENTS
 import ru.hse.fandomatch.R
@@ -79,6 +81,24 @@ fun ChatScreen(
             viewModel.obtainEvent(ChatEvent.Clear)
         }
 
+        ChatAction.ShowErrorDownloadToast -> {
+            Toast.makeText(
+                LocalContext.current,
+                R.string.error_downloading_media_toast,
+                Toast.LENGTH_SHORT
+            ).show()
+            viewModel.obtainEvent(ChatEvent.ToastShown)
+        }
+
+        ChatAction.ShowSuccessDownloadToast -> {
+            Toast.makeText(
+                LocalContext.current,
+                R.string.success_downloading_media_toast,
+                Toast.LENGTH_SHORT
+            ).show()
+            viewModel.obtainEvent(ChatEvent.ToastShown)
+        }
+
         null -> Unit
     }
 
@@ -104,6 +124,9 @@ fun ChatScreen(
             onAttachmentsChanged = { filesWithTypes ->
                 viewModel.obtainEvent(ChatEvent.AttachmentsChanged(filesWithTypes))
             },
+            onDownloadMediaItem = { mediaItem ->
+                viewModel.obtainEvent(ChatEvent.DownloadMediaItem(mediaItem))
+            }
         )
 
         is ChatState.Idle -> {
@@ -129,6 +152,7 @@ private fun MainState(
     onMessageDraftChanged: (String) -> Unit,
     onSendMessage: () -> Unit,
     onClickProfile: () -> Unit,
+    onDownloadMediaItem: (MediaItem) -> Unit,
 ) {
     setTopBarState(
         TopBarState(
@@ -318,6 +342,7 @@ private fun MainState(
             titleContent = {
                 // todo: from <user>, <time>
             },
+            onDownloadItem = { onDownloadMediaItem(it) },
             setTopBarState = setTopBarState,
         )
     }

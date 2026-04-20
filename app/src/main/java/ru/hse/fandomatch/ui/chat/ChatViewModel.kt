@@ -12,12 +12,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
+import ru.hse.fandomatch.domain.usecase.media.DownloadMediaToGalleryUseCase
 import ru.hse.fandomatch.utils.epochMillisToDateString
 
 class ChatViewModel(
@@ -25,6 +27,7 @@ class ChatViewModel(
     private val loadChatInfoUseCase: LoadChatInfoUseCase,
     private val subscribeToChatMessagesUseCase: SubscribeToChatMessagesUseCase,
     private val uploadMediaUseCase: UploadMediaUseCase,
+    private val downloadMediaToGalleryUseCase: DownloadMediaToGalleryUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -55,6 +58,8 @@ class ChatViewModel(
             is ChatEvent.MessageDraftChanged -> draftChanged(event.draft)
             is ChatEvent.AttachmentsChanged -> attachmentsChanged(event.filesWithTypes)
             is ChatEvent.ProfileClicked -> goToProfile()
+            is ChatEvent.DownloadMediaItem -> downloadMediaItem(event.mediaItem)
+            ChatEvent.ToastShown -> toastShown()
         }
     }
 
@@ -170,6 +175,26 @@ class ChatViewModel(
             )
             else -> Unit
         }
+    }
+
+    private fun downloadMediaItem(mediaItem: MediaItem) {
+        viewModelScope.launch(dispatcherIO) {
+            downloadMediaToGalleryUseCase.execute(
+                mediaUrl = mediaItem.url,
+                mediaType = mediaItem.mediaType
+            )
+                .onFailure {
+                    Log.e("ChatViewModel", "Failed to download media item", it)
+                    _action.value = ChatAction.ShowErrorDownloadToast
+                }
+                .onSuccess {
+                    _action.value = ChatAction.ShowSuccessDownloadToast
+                }
+        }
+    }
+
+    private fun toastShown() {
+        _action.value = null
     }
 
     private fun clear() {
