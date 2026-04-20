@@ -123,7 +123,7 @@ class NewPostViewModel(
             )
             if (result.isFailure) {
                 Log.e("NewPostViewModel", "Failed to create post: ${result.exceptionOrNull()}")
-                _action.value = NewPostAction.ShowErrorToast // todo надо ли его потом очищать?
+                _action.value = NewPostAction.ShowErrorToast
                 return@launch
             }
             withContext(dispatcherMain) {

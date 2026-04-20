@@ -449,9 +449,19 @@ class SettingsViewModel(
         _state.value = SettingsState.Loading
         viewModelScope.launch(dispatcherIO) {
             logoutUseCase.execute()
-            withContext(dispatcherMain) {
-                _action.value = SettingsAction.NavigateToIntro
-            }
+                .onFailure {
+                    Log.e("SettingsViewModel", "Failed to logout", it)
+                    withContext(dispatcherMain) {
+                        _state.value = SettingsState.Error(
+                            error = SettingsState.SettingsError.NETWORK
+                        )
+                    }
+                }
+                .onSuccess {
+                    withContext(dispatcherMain) {
+                        _action.value = SettingsAction.NavigateToIntro
+                    }
+                }
         }
     }
 

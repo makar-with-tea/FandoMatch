@@ -38,6 +38,7 @@ import ru.hse.fandomatch.data.model.PostMediaInputDTO
 import ru.hse.fandomatch.data.model.PostsGetRequestDTO
 import ru.hse.fandomatch.data.model.PresignedUploadRequestDTO
 import ru.hse.fandomatch.data.model.PublicUserProfileResponseDTO
+import ru.hse.fandomatch.data.model.RefreshTokenDTO
 import ru.hse.fandomatch.data.model.ResponseStatusDTO
 import ru.hse.fandomatch.data.model.SendMessageRequestDTO
 import ru.hse.fandomatch.data.model.TimestampPaginationRequestDTO
@@ -153,7 +154,7 @@ class GlobalRepositoryImpl(
             UserLoginRequestDTO(
                 email = null,
                 username = login,
-                hashedPassword = password // todo hashing
+                hashedPassword = PasswordHasher.sha256(password) // todo даша hashing
             )
         )
         when (response.status) {
@@ -186,7 +187,7 @@ class GlobalRepositoryImpl(
                 email = email,
                 username = login,
                 birthDate = dateOfBirthMillis,
-                hashedPassword = password // todo hashing
+                hashedPassword = PasswordHasher.sha256(password) // todo даша hashing
             )
         )
         when (response.status) {
@@ -200,6 +201,36 @@ class GlobalRepositoryImpl(
 
             ResponseStatusDTO.ERROR -> {
                 throw Exception("Registration failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}") // todo error handling
+            }
+        }
+    }
+
+    override suspend fun logout() {
+        val response = userApiService.logout()
+        if (response.errorResponse != null) {
+            throw Exception("Logout failed: ${response.errorResponse.errorCode}, ${response.errorResponse.errorMessage}")
+        }
+    }
+
+    override suspend fun refreshToken(
+        refreshToken: String
+    ): AuthInfo {
+        val response = userApiService.refreshToken(
+            RefreshTokenDTO(
+                refreshToken = refreshToken
+            )
+        )
+        when (response.status) {
+            ResponseStatusDTO.SUCCESS -> {
+                return AuthInfo(
+                    accessToken = response.successResponse!!.accessToken,
+                    refreshToken = response.successResponse.refreshToken,
+                    userId = response.successResponse.uuid,
+                )
+            }
+
+            ResponseStatusDTO.ERROR -> {
+                throw Exception("Token refresh failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}") // todo error handling
             }
         }
     }
@@ -230,8 +261,8 @@ class GlobalRepositoryImpl(
     override suspend fun changePassword(oldPassword: String, newPassword: String) {
         val response = userApiService.changePassword(
             ChangePasswordRequestDTO(
-                oldPassword = oldPassword,
-                newPassword = newPassword
+                oldPassword = PasswordHasher.sha256(oldPassword), // todo даша hashing
+                newPassword = PasswordHasher.sha256(newPassword) // todo даша hashing
             )
         )
         if (response.errorResponse != null) {

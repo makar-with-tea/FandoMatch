@@ -61,7 +61,6 @@ class IntroViewModel(
             val userId = getPastLoginUseCase.execute()
             withContext(dispatcherMain) {
                 if (userId != null) {
-                    // todo поумнее проверка? получение инфы по пользователю? отдельный синглтон с этой инфой?
                     _action.value = IntroAction.NavigateToMatches
                 } else {
                     _state.value = IntroState.Main

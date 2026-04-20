@@ -70,6 +70,10 @@ class GlobalRepositoryMock: GlobalRepository {
         }
     }
 
+    override suspend fun logout() {
+        Log.d("GlobalRepositoryMock", "logout: successful for user ${(mockUser.profileType as? ProfileType.Own)?.login}")
+    }
+
     override suspend fun updateUser(
         name: String,
         bio: String?,

@@ -31,8 +31,9 @@ interface GlobalRepository {
         gender: Gender,
         avatarMediaId: String?,
         password: String
-    ): AuthInfo // todo
-
+    ): AuthInfo
+    suspend fun logout()
+    suspend fun refreshToken(refreshToken: String): AuthInfo
     suspend fun updateUser(
         name: String,
         bio: String?,
