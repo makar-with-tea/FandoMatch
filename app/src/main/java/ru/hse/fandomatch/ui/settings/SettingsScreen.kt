@@ -454,7 +454,7 @@ fun ChangeEmailState(
     if (state.isCode) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.Top,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
@@ -480,7 +480,6 @@ fun ChangeEmailState(
             )
 
             Button(
-                modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isLoading,
                 onClick = { onSubmitCode(code) }
             ) { Text(stringResource(R.string.change_email_button)) }

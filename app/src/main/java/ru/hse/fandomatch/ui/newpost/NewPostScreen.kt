@@ -54,6 +54,7 @@ import kotlin.collections.plus
 @Composable
 fun NewPostScreen(
     navigateToPreviousScreen: () -> Unit,
+    navigateToAddFandom: () -> Unit,
     setTopBarState: (TopBarState) -> Unit,
     viewModel: NewPostViewModel = koinViewModel()
 ) {
@@ -64,6 +65,11 @@ fun NewPostScreen(
     when (action.value) {
         is NewPostAction.NavigateToPreviousScreen -> {
             navigateToPreviousScreen()
+            viewModel.obtainEvent(NewPostEvent.Clear)
+        }
+
+        is NewPostAction.NavigateToAddFandom -> {
+            navigateToAddFandom()
             viewModel.obtainEvent(NewPostEvent.Clear)
         }
 
@@ -85,6 +91,7 @@ fun NewPostScreen(
                 onFandomAdded = { viewModel.obtainEvent(NewPostEvent.FandomAdded(it)) },
                 onFandomRemoved = { viewModel.obtainEvent(NewPostEvent.FandomRemoved(it)) },
                 onFandomSearched = { viewModel.obtainEvent(NewPostEvent.FandomSearched(it)) },
+                onAddFandomClicked = { viewModel.obtainEvent(NewPostEvent.AddFandomClicked) },
                 setTopBarState = setTopBarState,
             )
         }
@@ -103,6 +110,7 @@ fun MainState(
     onFandomAdded: (Fandom) -> Unit,
     onFandomRemoved: (Fandom) -> Unit,
     onFandomSearched: (String?) -> Unit,
+    onAddFandomClicked: () -> Unit,
     setTopBarState: (TopBarState) -> Unit,
 ) {
     setTopBarState(
@@ -247,6 +255,7 @@ fun MainState(
             onFandomAdded = onFandomAdded,
             onFandomRemoved = onFandomRemoved,
             onSearch = onFandomSearched,
+            goToAddFandom = onAddFandomClicked,
             areFandomsLoading = state.areFandomsLoading,
             modifier = Modifier
                 .fillMaxWidth()
@@ -277,6 +286,6 @@ fun LoadingState() {
 @Composable
 fun NewPostScreenPreview() {
     NewPostScreen(
-            {}, {}
+            {}, {}, {}
     )
 }

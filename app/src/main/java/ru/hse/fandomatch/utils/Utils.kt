@@ -4,6 +4,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Female
+import androidx.compose.material.icons.filled.Male
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ru.hse.fandomatch.R
@@ -153,6 +157,11 @@ fun FandomCategory.getColor(): Color {
     }
 }
 
+fun Gender.getIcon() = when (this) {
+    Gender.FEMALE -> Icons.Default.Female
+    Gender.MALE -> Icons.Default.Male
+    Gender.NOT_SPECIFIED -> Icons.Default.QuestionMark
+}
 fun getBytesFromUri(context: Context, uri: Uri): ByteArray? {
     context.contentResolver.openInputStream(uri)?.use { inputStream ->
         return inputStream.readBytes()

@@ -56,6 +56,7 @@ import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.auth.LoginUseCase
 import ru.hse.fandomatch.domain.usecase.auth.LogoutUseCase
+import ru.hse.fandomatch.domain.usecase.auth.RefreshAuthUseCase
 import ru.hse.fandomatch.domain.usecase.auth.RegisterUseCase
 import ru.hse.fandomatch.domain.usecase.auth.ResetPasswordUseCase
 import ru.hse.fandomatch.domain.usecase.auth.SetPermissionShownUseCase
@@ -107,7 +108,7 @@ val appModule = module {
     viewModel<FeedViewModel> { FeedViewModel(get(), get()) }
     viewModel<EditProfileViewModel> { EditProfileViewModel(get(), get(), get(), get(), get()) }
     viewModel<SettingsViewModel> { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    viewModel<AddFandomViewModel> { AddFandomViewModel(get(), get()) }
+    viewModel<AddFandomViewModel> { AddFandomViewModel(get()) }
     viewModel<NewPostViewModel> { NewPostViewModel(get(), get(), get()) }
     viewModel<PasswordRecoveryViewModel> { PasswordRecoveryViewModel(get(), get()) }
     viewModel<PostViewModel> { PostViewModel(get(), get(), get(), get(), get()) }
@@ -180,7 +181,8 @@ val domainModule = module {
     factory<GetPermissionShownUseCase> { GetPermissionShownUseCase(get()) }
     factory<GetVerificationCodeUseCase> { GetVerificationCodeUseCase(get()) }
     factory<LoginUseCase> { LoginUseCase(get(), get()) }
-    factory<LogoutUseCase> { LogoutUseCase(get()) }
+    factory<LogoutUseCase> { LogoutUseCase(get(), get()) }
+    factory<RefreshAuthUseCase> { RefreshAuthUseCase(get(), get()) }
     factory<RegisterUseCase> { RegisterUseCase(get(), get()) }
     factory<ResetPasswordUseCase> { ResetPasswordUseCase(get()) }
     factory<SetPermissionShownUseCase> { SetPermissionShownUseCase(get()) }

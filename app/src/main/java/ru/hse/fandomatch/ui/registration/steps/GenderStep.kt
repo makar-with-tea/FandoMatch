@@ -34,6 +34,7 @@ import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.registration.RegistrationState
 import ru.hse.fandomatch.ui.registration.getText
 import ru.hse.fandomatch.ui.registration.isFieldError
+import ru.hse.fandomatch.utils.getIcon
 
 @Composable
 internal fun GenderStep(
@@ -76,13 +77,8 @@ internal fun GenderStep(
                         label = { Text(stringResource(gender.stringId())) },
                         icon = {
                             if (selectedGender == gender) {
-                                val genderIcon = when (gender) {
-                                    Gender.FEMALE -> Icons.Default.Female
-                                    Gender.MALE -> Icons.Default.Male
-                                    Gender.NOT_SPECIFIED -> Icons.Default.QuestionMark
-                                }
                                 Icon(
-                                    imageVector = genderIcon,
+                                    imageVector = gender.getIcon(),
                                     contentDescription = null,
                                 )
                             }

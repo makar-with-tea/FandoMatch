@@ -32,12 +32,14 @@ sealed class FiltersEvent {
     object ResetFilters : FiltersEvent()
     object ApplyFilters : FiltersEvent()
     object ToastShown : FiltersEvent()
+    object AddFandomClicked: FiltersEvent()
     object Clear : FiltersEvent()
     object LoadInitialFilters : FiltersEvent()
 }
 
 sealed class FiltersAction {
     object NavigateToMatches : FiltersAction()
+    object NavigateToAddFandom : FiltersAction()
     object ShowErrorToast : FiltersAction()
 }
 

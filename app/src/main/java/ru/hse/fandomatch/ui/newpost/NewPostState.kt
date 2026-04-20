@@ -29,11 +29,13 @@ sealed class NewPostEvent {
     data class FandomAdded(val fandom: Fandom): NewPostEvent()
     data class FandomRemoved(val fandom: Fandom): NewPostEvent()
     data class FandomSearched(val query: String?): NewPostEvent()
+    data object AddFandomClicked: NewPostEvent()
     data object ToastShown: NewPostEvent()
     data object Clear: NewPostEvent()
 }
 
 sealed class NewPostAction {
     data object NavigateToPreviousScreen : NewPostAction()
+    data object NavigateToAddFandom : NewPostAction()
     data object ShowErrorToast : NewPostAction()
 }

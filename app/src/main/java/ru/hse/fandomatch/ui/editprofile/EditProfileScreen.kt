@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -300,7 +301,7 @@ private fun MainState(
                         .padding(horizontal = 16.dp),
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
 
@@ -309,38 +310,17 @@ private fun MainState(
                 Text(
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                        .padding(start = 16.dp, end = 16.dp),
                     fontSize = 18.sp,
                     text = stringResource(R.string.your_fandoms_label),
                 )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.did_not_found_fandom_label),
-                        fontSize = 14.sp
-                    )
-                    TextButton(
-                        onClick = {
-                            onSuggestFandomButtonClicked()
-                        },
-                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.here_you_go_button),
-                            fontSize = 14.sp
-                        )
-                    }
-                }
                 FandomInput(
                     foundFandoms = state.foundFandoms,
                     selectedFandoms = state.fandoms,
                     onFandomAdded = onFandomAdded,
                     onFandomRemoved = onFandomRemoved,
                     onSearch = onFandomSearch,
+                    goToAddFandom = onSuggestFandomButtonClicked,
                     areFandomsLoading = state.areFandomsLoading,
                     modifier = Modifier
                         .fillMaxWidth()

@@ -74,6 +74,17 @@ class GlobalRepositoryMock: GlobalRepository {
         Log.d("GlobalRepositoryMock", "logout: successful for user ${(mockUser.profileType as? ProfileType.Own)?.login}")
     }
 
+    override suspend fun refreshToken(refreshToken: String): AuthInfo {
+        return if (refreshToken == mockAuthInfo.refreshToken) {
+            mockAuthInfo.copy(
+                accessToken = "new_mock_access_token_${System.currentTimeMillis()}",
+            )
+        } else {
+            Log.d("GlobalRepositoryMock", "refreshToken: failed due to invalid refresh token")
+            throw IllegalArgumentException("Invalid refresh token")
+        }
+    }
+
     override suspend fun updateUser(
         name: String,
         bio: String?,

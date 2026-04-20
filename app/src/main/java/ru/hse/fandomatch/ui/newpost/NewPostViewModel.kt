@@ -41,6 +41,7 @@ class NewPostViewModel(
             is NewPostEvent.FandomAdded -> addFandom(event.fandom)
             is NewPostEvent.FandomRemoved -> removeFandom(event.fandom)
             is NewPostEvent.FandomSearched -> searchFandom(event.query)
+            NewPostEvent.AddFandomClicked -> goToAddFandom()
             NewPostEvent.ToastShown -> _action.value = null
             is NewPostEvent.Clear -> clear()
         }
@@ -102,6 +103,10 @@ class NewPostViewModel(
                     currentState.copy(foundFandoms = foundFandoms, areFandomsLoading = false)
             }
         }
+    }
+
+    private fun goToAddFandom() {
+        _action.value = NewPostAction.NavigateToAddFandom
     }
 
     private fun post() {

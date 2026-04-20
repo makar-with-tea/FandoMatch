@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Gender
+import ru.hse.fandomatch.utils.getIcon
 
 @Composable
 fun CityInput(
@@ -148,8 +150,7 @@ fun CityInput(
 
 @Composable
 fun City.getName(): String {
-    val context = LocalContext.current
-    val locale = context.resources.configuration.locales[0]
+    val locale = LocalConfiguration.current.locales[0]
     val isRussianLocale = locale.language.equals("ru", ignoreCase = true)
     return if (isRussianLocale) this.nameRussian else this.nameEnglish
 }
@@ -172,8 +173,7 @@ fun CityAndGenderText(
         )
 
         val genderIcon = when (gender) {
-            Gender.FEMALE -> Icons.Default.Female
-            Gender.MALE -> Icons.Default.Male
+            Gender.FEMALE, Gender.MALE -> gender.getIcon()
             Gender.NOT_SPECIFIED -> null
         }
         val genderText = when (gender) {
@@ -187,7 +187,7 @@ fun CityAndGenderText(
                     .size(16.dp),
                 imageVector = genderIcon,
                 tint = color,
-                contentDescription = stringResource(genderText)
+                contentDescription = stringResource(genderText),
             )
         } ?: Text(
             text = stringResource(genderText),

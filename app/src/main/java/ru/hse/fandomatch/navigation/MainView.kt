@@ -379,6 +379,9 @@ fun MainView(
                         navigateToMatches = {
                             navigateToRoute(Route.Matches)
                         },
+                        navigateToAddFandom = {
+                            navigateToRoute(Route.AddFandom)
+                        },
                     )
                 }
                 composable(Route.Feed.route) {
@@ -434,6 +437,9 @@ fun MainView(
                                     navController.popBackStack()
                                 }
                             }
+                        },
+                        navigateToAddFandom = {
+                            navigateToRoute(Route.AddFandom)
                         },
                         setTopBarState = { state -> setTopBarState(state, Route.NewPost.route) },
                     )

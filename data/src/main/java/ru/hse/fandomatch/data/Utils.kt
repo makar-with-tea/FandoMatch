@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.data
 
-import retrofit2.HttpException
 import java.security.MessageDigest
 
 object PasswordHasher {
