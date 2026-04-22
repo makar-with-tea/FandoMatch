@@ -53,7 +53,7 @@ fun AddFandomScreen(
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
 
-    Log.d("AuthorizationScreen", "State: $state")
+    Log.d("AddFandomScreen", "State: $state")
     when (action.value) {
         AddFandomAction.ShowSuccessToastAndGoBack -> {
             Toast.makeText(
@@ -62,7 +62,7 @@ fun AddFandomScreen(
                 Toast.LENGTH_SHORT
             ).show()
             navigateBack()
-            viewModel.obtainEvent(AddFandomEvent.Clear)
+            viewModel.obtainEvent(AddFandomEvent.ToastShown)
         }
 
         AddFandomAction.ShowNetworkErrorToast -> {
@@ -71,7 +71,7 @@ fun AddFandomScreen(
                 R.string.network_error,
                 Toast.LENGTH_SHORT
             ).show()
-            viewModel.obtainEvent(AddFandomEvent.Clear)
+            viewModel.obtainEvent(AddFandomEvent.ToastShown)
         }
 
         null -> {}

@@ -397,17 +397,19 @@ class SettingsViewModel(
             isLoading = true
         )
         viewModelScope.launch(dispatcherIO) {
-            val result = deleteAccountUseCase.execute()
-            if (result.isFailure) {
-                Log.e("SettingsViewModel", "Failed to delete account", result.exceptionOrNull())
-                withContext(dispatcherMain) {
-                    _state.value = SettingsState.DeletionError
+            deleteAccountUseCase.execute()
+                .onFailure {
+                    Log.e("SettingsViewModel", "Failed to delete account", it)
+                    withContext(dispatcherMain) {
+                        _state.value = SettingsState.DeletionError
+                    }
+                    return@launch
                 }
-                return@launch
-            }
-            withContext(dispatcherMain) {
-                _action.value = SettingsAction.NavigateToIntro
-            }
+                .onSuccess {
+                    withContext(dispatcherMain) {
+                        _action.value = SettingsAction.NavigateToIntro
+                    }
+                }
         }
     }
 

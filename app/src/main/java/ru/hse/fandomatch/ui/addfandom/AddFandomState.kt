@@ -25,6 +25,7 @@ sealed class AddFandomEvent {
     data class CategoryChanged(val category: FandomCategory): AddFandomEvent()
     data class DescriptionChanged(val description: String): AddFandomEvent()
     data object SendButtonClicked: AddFandomEvent()
+    data object ToastShown: AddFandomEvent()
     data object Clear: AddFandomEvent()
 }
 

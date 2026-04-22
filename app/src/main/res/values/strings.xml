@@ -184,7 +184,7 @@
     <string name="old_password_label">Старый пароль</string>
     <string name="new_password_label">Новый пароль</string>
     <string name="save_button">Сохранить</string>
-    <string name="loading_error">Ошибка загрузки</string>
+    <string name="loading_error">Ошибка сети</string>
     <string name="unknown_error">Неизвестная ошибка</string>
     <string name="retry_button_text">Попробовать снова</string>
     <string name="account_not_found_error">Аккаунт не найден</string>
@@ -225,4 +225,5 @@
 
     <string name="success_downloading_media_toast">Медиа успешно загружено</string>
     <string name="error_downloading_media_toast">Ошибка загрузки медиа</string>
+    <string name="cancel_button_text">Отмена</string>
 </resources>

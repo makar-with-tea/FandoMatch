@@ -54,6 +54,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -412,14 +413,25 @@ fun MyAlertDialog(
             Button(
                 onClick = onConfirm,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
                 ),
             ) {
                 Text(text = confirmButtonText)
             }
         },
-        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+        dismissButton = {
+            Button(
+                onClick = onDismissRequest,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                ),
+            ) {
+                Text(text = stringResource(R.string.cancel_button_text))
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.errorContainer,
         titleContentColor = MaterialTheme.colorScheme.error,
         textContentColor = MaterialTheme.colorScheme.onErrorContainer,
     )
@@ -478,31 +490,34 @@ fun MyFloatingButton(
 fun BasicErrorState(
     onRetry: () -> Unit,
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.errorContainer),
-        contentAlignment = Alignment.Center
+            .background(MaterialTheme.colorScheme.errorContainer)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
             imageVector = Icons.Default.Error,
             contentDescription = stringResource(R.string.error_icon_description),
             tint = MaterialTheme.colorScheme.onErrorContainer,
             modifier = Modifier
-                .size(48.dp)
+                .size(100.dp)
                 .padding(bottom = 8.dp)
         )
         Text(
             text = stringResource(R.string.basic_error_message),
             color = MaterialTheme.colorScheme.onErrorContainer,
             fontSize = 18.sp,
+            textAlign = TextAlign.Center,
             fontWeight = FontWeight.Bold
         )
         Button(
             onClick = onRetry,
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                containerColor = MaterialTheme.colorScheme.onErrorContainer,
+                contentColor = MaterialTheme.colorScheme.errorContainer
             ),
             modifier = Modifier
                 .padding(top = 16.dp)

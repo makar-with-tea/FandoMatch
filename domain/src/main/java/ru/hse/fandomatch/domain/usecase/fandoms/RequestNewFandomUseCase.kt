@@ -14,6 +14,7 @@ class RequestNewFandomUseCase(
         description: String,
     ): Result<Unit> {
         return runCatching {
+            throw RuntimeException("wiwiwi")
             val userId = sharedPrefRepository.getUserId() ?: throw RuntimeException("User ID not found in shared preferences")
             globalRepository.requestNewFandom(
                 userId = userId,

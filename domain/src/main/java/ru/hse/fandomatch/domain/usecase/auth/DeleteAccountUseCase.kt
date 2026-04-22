@@ -7,8 +7,10 @@ class DeleteAccountUseCase(
     private val globalRepository: GlobalRepository,
     private val sharedPrefRepository: SharedPrefRepository,
 ) {
-    suspend fun execute(): Result<Unit> = runCatching {
-        globalRepository.deleteUser()
-        sharedPrefRepository.clearInfo()
+    suspend fun execute(): Result<Unit> {
+        return runCatching {
+            globalRepository.deleteUser()
+            sharedPrefRepository.clearInfo()
+        }
     }
 }

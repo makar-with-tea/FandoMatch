@@ -536,7 +536,7 @@ fun ErrorState(
             text = errorText ?: stringResource(id = R.string.unknown_error),
             onConfirm = onConfirm,
             onDismissRequest = onDismiss,
-            confirmButtonText = stringResource(id = R.string.retry_button_text)
+            confirmButtonText = stringResource(id = R.string.retry_button_text),
         )
     }
 }

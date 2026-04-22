@@ -33,6 +33,7 @@ class AddFandomViewModel(
             is AddFandomEvent.CategoryChanged -> categoryChanged(event.category)
             is AddFandomEvent.DescriptionChanged -> descriptionChanged(event.description)
             AddFandomEvent.SendButtonClicked -> send()
+            AddFandomEvent.ToastShown -> _action.value = null
             AddFandomEvent.Clear -> clear()
         }
     }
@@ -70,7 +71,7 @@ class AddFandomViewModel(
     }
 
     private fun send() {
-        val currentState = _state.value as AddFandomState.Main
+        val currentState = _state.value as? AddFandomState.Main ?: return
         _state.value = currentState.copy(
             isLoading = true
         )
@@ -94,31 +95,32 @@ class AddFandomViewModel(
         }
 
         viewModelScope.launch(dispatcherIO) {
-            val result = requestNewFandomUseCase.execute(
+            requestNewFandomUseCase.execute(
                 name = currentState.name,
                 category = currentState.category,
                 description = currentState.description,
             )
-            if (result.isFailure) {
-                Log.e(
-                    "AddFandomViewModel",
-                    "Failed to request new fandom",
-                    result.exceptionOrNull()
-                )
-                withContext(dispatcherMain) {
-                    _state.value = currentState.copy(
-                        isLoading = false
+                .onFailure {
+                    Log.e(
+                        "AddFandomViewModel",
+                        "Failed to request new fandom",
+                        it
                     )
-                    _action.value = AddFandomAction.ShowNetworkErrorToast
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            isLoading = false
+                        )
+                        _action.value = AddFandomAction.ShowNetworkErrorToast
+                    }
                 }
-            } else {
-                withContext(dispatcherMain) {
-                    _state.value = currentState.copy(
-                        isLoading = false
-                    )
-                    _action.value = AddFandomAction.ShowSuccessToastAndGoBack
+                .onSuccess {
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            isLoading = false
+                        )
+                        _action.value = AddFandomAction.ShowSuccessToastAndGoBack
+                    }
                 }
-            }
         }
     }
 
