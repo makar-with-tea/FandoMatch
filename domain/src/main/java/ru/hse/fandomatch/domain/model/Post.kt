@@ -5,10 +5,10 @@ data class Post(
     val authorId: String,
     val authorName: String,
     val authorLogin: String?,
-    val authorAvatarUrl: String?,
+    val authorAvatar: MediaItem?,
     val timestamp: Long,
     val content: String?,
-    val mediaItems: List<String>,
+    val mediaItems: List<MediaItem>,
     val likeCount: Int,
     val commentCount: Int,
     val isLikedByCurrentUser: Boolean,
@@ -20,15 +20,21 @@ enum class MediaType {
 }
 
 data class MediaItem(
-    val mediaId: String,
+    val id: String,
     val mediaType: MediaType,
-    val mediaUrl: String
+    val url: String
+)
+
+data class UploadMedia(
+    val url: String,
+    val mediaId: String,
+    val expiresAt: Long,
 )
 
 data class Comment(
     val authorName: String,
     val authorLogin: String?,
-    val authorAvatarUrl: String?,
+    val authorAvatar: MediaItem?,
     val timestamp: Long,
     val content: String,
 )

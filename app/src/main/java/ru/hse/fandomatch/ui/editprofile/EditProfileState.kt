@@ -2,6 +2,7 @@ package ru.hse.fandomatch.ui.editprofile
 
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
+import ru.hse.fandomatch.domain.model.MediaItem
 
 sealed class EditProfileState {
     enum class EditProfileError {
@@ -23,16 +24,20 @@ sealed class EditProfileState {
         val login: String,
         val description: String?,
         val descriptionError: EditProfileError = EditProfileError.IDLE,
-        val avatarUrl: String?,
+        val avatarBytes: ByteArray?,
+        val avatar: MediaItem?,
         val avatarError: EditProfileError = EditProfileError.IDLE,
-        val backgroundUrl: String?,
+        val backgroundBytes: ByteArray?,
+        val background: MediaItem?,
         val backgroundError: EditProfileError = EditProfileError.IDLE,
         val fandoms: List<Fandom>,
         val foundFandoms: List<Fandom>,
         val areFandomsLoading: Boolean,
         val city: City?,
-        val cityError: EditProfileError = EditProfileError.IDLE,
+        val foundCities: List<City>,
+        val areCitiesLoading: Boolean,
     ) : EditProfileState()
+
     object Error : EditProfileState()
 }
 
@@ -75,9 +80,11 @@ sealed class EditProfileEvent {
     data class FandomRemoved(val fandom: Fandom) : EditProfileEvent()
     data class FandomSearched(val query: String?) : EditProfileEvent()
     data object AddFandomButtonClicked : EditProfileEvent()
-    data class CityChanged(val cityName: String) : EditProfileEvent()
+    data class CitySearched(val query: String?) : EditProfileEvent()
+    data class CitySelected(val city: City) : EditProfileEvent()
     data object SaveButtonClicked : EditProfileEvent()
     data object LoadProfileData : EditProfileEvent()
+    data object ToastShown : EditProfileEvent()
     data object Clear : EditProfileEvent()
 }
 

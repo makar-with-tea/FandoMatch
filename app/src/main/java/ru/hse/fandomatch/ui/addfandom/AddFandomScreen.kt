@@ -7,12 +7,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -21,13 +20,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuItemColors
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
@@ -45,10 +40,10 @@ import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.FandomCategory
-import ru.hse.fandomatch.getColor
+import ru.hse.fandomatch.utils.getColor
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyTextField
-import ru.hse.fandomatch.toStringId
+import ru.hse.fandomatch.utils.toStringId
 
 @Composable
 fun AddFandomScreen(
@@ -58,7 +53,7 @@ fun AddFandomScreen(
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
 
-    Log.d("AuthorizationScreen", "State: $state")
+    Log.d("AddFandomScreen", "State: $state")
     when (action.value) {
         AddFandomAction.ShowSuccessToastAndGoBack -> {
             Toast.makeText(
@@ -67,7 +62,7 @@ fun AddFandomScreen(
                 Toast.LENGTH_SHORT
             ).show()
             navigateBack()
-            viewModel.obtainEvent(AddFandomEvent.Clear)
+            viewModel.obtainEvent(AddFandomEvent.ToastShown)
         }
 
         AddFandomAction.ShowNetworkErrorToast -> {
@@ -76,7 +71,7 @@ fun AddFandomScreen(
                 R.string.network_error,
                 Toast.LENGTH_SHORT
             ).show()
-            viewModel.obtainEvent(AddFandomEvent.Clear)
+            viewModel.obtainEvent(AddFandomEvent.ToastShown)
         }
 
         null -> {}
@@ -111,108 +106,120 @@ fun MainState(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top,
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
         ) {
-            Text(
-                stringResource(id = R.string.add_fandom_description),
-                modifier = Modifier
-                    .padding(bottom = 20.dp)
-            )
-
-            MyTextField(
-                value = name.value,
-                label = stringResource(id = R.string.fandom_name_label),
-                isError = state.nameError != AddFandomState.AddFandomError.IDLE,
-                errorText = if (state.nameError != AddFandomState.AddFandomError.NETWORK)
-                    state.nameError.toText() else null
-            ) {
-                name.value = it
-                onFandomNameChanged(it)
+            item {
+                Text(
+                    stringResource(id = R.string.add_fandom_description),
+                    modifier = Modifier
+                        .padding(vertical = 16.dp)
+                )
             }
 
-            Text(
-                stringResource(id = R.string.fandom_category_label),
-                modifier = Modifier
-                    .padding(bottom = 4.dp)
-            )
-
-            var expanded by remember { mutableStateOf(false) }
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = it },
-                modifier = Modifier
-                    .padding(bottom = 20.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .menuAnchor()
-                        .width(200.dp)
-                        .clip(CircleShape)
-                        .background(
-                            category.value.getColor()
-                        )
-                        .clickable { expanded = true }
-                        .padding(horizontal = 2.dp, vertical = 8.dp),
-                    contentAlignment = Alignment.Center
+            item {
+                MyTextField(
+                    value = name.value,
+                    label = stringResource(id = R.string.fandom_name_label),
+                    isError = state.nameError != AddFandomState.AddFandomError.IDLE,
+                    errorText = if (state.nameError != AddFandomState.AddFandomError.NETWORK)
+                        state.nameError.toText() else null
                 ) {
-                    Text(
-                        stringResource(id = category.value.toStringId()),
-                        modifier = Modifier,
-                    )
+                    name.value = it
+                    onFandomNameChanged(it)
+                }
+            }
+
+            item {
+                Text(
+                    stringResource(id = R.string.fandom_category_label),
+                    modifier = Modifier
+                        .padding(bottom = 4.dp)
+                )
+            }
+
+            item {
+                var expanded by remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it },
+                    modifier = Modifier
+                        .padding(bottom = 20.dp)
+                ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(),
-                        contentAlignment = Alignment.CenterEnd
+                            .menuAnchor()
+                            .width(200.dp)
+                            .clip(CircleShape)
+                            .background(
+                                category.value.getColor()
+                            )
+                            .clickable { expanded = true }
+                            .padding(horizontal = 2.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowDropDown,
-                            contentDescription = null
+                        Text(
+                            stringResource(id = category.value.toStringId()),
+                            modifier = Modifier,
                         )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.CenterEnd
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null
+                            )
+                        }
+                    }
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.exposedDropdownSize(true)
+                    ) {
+                        FandomCategory.entries.forEach { newCategory ->
+                            DropdownMenuItem(
+                                text = { Text(stringResource(id = newCategory.toStringId())) },
+                                onClick = {
+                                    category.value = newCategory
+                                    onFandomCategoryChanged(newCategory)
+                                    expanded = false
+                                },
+                                modifier = Modifier.background(newCategory.getColor()),
+                            )
+                        }
                     }
                 }
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                    modifier = Modifier.exposedDropdownSize(true)
+            }
+
+            item {
+                MyTextField(
+                    value = description.value,
+                    label = stringResource(id = R.string.fandom_description_label),
+                    isError = state.descriptionError != AddFandomState.AddFandomError.IDLE,
+                    errorText = if (state.descriptionError != AddFandomState.AddFandomError.NETWORK)
+                        state.descriptionError.toText() else null,
+                    hideOnDone = false
                 ) {
-                    FandomCategory.entries.forEach { newCategory ->
-                        DropdownMenuItem(
-                            text = { Text(stringResource(id = newCategory.toStringId())) },
-                            onClick = {
-                                category.value = newCategory
-                                onFandomCategoryChanged(newCategory)
-                                expanded = false
-                            },
-                            modifier = Modifier.background(newCategory.getColor()),
-                        )
-                    }
+                    description.value = it
+                    onFandomDescriptionChanged(it)
                 }
             }
 
-            MyTextField(
-                value = description.value,
-                label = stringResource(id = R.string.fandom_description_label),
-                isError = state.descriptionError != AddFandomState.AddFandomError.IDLE,
-                errorText = if (state.descriptionError != AddFandomState.AddFandomError.NETWORK)
-                    state.descriptionError.toText() else null,
-                hideOnDone = false
-            ) {
-                description.value = it
-                onFandomDescriptionChanged(it)
-            }
-
-            Button(
-                onClick = { onSendButtonClick() },
-                enabled = state.descriptionError == AddFandomState.AddFandomError.IDLE &&
-                        state.nameError == AddFandomState.AddFandomError.IDLE
-            ) {
-                Text(stringResource(id = R.string.send_request_button))
+            item {
+                Button(
+                    onClick = { onSendButtonClick() },
+                    enabled = state.descriptionError == AddFandomState.AddFandomError.IDLE &&
+                            state.nameError == AddFandomState.AddFandomError.IDLE
+                ) {
+                    Text(stringResource(id = R.string.send_request_button))
+                }
             }
         }
     }

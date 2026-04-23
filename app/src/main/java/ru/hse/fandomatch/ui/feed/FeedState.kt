@@ -10,7 +10,6 @@ sealed class FeedState {
     data class Main(
         val posts: List<Post>,
     ) : FeedState()
-
     data object Loading : FeedState()
     data object Error : FeedState()
     data object Idle : FeedState()
@@ -24,9 +23,11 @@ sealed class FeedEvent {
         val postId: String,
     ): FeedEvent()
     data object LoadPosts: FeedEvent()
+    data object NewPostClicked: FeedEvent()
     data object Clear: FeedEvent()
 }
 
 sealed class FeedAction {
     data class NavigateToPost(val postId: String) : FeedAction()
+    data object NavigateToNewPost : FeedAction()
 }

@@ -33,6 +33,7 @@ class FeedViewModel(
             is FeedEvent.PostClicked -> goToPost(event.postId)
             is FeedEvent.LoadPosts -> loadPosts()
             is FeedEvent.PostLiked -> likePost(event.postId)
+            FeedEvent.NewPostClicked -> _action.value = FeedAction.NavigateToNewPost
             is FeedEvent.Clear -> clear()
         }
     }

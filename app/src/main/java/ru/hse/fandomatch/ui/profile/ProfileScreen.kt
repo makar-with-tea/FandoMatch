@@ -37,7 +37,7 @@ import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.epochMillisToDateString
+import ru.hse.fandomatch.utils.epochMillisToDateString
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.AvatarWithBackground
 import ru.hse.fandomatch.ui.composables.BasicErrorState
@@ -384,10 +384,10 @@ private fun MainState(
                                 FeedPost(
                                     userName = post.authorName,
                                     userLogin = post.authorLogin,
-                                    userAvatarUrl = post.authorAvatarUrl,
+                                    userAvatarUrl = post.authorAvatar?.url,
                                     postDate = post.timestamp.epochMillisToDateString(),
                                     postText = post.content,
-                                    imageUrls = post.mediaItems,
+                                    mediaItems = post.mediaItems,
                                     areReactionsAvailable = state.type is ProfileType.Own
                                             || state.type is ProfileType.Friend,
                                     likeCount = post.likeCount,
@@ -429,7 +429,7 @@ private fun MainState(
                             ) {
                                 AvatarAndNameBlock(
                                     name = friend.name,
-                                    avatarUrl = friend.avatarUrl,
+                                    avatarUrl = friend.avatar?.url,
                                     login = friend.login,
                                     backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                                     avatarSize = 36.dp,
@@ -465,7 +465,7 @@ private fun MainState(
                             ) {
                                 AvatarAndNameBlock(
                                     name = possibleFriend.name,
-                                    avatarUrl = possibleFriend.avatarUrl,
+                                    avatarUrl = possibleFriend.avatar?.url,
                                     login = possibleFriend.login,
                                     backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                                     avatarSize = 36.dp,

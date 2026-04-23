@@ -1,15 +1,24 @@
 package ru.hse.fandomatch.data
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import okhttp3.RequestBody
 import retrofit2.HttpException
 import ru.hse.fandomatch.data.api.ChatApiService
 import ru.hse.fandomatch.data.api.CoreApiService
+import ru.hse.fandomatch.data.api.S3UploadApiService
 import ru.hse.fandomatch.data.api.UserApiService
 import ru.hse.fandomatch.data.model.ChangePasswordRequestDTO
 import ru.hse.fandomatch.data.model.ChatMessagesRequestDTO
 import ru.hse.fandomatch.data.model.ChatPreviewsRequestDTO
 import ru.hse.fandomatch.data.model.CityDTO
+import ru.hse.fandomatch.data.model.CreatePostRequestDTO
 import ru.hse.fandomatch.data.model.EditUserProfileRequestDTO
 import ru.hse.fandomatch.data.model.FandomCategoryDTO
 import ru.hse.fandomatch.data.model.FandomDTO
@@ -25,40 +34,53 @@ import ru.hse.fandomatch.data.model.MatchBatchRequestDTO
 import ru.hse.fandomatch.data.model.MatchFilterDTO
 import ru.hse.fandomatch.data.model.MatchFilterRequestDTO
 import ru.hse.fandomatch.data.model.MediaTypeDTO
+import ru.hse.fandomatch.data.model.PostMediaInputDTO
 import ru.hse.fandomatch.data.model.PostsGetRequestDTO
 import ru.hse.fandomatch.data.model.PresignedUploadRequestDTO
 import ru.hse.fandomatch.data.model.PublicUserProfileResponseDTO
+import ru.hse.fandomatch.data.model.RefreshTokenDTO
 import ru.hse.fandomatch.data.model.ResponseStatusDTO
 import ru.hse.fandomatch.data.model.SendMessageRequestDTO
 import ru.hse.fandomatch.data.model.TimestampPaginationRequestDTO
 import ru.hse.fandomatch.data.model.UserLoginRequestDTO
 import ru.hse.fandomatch.data.model.UserProfileRequestDTO
 import ru.hse.fandomatch.data.model.UserRegistrationRequestDTO
+import ru.hse.fandomatch.data.socket.ChatSocketService
+import ru.hse.fandomatch.domain.model.AuthInfo
 import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
+import ru.hse.fandomatch.domain.model.Filters
+import ru.hse.fandomatch.domain.model.FullPost
 import ru.hse.fandomatch.domain.model.Gender
+import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.Message
+import ru.hse.fandomatch.domain.model.OtherProfileItem
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.model.ProfileType
-import ru.hse.fandomatch.domain.model.AuthInfo
-import ru.hse.fandomatch.domain.model.Filters
-import ru.hse.fandomatch.domain.model.FullPost
-import ru.hse.fandomatch.domain.model.MediaType
-import ru.hse.fandomatch.domain.model.OtherProfileItem
+import ru.hse.fandomatch.domain.model.UploadMedia
 import ru.hse.fandomatch.domain.model.User
+import ru.hse.fandomatch.domain.model.UserPreferences
 import ru.hse.fandomatch.domain.repos.GlobalRepository
-import kotlin.Int
-import kotlin.String
+import okhttp3.MediaType as OkHttpMediaType
 
 class GlobalRepositoryImpl(
     private val coreApiService: CoreApiService,
     private val chatApiService: ChatApiService,
     private val userApiService: UserApiService,
+    private val s3UploadApiService: S3UploadApiService,
+    private val chatSocketService: ChatSocketService,
 ): GlobalRepository {
+    private val repositoryScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.IO
+    )
+
+    private val chatMessagesJobs = mutableMapOf<String, Job>()
+    private var chatPreviewsJob: Job? = null
+
     override suspend fun getUser(profileId: String): User {
         val response = coreApiService.getUserProfile(
             UserProfileRequestDTO(
@@ -76,8 +98,8 @@ class GlobalRepositoryImpl(
                             name = userDTO.name,
                             gender = Gender.FEMALE, // todo даша
                             age = 0, // todo даша
-                            avatarUrl = userDTO.avatar?.url,
-                            backgroundUrl = userDTO.background?.url,
+                            avatar = userDTO.avatar?.toDomain(),
+                            background = userDTO.background?.toDomain(),
                             city = userDTO.city?.toDomain(),
                             profileType = ProfileType.Friend(login = userDTO.username)
                         )
@@ -90,8 +112,8 @@ class GlobalRepositoryImpl(
                             gender = userDTO.gender?.toDomain()
                                 ?: Gender.NOT_SPECIFIED, // todo даша
                             age = userDTO.age.toInt(),
-                            avatarUrl = userDTO.avatar?.url,
-                            backgroundUrl = userDTO.background?.url,
+                            avatar = userDTO.avatar?.toDomain(),
+                            background = userDTO.background?.toDomain(),
                             city = userDTO.city?.toDomain(),
                             profileType = ProfileType.Own(
                                 login = userDTO.username,
@@ -106,8 +128,8 @@ class GlobalRepositoryImpl(
                             name = userDTO.name,
                             gender = Gender.NOT_SPECIFIED, // todo даша
                             age = 0, // todo даша
-                            avatarUrl = userDTO.avatar?.url,
-                            backgroundUrl = userDTO.background?.url,
+                            avatar = userDTO.avatar?.toDomain(),
+                            background = userDTO.background?.toDomain(),
                             city = userDTO.city?.toDomain(),
                             profileType = ProfileType.Stranger(userDTO.hasCurrentUserReacted)
                         )
@@ -132,7 +154,40 @@ class GlobalRepositoryImpl(
             UserLoginRequestDTO(
                 email = null,
                 username = login,
-                hashedPassword = password // todo hashing
+                hashedPassword = PasswordHasher.sha256(password) // todo даша hashing
+            )
+        )
+        when (response.status) {
+            ResponseStatusDTO.SUCCESS -> {
+                return AuthInfo(
+                    accessToken = response.successResponse!!.accessToken,
+                    refreshToken = response.successResponse.refreshToken,
+                    userId = response.successResponse.uuid,
+                )
+            }
+
+            ResponseStatusDTO.ERROR -> {
+                throw Exception("Login failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}") // todo error handling
+            }
+        }
+    }
+
+    override suspend fun register(
+        name: String,
+        email: String,
+        login: String,
+        dateOfBirthMillis: Long,
+        gender: Gender,
+        avatarMediaId: String?,
+        password: String
+    ): AuthInfo {
+        val response = userApiService.register(
+            UserRegistrationRequestDTO(
+                name = name,
+                email = email,
+                username = login,
+                birthDate = dateOfBirthMillis,
+                hashedPassword = PasswordHasher.sha256(password) // todo даша hashing
             )
         )
         when (response.status) {
@@ -150,22 +205,19 @@ class GlobalRepositoryImpl(
         }
     }
 
-    override suspend fun register(
-        name: String,
-        email: String,
-        login: String,
-        dateOfBirthMillis: Long,
-        gender: Gender,
-        avatarByteArray: ByteArray?,
-        password: String
+    override suspend fun logout() {
+        val response = userApiService.logout()
+        if (response.errorResponse != null) {
+            throw Exception("Logout failed: ${response.errorResponse.errorCode}, ${response.errorResponse.errorMessage}")
+        }
+    }
+
+    override suspend fun refreshToken(
+        refreshToken: String
     ): AuthInfo {
-        val response = userApiService.register(
-            UserRegistrationRequestDTO(
-                name = name,
-                email = email,
-                username = login,
-                birthDate = dateOfBirthMillis,
-                hashedPassword = password // todo hashing
+        val response = userApiService.refreshToken(
+            RefreshTokenDTO(
+                refreshToken = refreshToken
             )
         )
         when (response.status) {
@@ -178,7 +230,7 @@ class GlobalRepositoryImpl(
             }
 
             ResponseStatusDTO.ERROR -> {
-                throw Exception("Registration failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}") // todo error handling
+                throw Exception("Token refresh failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}") // todo error handling
             }
         }
     }
@@ -209,8 +261,8 @@ class GlobalRepositoryImpl(
     override suspend fun changePassword(oldPassword: String, newPassword: String) {
         val response = userApiService.changePassword(
             ChangePasswordRequestDTO(
-                oldPassword = oldPassword,
-                newPassword = newPassword
+                oldPassword = PasswordHasher.sha256(oldPassword), // todo даша hashing
+                newPassword = PasswordHasher.sha256(newPassword) // todo даша hashing
             )
         )
         if (response.errorResponse != null) {
@@ -218,7 +270,7 @@ class GlobalRepositoryImpl(
         }
     }
 
-    override suspend fun deleteUser(login: String) {
+    override suspend fun deleteUser() {
         // todo даша
     }
 
@@ -235,7 +287,7 @@ class GlobalRepositoryImpl(
                         id = friendDTO.uid,
                         name = friendDTO.name,
                         login = friendDTO.username,
-                        avatarUrl = friendDTO.avatar?.url
+                        avatar = friendDTO.avatar?.toDomain(),
                     )
                 }
             }
@@ -261,7 +313,7 @@ class GlobalRepositoryImpl(
                         id = requestDTO.uid,
                         name = requestDTO.name,
                         login = null,
-                        avatarUrl = requestDTO.avatar?.url
+                        avatar = requestDTO.avatar?.toDomain(),
                     )
                 }
             }
@@ -287,6 +339,32 @@ class GlobalRepositoryImpl(
         // todo даша
     }
 
+    override suspend fun getCitiesByQuery(query: String): List<City> {
+        // todo даша
+        return emptyList()
+    }
+
+    override suspend fun getUserPreferences(): UserPreferences {
+        // todo даша
+        return UserPreferences(
+            matchesEnabled = true,
+            messagesEnabled = true,
+            hideMyPostsFromNonMatches = true
+        )
+    }
+
+    override suspend fun updateUserPreferences(
+        matchNotificationsEnabled: Boolean,
+        messageNotificationsEnabled: Boolean,
+        hideMyPostsFromNonMatches: Boolean
+    ) {
+        // todo даша
+    }
+
+    override suspend fun changeEmail(newEmail: String) {
+        // todo даша
+    }
+
     override suspend fun getSuggestedProfiles(
         size: Int
     ): List<ProfileCard> {
@@ -302,7 +380,7 @@ class GlobalRepositoryImpl(
                         id = candidateDTO.uuid,
                         name = candidateDTO.name,
                         age = candidateDTO.age,
-                        avatarUrl = candidateDTO.avatar?.url,
+                        avatar = candidateDTO.avatar?.toDomain(),
                         fandoms = candidateDTO.fandoms.map { it.toDomain() },
                         gender = Gender.FEMALE, // todo даша
                         compatibilityPercentage = candidateDTO.compatibility,
@@ -386,24 +464,32 @@ class GlobalRepositoryImpl(
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<ChatPreview>> {
-        val response = chatApiService.getChatPreviews(
-            ChatPreviewsRequestDTO(
-                beforeTimestamp = beforeTimestamp,
-                size = size
-            )
-        )
-        return MutableStateFlow(response.successResponse?.previews?.map { previewDTO ->
+        val initial = chatApiService.getChatPreviews(
+            ChatPreviewsRequestDTO(beforeTimestamp = beforeTimestamp, size = size)
+        ).successResponse?.previews?.map { dto ->
             ChatPreview(
-                chatId = previewDTO.chatId,
-                participantName = previewDTO.participantName,
-                participantAvatarUrl = previewDTO.participantAvatarUrl,
-                lastMessage = previewDTO.lastMessage,
-                isLastMessageFromThisUser = previewDTO.isLastMessageFromThisUser,
-                lastMessageTimestamp = previewDTO.lastMessageTimestamp,
-                newMessagesCount = previewDTO.newMessagesCount,
+                chatId = dto.chatId,
+                participantName = dto.participantName,
+                participantAvatarUrl = dto.participantAvatarUrl,
+                lastMessage = dto.lastMessage,
+                isLastMessageFromThisUser = dto.isLastMessageFromThisUser,
+                lastMessageTimestamp = dto.lastMessageTimestamp,
+                newMessagesCount = dto.newMessagesCount,
             )
         } ?: emptyList()
-        ) // todo websocket somehow
+
+        val state = MutableStateFlow(initial)
+
+        chatPreviewsJob?.cancel()
+        chatPreviewsJob = chatSocketService.observeChatPreviews()
+            .onEach { incoming ->
+                val updated = state.value
+                    .filterNot { it.chatId == incoming.chatId } + incoming
+                state.value = updated.sortedByDescending { it.lastMessageTimestamp }
+            }
+            .launchIn(repositoryScope)
+
+        return state
     }
 
     override suspend fun subscribeToChatMessages(
@@ -412,24 +498,35 @@ class GlobalRepositoryImpl(
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<Message>> {
-        val response = chatApiService.getChatMessages(
+        val initial = chatApiService.getChatMessages(
             userId = userId,
             request = ChatMessagesRequestDTO(
                 chatId = chatId,
                 beforeTimestamp = beforeTimestamp,
                 size = size
             )
-        )
-        return MutableStateFlow(response.successResponse?.messages?.map { messageDTO ->
+        ).successResponse?.messages?.map { dto ->
             Message(
-                messageId = messageDTO.messageId,
-                isFromThisUser = messageDTO.isFromThisUser,
-                content = messageDTO.content,
-                timestamp = messageDTO.timestamp,
-                imageUrls = messageDTO.mediaItems?.map { it.url } ?: emptyList(),
+                messageId = dto.messageId,
+                isFromThisUser = dto.isFromThisUser,
+                content = dto.content,
+                timestamp = dto.timestamp,
+                mediaItems = dto.mediaItems?.map { it.toDomain() } ?: emptyList(),
             )
         } ?: emptyList()
-        ) // todo websocket somehow
+
+        val state = MutableStateFlow(initial)
+
+        chatMessagesJobs[userId]?.cancel()
+        chatMessagesJobs[userId] = chatSocketService.observeChatMessages(userId)
+            .onEach { incoming ->
+                state.value = (state.value + incoming)
+                    .distinctBy { it.messageId }
+                    .sortedBy { it.timestamp }
+            }
+            .launchIn(repositoryScope)
+
+        return state
     }
 
     override suspend fun loadChatInfo(userId: String): Chat {
@@ -457,15 +554,14 @@ class GlobalRepositoryImpl(
     override suspend fun sendMessage(
         receiverId: String,
         content: String,
-        images: List<ByteArray>,
+        mediaIdsWithTypes: List<Pair<String, MediaType>>,
         timestamp: Long
     ) {
-        // todo upload images and get mediaIds
         val response = chatApiService.sendMessage(
             userId = receiverId,
             request = SendMessageRequestDTO(
                 content = content,
-                mediaIds = emptyList(),
+                mediaIds = mediaIdsWithTypes.map { it.first },
                 timestamp = timestamp,
             )
         )
@@ -474,7 +570,7 @@ class GlobalRepositoryImpl(
         }
     }
 
-    override suspend fun getUploadMediaUrl(mediaType: MediaType): String {
+    override suspend fun getUploadMediaUrl(mediaType: MediaType): UploadMedia {
         val response = chatApiService.getPresignedUploadUrl(
             PresignedUploadRequestDTO(
                 mediaType = MediaTypeDTO.fromDomain(mediaType)
@@ -482,7 +578,7 @@ class GlobalRepositoryImpl(
         )
         when (response.status) {
             ResponseStatusDTO.SUCCESS -> {
-                return response.successResponse!!.uploadUrl
+                return response.successResponse!!.toDomain()
             }
 
             ResponseStatusDTO.ERROR -> {
@@ -490,6 +586,19 @@ class GlobalRepositoryImpl(
                     throw Exception("Failed to get upload media url: $errorCode, $errorMessage")
                 }
             }
+        }
+    }
+
+    override suspend fun uploadToPresignedUrl(
+        url: String,
+        bytes: ByteArray,
+        contentType: String
+    ) {
+        val mediaType = OkHttpMediaType.parse(contentType)
+        val body = RequestBody.create(mediaType, bytes)
+        val response = s3UploadApiService.upload(url, body)
+        if (!response.isSuccessful) {
+            throw HttpException(response)
         }
     }
 
@@ -515,10 +624,10 @@ class GlobalRepositoryImpl(
                         authorId = postDTO.author.uuid,
                         authorName = postDTO.author.name!!, // todo даша
                         authorLogin = postDTO.author.username,
-                        authorAvatarUrl = postDTO.author.avatar?.url,
+                        authorAvatar = postDTO.author.avatar?.toDomain(),
                         timestamp = postDTO.createdAt,
                         content = postDTO.content,
-                        mediaItems = postDTO.mediaItems?.map { it.url } ?: emptyList(),
+                        mediaItems = postDTO.mediaItems?.map { it.toDomain() } ?: emptyList(),
                         likeCount = postDTO.likeCount ?: 0, // todo даша
                         commentCount = postDTO.commentCount ?: 0, // todo даша
                         isLikedByCurrentUser = false, // todo даша
@@ -557,10 +666,10 @@ class GlobalRepositoryImpl(
                         authorId = postDTO.author.uuid,
                         authorName = postDTO.author.name!!, // todo даша
                         authorLogin = postDTO.author.username,
-                        authorAvatarUrl = postDTO.author.avatar?.url,
+                        authorAvatar = postDTO.author.avatar?.toDomain(),
                         timestamp = postDTO.createdAt,
                         content = postDTO.content,
-                        mediaItems = postDTO.mediaItems?.map { it.url } ?: emptyList(),
+                        mediaItems = postDTO.mediaItems?.map { it.toDomain() } ?: emptyList(),
                         likeCount = postDTO.likeCount ?: 0, // todo даша
                         commentCount = postDTO.commentCount ?: 0, // todo даша
                         isLikedByCurrentUser = false, // todo даша
@@ -597,6 +706,29 @@ class GlobalRepositoryImpl(
         val response = coreApiService.likePost(postId)
         if (response.errorResponse != null) {
             throw Exception("Failed to like post: ${response.errorResponse.errorCode}, ${response.errorResponse.errorMessage}")
+        }
+    }
+
+    override suspend fun createPost(
+        content: String,
+        mediaIdsWithTypes: List<Pair<String, MediaType>>,
+        fandomIds: List<String>
+    ) {
+        val response = coreApiService.createPost(
+            CreatePostRequestDTO(
+                title = "", // todo даша убрать
+                content = content,
+                mediaItems = mediaIdsWithTypes.map { (mediaId, mediaType) ->
+                    PostMediaInputDTO(
+                        mediaId = mediaId,
+                        mediaType = MediaTypeDTO.fromDomain(mediaType)
+                    )
+                },
+                fandomId = fandomIds.firstOrNull() // todo даша multiple fandoms
+            )
+        )
+        if (response.errorResponse != null) {
+            throw Exception("Failed to create post: ${response.errorResponse.errorCode}, ${response.errorResponse.errorMessage}")
         }
     }
 

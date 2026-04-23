@@ -117,39 +117,3 @@ private fun LoadingState() = LoadingBlock()
 
 @Composable
 private fun IdleState() = LoadingBlock()
-
-@Preview(showBackground = true)
-@Composable
-fun MainStatePreview() {
-    val mockState = MatchesState.Main(
-        profileStack = listOf(
-            ProfileCard(
-                id = "1",
-                name = "Alice",
-                age = 25,
-                avatarUrl = "",
-                fandoms = listOf(
-                    Fandom(
-                        id = "1",
-                        name = "One Piece",
-                        category = FandomCategory.ANIME_MANGA,
-                    )
-                ),
-                description = "Luffy is my hero!",
-                compatibilityPercentage = 85,
-                gender = Gender.FEMALE,
-                city = null,
-            )
-        ),
-        isLoading = false,
-        error = MatchesState.MatchesError.IDLE
-    )
-
-    MainState(
-        state = mockState,
-        onLike = { },
-        onDislike = { },
-        onCardClick = { },
-        onReload = { }
-    )
-}

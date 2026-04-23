@@ -5,21 +5,29 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.model.MediaItem
+import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
-import ru.hse.fandomatch.epochMillisToDateString
+import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
+import ru.hse.fandomatch.domain.usecase.media.DownloadMediaToGalleryUseCase
+import ru.hse.fandomatch.utils.epochMillisToDateString
 
 class ChatViewModel(
     private val sendMessageUseCase: SendMessageUseCase,
     private val loadChatInfoUseCase: LoadChatInfoUseCase,
     private val subscribeToChatMessagesUseCase: SubscribeToChatMessagesUseCase,
+    private val uploadMediaUseCase: UploadMediaUseCase,
+    private val downloadMediaToGalleryUseCase: DownloadMediaToGalleryUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -30,72 +38,133 @@ class ChatViewModel(
 
     private var _messages: StateFlow<List<Message>> = MutableStateFlow(emptyList())
 
+    private val stateMutex = Mutex()
+    private var loadChatJob: Job? = null
+
+    private suspend fun setState(reducer: (ChatState) -> ChatState) {
+        withContext(dispatcherMain) {
+            stateMutex.withLock {
+                _state.value = reducer(_state.value)
+            }
+        }
+    }
+
     fun obtainEvent(event: ChatEvent) {
         Log.i("ChatViewModel", "Obtained event: $event")
         when (event) {
             ChatEvent.Clear -> clear()
             is ChatEvent.LoadChat -> loadChat(event.profileId)
-            is ChatEvent.SendMessage -> sendMessage(event.message, event.images, event.timestamp)
+            is ChatEvent.SendMessage -> sendMessage(event.timestamp)
+            is ChatEvent.MessageDraftChanged -> draftChanged(event.draft)
+            is ChatEvent.AttachmentsChanged -> attachmentsChanged(event.filesWithTypes)
             is ChatEvent.ProfileClicked -> goToProfile()
+            is ChatEvent.DownloadMediaItem -> downloadMediaItem(event.mediaItem)
+            ChatEvent.ToastShown -> toastShown()
         }
     }
 
     private fun loadChat(profileId: String?) {
-        _state.value = ChatState.Loading
-        if (profileId == null) {
-            _state.value = ChatState.Error
-            return
-        }
-        viewModelScope.launch(dispatcherIO) {
-            delay(1000)
+        loadChatJob?.cancel()
+        loadChatJob = viewModelScope.launch(dispatcherIO) {
+            setState { ChatState.Loading }
+
+            if (profileId == null) {
+                setState { ChatState.Error }
+                return@launch
+            }
+
             val result = loadChatInfoUseCase.execute(userId = profileId)
             val chat = result.getOrNull() ?: run {
                 Log.e("ChatViewModel", "Failed to load chat info", result.exceptionOrNull())
-                withContext(dispatcherMain) {
-                    _state.value = ChatState.Error
-                }
+                setState { ChatState.Error }
                 return@launch
             }
-            // todo error handling
-            _messages = subscribeToChatMessagesUseCase.execute(userId = profileId, chatId = chat.chatId)
-            _state.value = ChatState.Main(
-                chatId = chat.chatId,
-                participantId = chat.participantId,
-                participantName = chat.participantName,
-                participantAvatarUrl = chat.participantAvatarUrl,
-                uiElements = _messages.value.mapMessagesToUiElements().reversed(),
-            )
 
-            _messages.collect {
-                Log.d("ChatViewModel", "Loaded chat messages: $it")
-                _state.value = when (val currentState = _state.value) {
-                    is ChatState.Main -> currentState.copy(
-                        uiElements = it.mapMessagesToUiElements().reversed()
-                    )
-                    else -> currentState
+            val messagesResult = subscribeToChatMessagesUseCase.execute(
+                userId = profileId,
+                chatId = chat.chatId
+            )
+            val messagesFlow = messagesResult.getOrNull() ?: run {
+                Log.e("ChatViewModel", "Failed to subscribe to chat messages", result.exceptionOrNull())
+                setState { ChatState.Error }
+                return@launch
+            }
+            _messages = messagesFlow
+
+            setState {
+                ChatState.Main(
+                    chatId = chat.chatId,
+                    participantId = chat.participantId,
+                    participantName = chat.participantName,
+                    participantAvatarUrl = chat.participantAvatarUrl,
+                    uiElements = messagesFlow.value.mapMessagesToUiElements().reversed(),
+                )
+            }
+
+            messagesFlow.collect { messages ->
+                setState { current ->
+                    if (current is ChatState.Main) {
+                        current.copy(
+                            uiElements = messages.mapMessagesToUiElements().reversed()
+                        )
+                    } else current
                 }
             }
         }
     }
 
-    private fun sendMessage(message: String, images: List<ByteArray>, timestamp: Long) {
-        Log.i("ChatViewModel", "Sending message: $message at $timestamp")
-        when (val currentState = _state.value) {
-            is ChatState.Main -> {
-                viewModelScope.launch(dispatcherIO) {
-                    val result = sendMessageUseCase.execute(
-                        userId = currentState.participantId,
-                        content = message,
-                        images = images,
-                        timestamp = timestamp * 1000,
-                    )
-                    if (result.isFailure) {
-                        Log.e("ChatViewModel", "Failed to send message", result.exceptionOrNull())
-                    }
-                }
+    private fun draftChanged(draft: String) {
+        viewModelScope.launch(dispatcherMain) {
+            setState { current ->
+                (current as? ChatState.Main)?.copy(messageDraft = draft) ?: current
             }
+        }
+    }
 
-            else -> Unit
+    private fun attachmentsChanged(filesWithTypes: List<Pair<ByteArray, MediaType>>) {
+        viewModelScope.launch(dispatcherMain) {
+            setState { current ->
+                (current as? ChatState.Main)?.copy(attachedFilesWithTypes = filesWithTypes) ?: current
+            }
+        }
+    }
+
+    private fun sendMessage(timestamp: Long) {
+        val currentState = _state.value as? ChatState.Main ?: return
+        val message = currentState.messageDraft
+        val filesWithTypes = currentState.attachedFilesWithTypes
+        if (message.isBlank() && filesWithTypes.isEmpty()) return
+        Log.i("ChatViewModel", "Sending message: $message at $timestamp")
+        viewModelScope.launch(dispatcherIO) {
+            val mediaIds = filesWithTypes.mapNotNull { (bytes, type) ->
+                val uploadInfoResult = uploadMediaUseCase.execute(bytes, type)
+                val mediaId = uploadInfoResult.getOrNull()
+                mediaId ?: run {
+                    Log.e(
+                        "ChatViewModel",
+                        "Failed to get upload media url",
+                        uploadInfoResult.exceptionOrNull()
+                    )
+                    return@mapNotNull null
+                }
+                mediaId to type
+            }
+            val result = sendMessageUseCase.execute(
+                userId = currentState.participantId,
+                content = message,
+                mediaIdsWithTypes = mediaIds,
+                timestamp = timestamp * 1000,
+            )
+            if (result.isFailure) {
+                Log.e("ChatViewModel", "Failed to send message", result.exceptionOrNull())
+                return@launch
+            }
+            setState { current ->
+                (current as? ChatState.Main)?.copy(
+                    messageDraft = "",
+                    attachedFilesWithTypes = emptyList()
+                ) ?: current
+            }
         }
     }
 
@@ -108,12 +177,35 @@ class ChatViewModel(
         }
     }
 
-    private fun clear() {
-        _state.value = ChatState.Idle
+    private fun downloadMediaItem(mediaItem: MediaItem) {
+        viewModelScope.launch(dispatcherIO) {
+            downloadMediaToGalleryUseCase.execute(
+                mediaUrl = mediaItem.url,
+                mediaType = mediaItem.mediaType
+            )
+                .onFailure {
+                    Log.e("ChatViewModel", "Failed to download media item", it)
+                    _action.value = ChatAction.ShowErrorDownloadToast
+                }
+                .onSuccess {
+                    _action.value = ChatAction.ShowSuccessDownloadToast
+                }
+        }
+    }
+
+    private fun toastShown() {
         _action.value = null
     }
 
-    fun List<Message>.mapMessagesToUiElements(): List<ChatUiElement> {
+    private fun clear() {
+        loadChatJob?.cancel()
+        viewModelScope.launch(dispatcherMain) {
+            setState { ChatState.Idle }
+            _action.value = null
+        }
+    }
+
+    private fun List<Message>.mapMessagesToUiElements(): List<ChatUiElement> {
         if (isEmpty()) return emptyList()
 
         val result = mutableListOf<ChatUiElement>()

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.ProfileCard
-import ru.hse.fandomatch.nameAndAgeString
+import ru.hse.fandomatch.utils.nameAndAgeString
 
 @Composable
 fun SwipeableCardContent(
@@ -56,13 +54,14 @@ fun SwipeableCardContent(
                 .weight(1f),
             contentAlignment = Alignment.BottomStart
         ) {
-            RawImageOrPlaceholder(
-                url = profile.avatarUrl,
-                context = LocalContext.current,
+            val placeholderIcon = ImageVector.vectorResource(R.drawable.ic_account_placeholder)
+            ImageOrPlaceholder(
+                url = profile.avatar?.url,
                 contentScale = ContentScale.FillHeight,
-                placeholderId = R.drawable.ic_account_placeholder,
+                placeholderIcon = placeholderIcon,
+                background = MaterialTheme.colorScheme.primaryContainer,
                 modifier = modifier
-                    .fillMaxHeight()
+                    .fillMaxSize()
                     .clip(RoundedCornerShape(12.dp)),
             )
 

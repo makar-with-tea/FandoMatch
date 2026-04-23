@@ -22,7 +22,6 @@ sealed class ChatsListEvent {
     data class ChatClicked(
         val chatId: String,
     ): ChatsListEvent()
-    // todo other events: delete, mute, etc.
     data object LoadChats: ChatsListEvent()
     data class SearchChats(val query: String?): ChatsListEvent()
     data object Clear: ChatsListEvent()

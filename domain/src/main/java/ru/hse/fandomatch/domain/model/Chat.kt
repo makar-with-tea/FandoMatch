@@ -22,5 +22,5 @@ data class Message(
     val isFromThisUser: Boolean,
     val content: String,
     val timestamp: Long,
-    val imageUrls: List<String> = emptyList(),
+    val mediaItems: List<MediaItem> = emptyList(),
 )

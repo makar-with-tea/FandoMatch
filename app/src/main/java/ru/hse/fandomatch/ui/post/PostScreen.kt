@@ -1,6 +1,7 @@
 package ru.hse.fandomatch.ui.post
 
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -27,13 +28,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.epochMillisToDateString
+import ru.hse.fandomatch.ui.chat.ChatAction
+import ru.hse.fandomatch.ui.chat.ChatEvent
+import ru.hse.fandomatch.utils.epochMillisToDateString
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.FullPost
@@ -57,6 +62,24 @@ fun PostScreen(
             viewModel.obtainEvent(PostEvent.Clear)
         }
 
+        PostAction.ShowErrorDownloadToast -> {
+            Toast.makeText(
+                LocalContext.current,
+                R.string.error_downloading_media_toast,
+                Toast.LENGTH_SHORT
+            ).show()
+            viewModel.obtainEvent(PostEvent.ToastShown)
+        }
+
+        PostAction.ShowSuccessDownloadToast -> {
+            Toast.makeText(
+                LocalContext.current,
+                R.string.success_downloading_media_toast,
+                Toast.LENGTH_SHORT
+            ).show()
+            viewModel.obtainEvent(PostEvent.ToastShown)
+        }
+
         null -> Unit
     }
 
@@ -69,8 +92,7 @@ fun PostScreen(
             onSendComment = { viewModel.obtainEvent(PostEvent.SendComment) },
             onClickProfile = { viewModel.obtainEvent(PostEvent.ProfileClicked) },
             onClickLike = { viewModel.obtainEvent(PostEvent.LikeClicked) },
-            onClickImages = { viewModel.obtainEvent(PostEvent.ImagesClicked) },
-            onCloseImages = { viewModel.obtainEvent(PostEvent.ImagesClosed) },
+            onDownloadMediaItem = { mediaItem -> viewModel.obtainEvent(PostEvent.DownloadMediaItem(mediaItem)) },
             onUpdateCommentDraft = { commentDraft -> viewModel.obtainEvent(PostEvent.UpdateCommentDraft(commentDraft)) },
         )
 
@@ -94,8 +116,7 @@ private fun MainState(
     onSendComment: () -> Unit,
     onClickProfile: () -> Unit,
     onClickLike: () -> Unit,
-    onClickImages: () -> Unit,
-    onCloseImages: () -> Unit,
+    onDownloadMediaItem: (MediaItem) -> Unit,
     onUpdateCommentDraft: (String) -> Unit,
 ) {
     setTopBarState(
@@ -103,7 +124,7 @@ private fun MainState(
             titleContent = {
                 AvatarAndNameBlock(
                     name = state.fullPost.post.authorName,
-                    avatarUrl = state.fullPost.post.authorAvatarUrl,
+                    avatarUrl = state.fullPost.post.authorAvatar?.url,
                     login = state.fullPost.post.authorLogin,
                     onClick = { onClickProfile() },
                 )
@@ -111,11 +132,11 @@ private fun MainState(
         )
     )
 
-    var imageUrlsForScreen by remember { mutableStateOf<List<String>>(emptyList()) }
-    var currentImageIndex by remember { mutableStateOf(0) }
-    BackHandler(enabled = imageUrlsForScreen.isNotEmpty()) {
-        imageUrlsForScreen = emptyList()
-        currentImageIndex = 0
+    var itemsForScreen by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
+    var currentItemIndex by remember { mutableStateOf(0) }
+    BackHandler(enabled = itemsForScreen.isNotEmpty()) {
+        itemsForScreen = emptyList()
+        currentItemIndex = 0
     }
 
     Column(
@@ -130,16 +151,16 @@ private fun MainState(
                 FullPost(
                     postDate = state.fullPost.post.timestamp.epochMillisToDateString(),
                     postText = state.fullPost.post.content,
-                    imageUrls = state.fullPost.post.mediaItems,
+                    mediaItems = state.fullPost.post.mediaItems,
                     areReactionsAvailable = true,
                     likeCount = state.fullPost.post.likeCount,
                     commentCount = state.fullPost.post.commentCount,
                     fandoms = state.fullPost.post.fandoms,
                     isLiked = state.fullPost.post.isLikedByCurrentUser,
                     onLikeClick = { onClickLike() },
-                    onImageClick = { urls, index ->
-                        imageUrlsForScreen = urls // todo move to view model
-                        currentImageIndex = index
+                    onItemClick = { urls, index ->
+                        itemsForScreen = urls // todo move to view model
+                        currentItemIndex = index
                     },
                     modifier = Modifier,
                     backgroundColor = MaterialTheme.colorScheme.background,
@@ -204,13 +225,14 @@ private fun MainState(
         )
     }
 
-    if (imageUrlsForScreen.isNotEmpty()) {
+    if (itemsForScreen.isNotEmpty()) {
         ImagesScreen(
-            urls = imageUrlsForScreen,
-            initialPage = currentImageIndex,
+            items = itemsForScreen,
+            initialPage = currentItemIndex,
             titleContent = {
                 // todo: from <user>, <time>
             },
+            onDownloadItem = onDownloadMediaItem,
             setTopBarState = setTopBarState,
         )
     }

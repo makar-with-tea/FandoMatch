@@ -36,17 +36,19 @@ import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.Comment
 import ru.hse.fandomatch.domain.model.Fandom
-import ru.hse.fandomatch.epochMillisToTimeString
+import ru.hse.fandomatch.domain.model.MediaItem
+import ru.hse.fandomatch.utils.epochMillisToTimeString
 
 @Composable
 fun FeedPost(
@@ -55,7 +57,7 @@ fun FeedPost(
     userAvatarUrl: String?,
     postDate: String,
     postText: String?,
-    imageUrls: List<String>,
+    mediaItems: List<MediaItem>,
     areReactionsAvailable: Boolean,
     likeCount: Int,
     commentCount: Int,
@@ -83,10 +85,10 @@ fun FeedPost(
                     backgroundColor = backgroundColor,
                     avatarSize = 36.dp
                 )
-                if (imageUrls.isNotEmpty()) {
-                    ImagesGrid(
-                        imageUrls = imageUrls,
-                        onImageClicked = { _, _ -> },
+                if (mediaItems.isNotEmpty()) {
+                    MediaItemsGrid(
+                        mediaItems = mediaItems,
+                        onItemClicked = { _, _ -> },
                         minHeight = 100.dp,
                         maxHeight = 300.dp
                     )
@@ -168,14 +170,14 @@ fun FeedPost(
 fun FullPost(
     postDate: String,
     postText: String?,
-    imageUrls: List<String>,
+    mediaItems: List<MediaItem>,
     areReactionsAvailable: Boolean,
     likeCount: Int,
     commentCount: Int,
     fandoms: List<Fandom>,
     isLiked: Boolean,
     onLikeClick: () -> Unit,
-    onImageClick: (List<String>, Int) -> Unit,
+    onItemClick: (List<MediaItem>, Int) -> Unit,
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.primaryContainer,
 ) {
@@ -188,10 +190,10 @@ fun FullPost(
             .background(backgroundColor)
             .padding(horizontal = 4.dp)
     ) {
-        if (imageUrls.isNotEmpty()) {
-            ImagesGrid(
-                imageUrls = imageUrls,
-                onImageClicked = { urls, index -> onImageClick(urls, index) },
+        if (mediaItems.isNotEmpty()) {
+            MediaItemsGrid(
+                mediaItems = mediaItems,
+                onItemClicked = { items, index -> onItemClick(items, index) },
                 minHeight = 100.dp,
                 maxHeight = 300.dp
             )
@@ -297,14 +299,14 @@ fun PostComment(
     Row(
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RawImageOrPlaceholder(
+        val placeholderIcon = ImageVector.vectorResource(id = R.drawable.ic_account_placeholder)
+        ImageOrPlaceholder(
             modifier = Modifier
                 .padding(start = 4.dp, top = 2.dp, bottom = 2.dp, end = 2.dp)
                 .size(24.dp)
                 .clip(CircleShape),
-            url = comment.authorAvatarUrl,
-            placeholderId = R.drawable.ic_account_placeholder,
-            context = LocalContext.current,
+            url = comment.authorAvatar?.url,
+            placeholderIcon = placeholderIcon,
         )
 
         Box(

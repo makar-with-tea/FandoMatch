@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MultiChoiceSegmentedButtonRow
 import androidx.compose.material3.RangeSlider
@@ -42,20 +43,22 @@ import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Gender
-import ru.hse.fandomatch.getColor
-import ru.hse.fandomatch.getName
-import ru.hse.fandomatch.stringId
-import ru.hse.fandomatch.toStringId
+import ru.hse.fandomatch.utils.getColor
+import ru.hse.fandomatch.utils.stringId
+import ru.hse.fandomatch.utils.toStringId
 import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.FandomInput
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MySwitch
+import ru.hse.fandomatch.ui.composables.getName
 import ru.hse.fandomatch.ui.theme.FandoMatchTheme
+import ru.hse.fandomatch.utils.getIcon
 import kotlin.math.roundToInt
 
 @Composable
 fun FiltersScreen(
     navigateToMatches: () -> Unit,
+    navigateToAddFandom: () -> Unit,
     viewModel: FiltersViewModel = koinViewModel()
 ) {
     val state = viewModel.state.collectAsState()
@@ -68,12 +71,18 @@ fun FiltersScreen(
             viewModel.obtainEvent(FiltersEvent.Clear)
         }
 
+        is FiltersAction.NavigateToAddFandom -> {
+            navigateToAddFandom()
+            viewModel.obtainEvent(FiltersEvent.Clear)
+        }
+
         is FiltersAction.ShowErrorToast -> {
             Toast.makeText(
                 LocalContext.current,
                 stringResource(R.string.filters_error_toast),
                 Toast.LENGTH_SHORT
             ).show()
+            viewModel.obtainEvent(FiltersEvent.ToastShown)
         }
 
         null -> {}
@@ -91,7 +100,8 @@ fun FiltersScreen(
                 onFandomSearch = { viewModel.obtainEvent(FiltersEvent.FandomSearched(it)) },
                 onLocationToggled = { viewModel.obtainEvent(FiltersEvent.LocationToggled(it)) },
                 onResetFilters = { viewModel.obtainEvent(FiltersEvent.ResetFilters) },
-                onApplyFilters = { viewModel.obtainEvent(FiltersEvent.ApplyFilters) }
+                onApplyFilters = { viewModel.obtainEvent(FiltersEvent.ApplyFilters) },
+                onAddFandomClicked = { viewModel.obtainEvent(FiltersEvent.AddFandomClicked) }
             )
         }
         is FiltersState.Loading -> {
@@ -120,7 +130,8 @@ private fun MainState(
     onFandomSearch: (String?) -> Unit,
     onLocationToggled: (Boolean) -> Unit,
     onResetFilters: () -> Unit,
-    onApplyFilters: () -> Unit
+    onApplyFilters: () -> Unit,
+    onAddFandomClicked: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -128,14 +139,16 @@ private fun MainState(
         ) {
         LazyColumn(
             modifier = Modifier
-                .padding(top = 16.dp, bottom = 0.dp, start = 16.dp, end = 16.dp)
+                .padding(top = 0.dp, bottom = 0.dp, start = 16.dp, end = 16.dp)
                 .fillMaxWidth()
                 .weight(1f),
             verticalArrangement = Arrangement.spacedBy(11.dp),
         ) {
             item {
                 Column(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
@@ -146,15 +159,23 @@ private fun MainState(
                     )
 
                     MultiChoiceSegmentedButtonRow {
-                        Gender.entries.forEachIndexed { index, label ->
+                        Gender.entries.forEachIndexed { index, gender ->
                             SegmentedButton(
                                 shape = SegmentedButtonDefaults.itemShape(
                                     index = index,
                                     count = Gender.entries.size
                                 ),
-                                onCheckedChange = { onGenderSelected(label) },
-                                checked = label in state.selectedGenders,
-                                label = { Text(stringResource(label.stringId())) }
+                                onCheckedChange = { onGenderSelected(gender) },
+                                checked = gender in state.selectedGenders,
+                                label = { Text(stringResource(gender.stringId())) },
+                                icon = {
+                                    if (gender in state.selectedGenders) {
+                                        Icon(
+                                            imageVector = gender.getIcon(),
+                                            contentDescription = null,
+                                        )
+                                    }
+                                }
                             )
                         }
                     }
@@ -288,6 +309,7 @@ private fun MainState(
                         onFandomAdded = onFandomAdded,
                         onFandomRemoved = onFandomRemoved,
                         onSearch = onFandomSearch,
+                        goToAddFandom = onAddFandomClicked,
                         areFandomsLoading = state.areFandomsLoading,
                     )
                 }
@@ -394,7 +416,8 @@ fun MainStatePreview() {
             onFandomSearch = {},
             onLocationToggled = {},
             onResetFilters = {},
-            onApplyFilters = {}
+            onApplyFilters = {},
+            onAddFandomClicked = {},
         )
     }
 }

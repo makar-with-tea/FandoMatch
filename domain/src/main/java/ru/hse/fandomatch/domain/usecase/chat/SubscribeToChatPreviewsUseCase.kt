@@ -7,8 +7,8 @@ import ru.hse.fandomatch.domain.repos.GlobalRepository
 class SubscribeToChatPreviewsUseCase(
     private val globalRepository: GlobalRepository,
 ) {
-    suspend fun execute(): StateFlow<List<ChatPreview>> {
-        return globalRepository.subscribeToChatPreviews(
+    suspend fun execute(): Result<StateFlow<List<ChatPreview>>> = runCatching {
+        globalRepository.subscribeToChatPreviews(
             beforeTimestamp = null,
             size = 100500, // todo
         )

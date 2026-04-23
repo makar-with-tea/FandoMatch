@@ -1,5 +1,7 @@
 package ru.hse.fandomatch.ui.chat
 
+import ru.hse.fandomatch.domain.model.MediaItem
+import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.Message
 
 sealed class ChatState {
@@ -14,7 +16,8 @@ sealed class ChatState {
         val participantAvatarUrl: String?,
         val uiElements: List<ChatUiElement>,
         val error: ChatError = ChatError.IDLE,
-        // todo хранить тут вводимое сообщение и картинки
+        val attachedFilesWithTypes: List<Pair<ByteArray, MediaType>> = emptyList(),
+        val messageDraft: String = "",
     ) : ChatState()
 
     data object Loading : ChatState()
@@ -24,19 +27,23 @@ sealed class ChatState {
 
 sealed class ChatEvent {
     data class SendMessage(
-        val message: String,
-        val images: List<ByteArray>,
         val timestamp: Long,
     ) : ChatEvent()
     data class LoadChat(
         val profileId: String?,
     ) : ChatEvent()
     data object ProfileClicked: ChatEvent()
+    data class MessageDraftChanged(val draft: String) : ChatEvent()
+    data class AttachmentsChanged(val filesWithTypes: List<Pair<ByteArray, MediaType>>) : ChatEvent()
+    data class DownloadMediaItem(val mediaItem: MediaItem) : ChatEvent()
+    data object ToastShown : ChatEvent()
     data object Clear : ChatEvent()
 }
 
 sealed class ChatAction {
     data class GoToProfile(val profileId: String) : ChatAction()
+    data object ShowSuccessDownloadToast : ChatAction()
+    data object ShowErrorDownloadToast : ChatAction()
 }
 
 sealed class ChatUiElement {

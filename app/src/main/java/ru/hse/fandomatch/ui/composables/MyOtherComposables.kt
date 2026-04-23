@@ -1,9 +1,5 @@
 package ru.hse.fandomatch.ui.composables
 
-import android.content.Context
-import android.graphics.BitmapFactory
-import android.util.Log
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,8 +25,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.Female
-import androidx.compose.material.icons.filled.Male
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -44,9 +38,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,7 +45,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -64,16 +54,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ru.hse.fandomatch.utils.BitmapHelper
 import ru.hse.fandomatch.R
-import ru.hse.fandomatch.domain.model.City
-import ru.hse.fandomatch.domain.model.Gender
-import ru.hse.fandomatch.getName
 import ru.hse.fandomatch.navigation.EndIconState
-import ru.hse.fandomatch.rawResId
 
 @Composable
 fun MyTitle(
@@ -186,49 +174,13 @@ fun LoadingBlock() {
     }
 }
 
-@Composable
-fun RawImageOrPlaceholder(
-    url: String?,
-    @DrawableRes placeholderId: Int = R.drawable.ic_account_placeholder,
-    contentScale: ContentScale = ContentScale.Crop,
-    context: Context,
-    modifier: Modifier = Modifier
-) {
-    if (url != null) {
-        val rawResId = rawResId(url, LocalContext.current)
-        val imageBitmap by remember(rawResId) {
-            mutableStateOf(
-                try {
-                    BitmapFactory.decodeStream(context.resources.openRawResource(rawResId))
-                        ?.asImageBitmap()
-                } catch (e: Exception) {
-                    Log.i("RawImageOrPlaceholder", "Error loading image from raw resource: $url", e)
-                    null
-                }
-            )
-        }
-        imageBitmap?.let {
-            Image(
-                bitmap = it,
-                contentDescription = null,
-                modifier = modifier,
-                contentScale = contentScale,
-            )
-        }
-    } else {
-        Image(
-            painter = painterResource(id = placeholderId),
-            contentDescription = null,
-            modifier = modifier,
-            contentScale = contentScale,
-        )
-    }
-}
 
 @Composable
 fun AvatarWithBackground(
     backgroundUrl: String?,
     avatarUrl: String?,
+    backgroundBytes: ByteArray? = null,
+    avatarBytes: ByteArray? = null,
     onEditAvatar: (() -> Unit)? = null,
     onEditBackground: (() -> Unit)? = null,
     backgroundColor: Color = MaterialTheme.colorScheme.background,
@@ -238,14 +190,28 @@ fun AvatarWithBackground(
             contentAlignment = Alignment.BottomCenter
         ) {
             Box {
-                RawImageOrPlaceholder(
+                val backgroundBitmap =
+                    BitmapHelper.byteArrayToBitmap(backgroundBytes)?.asImageBitmap()
+                backgroundBitmap?.let { imageBitmap ->
+                    Box(
+                        contentAlignment = Alignment.TopEnd,
+                    ) {
+                        Image(
+                            bitmap = imageBitmap,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .aspectRatio(3f)
+                                .background(backgroundColor),
+                            contentScale = ContentScale.Crop,
+                        )
+                    }
+                } ?: ImageOrPlaceholder(
                     url = backgroundUrl,
-                    context = LocalContext.current,
-                    placeholderId = R.drawable.ic_account_placeholder, // todo replace
+                    background = backgroundColor,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(3f)
-                        .background(backgroundColor),
+                        .aspectRatio(3f),
                 )
                 if (onEditBackground != null) {
                     IconButton(
@@ -272,15 +238,28 @@ fun AvatarWithBackground(
                     .background(backgroundColor, shape = CircleShape)
                     .padding(4.dp),
             ) {
-                RawImageOrPlaceholder(
+                val placeholderIcon = ImageVector.vectorResource(id = R.drawable.ic_account_placeholder)
+                val avatarBitmap =
+                    BitmapHelper.byteArrayToBitmap(avatarBytes)?.asImageBitmap()
+                avatarBitmap?.let { imageBitmap ->
+                    Image(
+                        bitmap = imageBitmap,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(120.dp)
+                            .aspectRatio(1f)
+                            .clip(CircleShape)
+                            .background(backgroundColor),
+                        contentScale = ContentScale.Crop,
+                    )
+                } ?: ImageOrPlaceholder(
                     url = avatarUrl,
-                    context = LocalContext.current,
-                    placeholderId = R.drawable.ic_account_placeholder,
+                    placeholderIcon = placeholderIcon,
+                    background = backgroundColor,
                     modifier = Modifier
                         .size(120.dp)
                         .aspectRatio(1f)
-                        .clip(CircleShape)
-                        .background(backgroundColor),
+                        .clip(CircleShape),
                 )
                 if (onEditAvatar != null) {
                     IconButton(
@@ -383,14 +362,15 @@ fun AvatarAndNameBlock(
             modifier = Modifier
                 .clickable(enabled = onClick != null) { onClick?.invoke() }
         ) {
-            RawImageOrPlaceholder(
+            val placeholderIcon = ImageVector.vectorResource(id = R.drawable.ic_account_placeholder)
+            ImageOrPlaceholder(
+                url = avatarUrl,
+                placeholderIcon = placeholderIcon,
+                background = backgroundColor,
                 modifier = Modifier
                     .padding(start = 4.dp, top = 2.dp, bottom = 2.dp, end = 8.dp)
                     .size(avatarSize)
                     .clip(CircleShape),
-                url = avatarUrl,
-                placeholderId = R.drawable.ic_account_placeholder,
-                context = LocalContext.current,
             )
 
             Column {
@@ -433,14 +413,25 @@ fun MyAlertDialog(
             Button(
                 onClick = onConfirm,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
                 ),
             ) {
                 Text(text = confirmButtonText)
             }
         },
-        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+        dismissButton = {
+            Button(
+                onClick = onDismissRequest,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                ),
+            ) {
+                Text(text = stringResource(R.string.cancel_button_text))
+            }
+        },
+        containerColor = MaterialTheme.colorScheme.errorContainer,
         titleContentColor = MaterialTheme.colorScheme.error,
         textContentColor = MaterialTheme.colorScheme.onErrorContainer,
     )
@@ -496,76 +487,37 @@ fun MyFloatingButton(
 }
 
 @Composable
-fun CityAndGenderText(
-    city: City?,
-    gender: Gender,
-    modifier: Modifier = Modifier,
-    color: Color,
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val cityText = city?.getName() ?: stringResource(R.string.profile_no_city)
-        Text(
-            text = "$cityText,",
-            color = color,
-        )
-
-        val genderIcon = when (gender) {
-            Gender.FEMALE -> Icons.Default.Female
-            Gender.MALE -> Icons.Default.Male
-            Gender.NOT_SPECIFIED -> null
-        }
-        val genderText = when (gender) {
-            Gender.FEMALE -> R.string.gender_female_icon_description
-            Gender.MALE -> R.string.gender_male_icon_description
-            Gender.NOT_SPECIFIED -> R.string.gender_not_specified_icon_description
-        }
-        genderIcon?.let {
-            Icon(
-                modifier = Modifier
-                    .size(16.dp),
-                imageVector = genderIcon,
-                tint = color,
-                contentDescription = stringResource(genderText)
-            )
-        } ?: Text(
-            text = stringResource(genderText),
-            color = color,
-        )
-    }
-}
-
-@Composable
 fun BasicErrorState(
     onRetry: () -> Unit,
 ) {
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.errorContainer),
-        contentAlignment = Alignment.Center
+            .background(MaterialTheme.colorScheme.errorContainer)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
             imageVector = Icons.Default.Error,
             contentDescription = stringResource(R.string.error_icon_description),
             tint = MaterialTheme.colorScheme.onErrorContainer,
             modifier = Modifier
-                .size(48.dp)
+                .size(100.dp)
                 .padding(bottom = 8.dp)
         )
         Text(
             text = stringResource(R.string.basic_error_message),
             color = MaterialTheme.colorScheme.onErrorContainer,
             fontSize = 18.sp,
+            textAlign = TextAlign.Center,
             fontWeight = FontWeight.Bold
         )
         Button(
             onClick = onRetry,
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                containerColor = MaterialTheme.colorScheme.onErrorContainer,
+                contentColor = MaterialTheme.colorScheme.errorContainer
             ),
             modifier = Modifier
                 .padding(top = 16.dp)

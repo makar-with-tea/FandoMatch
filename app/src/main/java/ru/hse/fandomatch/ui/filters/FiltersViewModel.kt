@@ -46,6 +46,8 @@ class FiltersViewModel(
             is FiltersEvent.LocationToggled -> toggleLocation(event.isChecked)
             is FiltersEvent.ResetFilters -> resetFilters()
             is FiltersEvent.ApplyFilters -> applyFilters()
+            FiltersEvent.ToastShown -> _action.value = null
+            FiltersEvent.AddFandomClicked -> goToAddFandom()
             is FiltersEvent.Clear -> clear()
         }
     }
@@ -196,6 +198,10 @@ class FiltersViewModel(
                 _action.value = FiltersAction.NavigateToMatches
             }
         }
+    }
+
+    private fun goToAddFandom() {
+        _action.value = FiltersAction.NavigateToAddFandom
     }
 
     private fun clear() {

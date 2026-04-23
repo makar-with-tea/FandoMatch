@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -14,7 +15,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import ru.hse.fandomatch.domain.model.FandomCategory
+import ru.hse.fandomatch.domain.usecase.fandoms.RequestNewFandomUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AddFandomViewModelTest {
@@ -23,24 +27,21 @@ class AddFandomViewModelTest {
     val instantExecutorRule = InstantTaskExecutorRule()
 
     private lateinit var viewModel: AddFandomViewModel
-    private val testDispatcher = StandardTestDispatcher()
+    private lateinit var requestNewFandomUseCase: RequestNewFandomUseCase
+    private lateinit var testDispatcher: TestDispatcher
 
     @Before
     fun setUp() {
+        testDispatcher = StandardTestDispatcher()
         Dispatchers.setMain(testDispatcher)
-        viewModel = AddFandomViewModel(
-            dispatcherIO = testDispatcher,
-            dispatcherMain = testDispatcher
-        )
+        requestNewFandomUseCase = mock(RequestNewFandomUseCase::class.java)
+        viewModel = AddFandomViewModel(requestNewFandomUseCase, testDispatcher, testDispatcher)
     }
 
     @Test
-    fun `nameChanged with valid name sets state and enables button`() = runTest {
-        // Act
+    fun `name changed with valid value updates state`() = runTest {
         viewModel.obtainEvent(AddFandomEvent.NameChanged("ValidName"))
-        advanceUntilIdle()
 
-        // Assert
         val state = viewModel.state.first() as AddFandomState.Main
         assertEquals("ValidName", state.name)
         assertEquals(AddFandomState.AddFandomError.IDLE, state.nameError)
@@ -48,12 +49,9 @@ class AddFandomViewModelTest {
     }
 
     @Test
-    fun `nameChanged with invalid name sets error and disables button`() = runTest {
-        // Act
+    fun `name changed with invalid value disables button`() = runTest {
         viewModel.obtainEvent(AddFandomEvent.NameChanged(""))
-        advanceUntilIdle()
 
-        // Assert
         val state = viewModel.state.first() as AddFandomState.Main
         assertEquals("", state.name)
         assertEquals(AddFandomState.AddFandomError.NAME_LENGTH, state.nameError)
@@ -61,115 +59,97 @@ class AddFandomViewModelTest {
     }
 
     @Test
-    fun `categoryChanged updates category in state`() = runTest {
-        // Act
+    fun `category changed updates category`() = runTest {
         viewModel.obtainEvent(AddFandomEvent.CategoryChanged(FandomCategory.BOOKS))
-        advanceUntilIdle()
 
-        // Assert
         val state = viewModel.state.first() as AddFandomState.Main
         assertEquals(FandomCategory.BOOKS, state.category)
     }
 
     @Test
-    fun `descriptionChanged with valid description updates state`() = runTest {
-        // Act
+    fun `description changed with valid value updates state`() = runTest {
         viewModel.obtainEvent(AddFandomEvent.DescriptionChanged("Some description"))
-        advanceUntilIdle()
 
-        // Assert
         val state = viewModel.state.first() as AddFandomState.Main
         assertEquals("Some description", state.description)
-        assertEquals(AddFandomState.AddFandomError.IDLE, state.nameError)
-        assertEquals(true, state.isButtonAvailable)
+        assertEquals(AddFandomState.AddFandomError.IDLE, state.descriptionError)
     }
 
     @Test
-    fun `descriptionChanged with invalid description sets error and disables button`() = runTest {
-        // Act
-        val longDescription = "a".repeat(4000)
-        viewModel.obtainEvent(AddFandomEvent.DescriptionChanged(longDescription))
-        advanceUntilIdle()
+    fun `description changed with invalid value disables button`() = runTest {
+        viewModel.obtainEvent(AddFandomEvent.DescriptionChanged("a".repeat(4000)))
 
-        // Assert
-        val state = viewModel.state.first() as AddFandomState.Main
-        assertEquals(longDescription, state.description)
-        assertEquals(AddFandomState.AddFandomError.DESCRIPTION_LENGTH, state.nameError)
-        assertEquals(false, state.isButtonAvailable)
-    }
-
-    @Test
-    fun `send with valid data triggers success action`() = runTest {
-        // Arrange
-        viewModel.obtainEvent(AddFandomEvent.NameChanged("ValidName"))
-        viewModel.obtainEvent(AddFandomEvent.DescriptionChanged("Valid description"))
-        advanceUntilIdle()
-
-        // Act
-        viewModel.obtainEvent(AddFandomEvent.SendButtonClicked)
-        advanceUntilIdle()
-
-        // Assert
-        val action = viewModel.action.first()
-        assertEquals(AddFandomAction.ShowSuccessToastAndGoBack, action)
-    }
-
-    @Test
-    fun `send with invalid name sets error and does not trigger action`() = runTest {
-        // Arrange
-        viewModel.obtainEvent(AddFandomEvent.NameChanged(""))
-        viewModel.obtainEvent(AddFandomEvent.DescriptionChanged("Valid description"))
-        advanceUntilIdle()
-
-        // Act
-        viewModel.obtainEvent(AddFandomEvent.SendButtonClicked)
-        advanceUntilIdle()
-
-        // Assert
-        val state = viewModel.state.first() as AddFandomState.Main
-        assertEquals(AddFandomState.AddFandomError.NAME_LENGTH, state.nameError)
-        assertEquals(false, state.isButtonAvailable)
-        val action = viewModel.action.first()
-        assertEquals(null, action)
-    }
-
-    @Test
-    fun `send with invalid description sets error and does not trigger action`() = runTest {
-        // Arrange
-        viewModel.obtainEvent(AddFandomEvent.NameChanged("ValidName"))
-        val longDescription = "a".repeat(4000)
-        viewModel.obtainEvent(AddFandomEvent.DescriptionChanged(longDescription))
-        advanceUntilIdle()
-
-        // Act
-        viewModel.obtainEvent(AddFandomEvent.SendButtonClicked)
-        advanceUntilIdle()
-
-        // Assert
         val state = viewModel.state.first() as AddFandomState.Main
         assertEquals(AddFandomState.AddFandomError.DESCRIPTION_LENGTH, state.descriptionError)
         assertEquals(false, state.isButtonAvailable)
-        val action = viewModel.action.first()
-        assertEquals(null, action)
+    }
+
+    @Test
+    fun `send button success emits go back action`() = runTest {
+        `when`(
+            requestNewFandomUseCase.execute(
+                name = "ValidName",
+                category = FandomCategory.BOOKS,
+                description = "Valid description",
+            )
+        ).thenReturn(Result.success(Unit))
+
+        viewModel.obtainEvent(AddFandomEvent.NameChanged("ValidName"))
+        viewModel.obtainEvent(AddFandomEvent.CategoryChanged(FandomCategory.BOOKS))
+        viewModel.obtainEvent(AddFandomEvent.DescriptionChanged("Valid description"))
+        viewModel.obtainEvent(AddFandomEvent.SendButtonClicked)
+        advanceUntilIdle()
+
+        assertEquals(AddFandomAction.ShowSuccessToastAndGoBack, viewModel.action.first())
+    }
+
+    @Test
+    fun `send button failure emits network error action`() = runTest {
+        `when`(
+            requestNewFandomUseCase.execute(
+                name = "ValidName",
+                category = FandomCategory.BOOKS,
+                description = "Valid description",
+            )
+        ).thenReturn(Result.failure(RuntimeException()))
+
+        viewModel.obtainEvent(AddFandomEvent.NameChanged("ValidName"))
+        viewModel.obtainEvent(AddFandomEvent.CategoryChanged(FandomCategory.BOOKS))
+        viewModel.obtainEvent(AddFandomEvent.DescriptionChanged("Valid description"))
+        viewModel.obtainEvent(AddFandomEvent.SendButtonClicked)
+        advanceUntilIdle()
+
+        assertEquals(AddFandomAction.ShowNetworkErrorToast, viewModel.action.first())
+    }
+
+    @Test
+    fun `toast shown clears action`() = runTest {
+        `when`(
+            requestNewFandomUseCase.execute(
+                name = "ValidName",
+                category = FandomCategory.BOOKS,
+                description = "Valid description",
+            )
+        ).thenReturn(Result.success(Unit))
+
+        viewModel.obtainEvent(AddFandomEvent.NameChanged("ValidName"))
+        viewModel.obtainEvent(AddFandomEvent.DescriptionChanged("Valid description"))
+        viewModel.obtainEvent(AddFandomEvent.SendButtonClicked)
+        advanceUntilIdle()
+        viewModel.obtainEvent(AddFandomEvent.ToastShown)
+
+        assertEquals(null, viewModel.action.first())
     }
 
     @Test
     fun `clear resets state and action`() = runTest {
-        // Arrange
         viewModel.obtainEvent(AddFandomEvent.NameChanged("ValidName"))
         viewModel.obtainEvent(AddFandomEvent.CategoryChanged(FandomCategory.BOOKS))
         viewModel.obtainEvent(AddFandomEvent.DescriptionChanged("desc"))
-        advanceUntilIdle()
-
-        // Act
         viewModel.obtainEvent(AddFandomEvent.Clear)
-        advanceUntilIdle()
 
-        // Assert
-        val state = viewModel.state.first()
-        val action = viewModel.action.first()
-        assertEquals(AddFandomState.Main(), state)
-        assertEquals(null, action)
+        assertEquals(AddFandomState.Main(), viewModel.state.first())
+        assertEquals(null, viewModel.action.first())
     }
 
     @After

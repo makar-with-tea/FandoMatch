@@ -1,0 +1,14 @@
+package ru.hse.fandomatch.domain.usecase.auth
+
+import ru.hse.fandomatch.domain.repos.GlobalRepository
+import ru.hse.fandomatch.domain.repos.SharedPrefRepository
+
+class LogoutUseCase(
+    private val globalRepository: GlobalRepository,
+    private val sharedPrefRepository: SharedPrefRepository,
+) {
+    suspend fun execute(): Result<Unit> = runCatching {
+        globalRepository.logout()
+        sharedPrefRepository.clearInfo()
+    }
+}

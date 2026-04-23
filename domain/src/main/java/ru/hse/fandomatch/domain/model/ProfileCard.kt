@@ -6,7 +6,7 @@ data class ProfileCard(
     val description: String? = null,
     val name: String,
     val gender: Gender,
-    val avatarUrl: String? = null,
+    val avatar: MediaItem? = null,
     val age: Int,
     val city: City?,
     val compatibilityPercentage: Int,

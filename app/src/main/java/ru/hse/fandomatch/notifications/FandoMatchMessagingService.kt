@@ -19,7 +19,10 @@ class FandoMatchMessagingService(): FirebaseMessagingService() {
             NotificationType.MATCH.rawValue -> NotificationType.MATCH
             else -> return
         }
-        val userId = message.data[USER_ID]
+        val id = when(type) {
+            NotificationType.CHAT -> message.data[CHAT_ID]
+            NotificationType.MATCH -> message.data[USER_ID]
+        }
         val title = resources.getString(
             when (type) {
                 NotificationType.CHAT -> R.string.notification_title_new_message
@@ -41,10 +44,18 @@ class FandoMatchMessagingService(): FirebaseMessagingService() {
 
         val intent = Intent(this, MainActivity::class.java).apply {
             putExtra(NAVIGATE_TO, type.rawValue)
-            putExtra(USER_ID, userId?.toLong())
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra(ID, id)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
-        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        val requestCode = "$type:$id".hashCode()
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
         val notification = NotificationCompat.Builder(this, "default_channel")
             .setSmallIcon(iconRes)
@@ -56,7 +67,7 @@ class FandoMatchMessagingService(): FirebaseMessagingService() {
             .build()
 
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(0, notification)
+        manager.notify(requestCode, notification)
 
         Log.i("FCM", "message shown: ${message.data}")
     }
@@ -77,6 +88,8 @@ private enum class NotificationType(val rawValue: String) {
 }
 
 private const val USER_ID = "userId"
+private const val CHAT_ID = "chatId"
+private const val ID = "id"
 private const val NAVIGATE_TO = "navigateTo"
 private const val TYPE = "type"
 private const val NAME = "name"

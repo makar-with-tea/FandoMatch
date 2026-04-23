@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -31,12 +30,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.ui.composables.AvatarWithBackground
 import ru.hse.fandomatch.ui.composables.FandomInput
@@ -44,10 +45,10 @@ import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.getBytesFromUri
-import ru.hse.fandomatch.getName
+import ru.hse.fandomatch.utils.getBytesFromUri
 import ru.hse.fandomatch.ui.composables.BasicErrorState
-import ru.hse.fandomatch.ui.settings.ErrorState
+import ru.hse.fandomatch.ui.composables.CityInput
+import ru.hse.fandomatch.ui.composables.getName
 
 
 @Composable
@@ -78,6 +79,7 @@ fun EditProfileScreen(
                 stringResource(R.string.edit_profile_error_toast),
                 Toast.LENGTH_SHORT
             ).show()
+            viewModel.obtainEvent(EditProfileEvent.ToastShown)
         }
 
         null -> {}
@@ -109,8 +111,11 @@ fun EditProfileScreen(
                 onFandomSearch = { query ->
                     viewModel.obtainEvent(EditProfileEvent.FandomSearched(query))
                 },
-                onCityChanged = { city ->
-                    viewModel.obtainEvent(EditProfileEvent.CityChanged(city))
+                onCitySelected = { city ->
+                    viewModel.obtainEvent(EditProfileEvent.CitySelected(city))
+                },
+                onCitySearch = { query ->
+                    viewModel.obtainEvent(EditProfileEvent.CitySearched(query))
                 },
                 onSave = {
                     viewModel.obtainEvent(EditProfileEvent.SaveButtonClicked)
@@ -149,7 +154,8 @@ private fun MainState(
     onFandomAdded: (Fandom) -> Unit,
     onFandomRemoved: (Fandom) -> Unit,
     onFandomSearch: (String?) -> Unit,
-    onCityChanged: (String) -> Unit,
+    onCitySelected: (City) -> Unit,
+    onCitySearch: (String?) -> Unit,
     onSuggestFandomButtonClicked: () -> Unit,
     onSave: () -> Unit,
 ) {
@@ -208,8 +214,10 @@ private fun MainState(
                 }
 
             AvatarWithBackground(
-                state.backgroundUrl,
-                state.avatarUrl,
+                state.background?.url,
+                state.avatar?.url,
+                state.backgroundBytes,
+                state.avatarBytes,
                 onEditAvatar = {
                     isPickingAvatar = true
                     pickMedia.launch(
@@ -275,64 +283,49 @@ private fun MainState(
         }
 
         item {
-            val cityInitialName = state.city?.getName().orEmpty()
-            var cityName by remember { mutableStateOf(cityInitialName) }
-            MyTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
-                value = cityName,
-                label = stringResource(R.string.city_label),
-                isError = state.cityError != EditProfileState.EditProfileError.IDLE,
-                enabled = true,
-                errorText = when (state.cityError) {
-                    EditProfileState.EditProfileError.CITY_NOT_FOUND -> stringResource(R.string.city_not_found_error)
-                    else -> null
-                },
-                onValueChange = {
-                    cityName = it
-                    onCityChanged(it)
-                }
-            )
+            Column {
+                Text(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                    fontSize = 18.sp,
+                    text = stringResource(R.string.city_filter_label, state.city?.getName() ?: stringResource(R.string.city_filter_no_city)),
+                )
+                CityInput(
+                    foundCities = state.foundCities,
+                    onCitySelected = onCitySelected,
+                    onSearch = onCitySearch,
+                    areCitiesLoading = state.areCitiesLoading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
         }
 
         item {
             Column {
+                Text(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(start = 16.dp, end = 16.dp),
+                    fontSize = 18.sp,
+                    text = stringResource(R.string.your_fandoms_label),
+                )
                 FandomInput(
                     foundFandoms = state.foundFandoms,
                     selectedFandoms = state.fandoms,
                     onFandomAdded = onFandomAdded,
                     onFandomRemoved = onFandomRemoved,
                     onSearch = onFandomSearch,
+                    goToAddFandom = onSuggestFandomButtonClicked,
                     areFandomsLoading = state.areFandomsLoading,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                 )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                ) {
-
-                    Text(
-                        text = stringResource(R.string.did_not_found_fandom_label),
-                        fontSize = 14.sp
-                    )
-                    TextButton(
-                        onClick = {
-                            onSuggestFandomButtonClicked()
-                        },
-                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.here_you_go_button),
-                            fontSize = 14.sp
-                        )
-                    }
-                }
             }
         }
 

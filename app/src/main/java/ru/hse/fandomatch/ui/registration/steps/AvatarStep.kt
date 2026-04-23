@@ -37,8 +37,8 @@ import androidx.compose.ui.unit.dp
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.registration.RegistrationState
-import ru.hse.fandomatch.BitmapHelper
-import ru.hse.fandomatch.getBytesFromUri
+import ru.hse.fandomatch.utils.BitmapHelper
+import ru.hse.fandomatch.utils.getBytesFromUri
 
 @Composable
 internal fun AvatarStep(

@@ -1,7 +1,6 @@
 package ru.hse.fandomatch.navigation
 
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -9,11 +8,11 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -33,7 +32,7 @@ import ru.hse.fandomatch.ui.matches.MatchesScreen
 import ru.hse.fandomatch.ui.profile.ProfileScreen
 import ru.hse.fandomatch.ui.registration.RegistrationScreen
 import ru.hse.fandomatch.ui.settings.SettingsScreen
-import ru.hse.fandomatch.orFalse
+import ru.hse.fandomatch.utils.orFalse
 import ru.hse.fandomatch.ui.newpost.NewPostScreen
 import ru.hse.fandomatch.ui.passwordrecovery.PasswordRecoveryScreen
 import ru.hse.fandomatch.ui.post.PostScreen
@@ -62,7 +61,11 @@ sealed class Route(val route: String) {
     data object EditProfile : Route("edit_profile")
     data object Settings : Route("settings")
     data object AddFandom : Route("add_fandom")
-    data object NewPost : Route("new_post")
+    data object NewPost : Route("new_post/{prev_screen}") {
+        fun createRoute(prevScreen: String): String {
+            return "new_post/$prevScreen"
+        }
+    }
     data object PasswordRecovery : Route("password_recovery")
     data object Post : Route("post/{post_id}") {
         fun createRoute(postId: String): String {
@@ -72,8 +75,12 @@ sealed class Route(val route: String) {
 }
 
 @Composable
-fun MainView() {
-    Log.d("MainView", "SetUpNavHost")
+fun MainView(
+    navigateTo: String? = null,
+    id: String? = null,
+    onNotificationConsumed: () -> Unit = {},
+) {
+    Log.d("MainView", "MainView created: navigateTo=$navigateTo, id=$id")
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -83,7 +90,7 @@ fun MainView() {
             launchSingleTop = true
             restoreState = true
         }
-        Log.d("Navigation", "MainView to ${route.route} from $currentRoute")
+        Log.d("Navigation", "Navigate to ${route.route} from $currentRoute")
     }
 
     fun navigateToRouteWithArgs(route: String) {
@@ -91,10 +98,8 @@ fun MainView() {
             launchSingleTop = true
             restoreState = true
         }
-        Log.d("Navigation", "MainView to $route from $currentRoute")
+        Log.d("Navigation", "Navigate to $route from $currentRoute")
     }
-
-    // todo go back from the first screen??
 
     val screenTitleId =
         when (currentRoute) {
@@ -173,6 +178,24 @@ fun MainView() {
     }
 
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
+
+    LaunchedEffect(navigateTo, id) {
+        val targetRoute = id?.let {
+            when (navigateTo) {
+                "chat" -> Route.Chat.createRoute(chatId = id)
+                "match" -> Route.Profile.createRoute(profileId = id)
+                else -> null
+            }
+        }
+        if (targetRoute != null) {
+            navController.navigate(targetRoute) {
+                launchSingleTop = true
+                restoreState = false
+            }
+            onNotificationConsumed()
+        }
+    }
+
     Scaffold(
         topBar = {
             topBarState.value?.let {
@@ -254,7 +277,9 @@ fun MainView() {
                             navigateToRoute(Route.Settings)
                         },
                         goToAddPost = {
-                            navigateToRoute(Route.NewPost)
+                            navigateToRouteWithArgs(
+                                Route.NewPost.createRoute("my_profile")
+                            )
                         },
                         goToMatches = {
                             /* do nothing */
@@ -330,7 +355,6 @@ fun MainView() {
                             )
                         },
                         goToPost = { postId ->
-                            Log.d("Navigation", "Navigate to post $postId from profile $profileId")
                             navigateToRouteWithArgs(
                                 Route.Post.createRoute(postId)
                             )
@@ -343,7 +367,6 @@ fun MainView() {
                         profileId = chatId,
                         setTopBarState = { setTopBarState(it, Route.Chat.route) },
                         goToProfile = { profileId ->
-                            Log.d("Navigation", "Navigate to profile $profileId from chat")
                             navigateToRouteWithArgs(
                                 Route.Profile.createRoute(profileId)
                             )
@@ -356,17 +379,24 @@ fun MainView() {
                         navigateToMatches = {
                             navigateToRoute(Route.Matches)
                         },
+                        navigateToAddFandom = {
+                            navigateToRoute(Route.AddFandom)
+                        },
                     )
                 }
                 composable(Route.Feed.route) {
                     updateTopBar()
                     FeedScreen(
                         navigateToPost = { postId ->
-                            Log.d("Navigation", "Navigate to post $postId from feed")
                             navigateToRouteWithArgs(
                                 Route.Post.createRoute(postId)
                             )
-                        }
+                        },
+                        navigateToNewPost = {
+                            navigateToRouteWithArgs(
+                                Route.NewPost.createRoute("feed")
+                            )
+                        },
                     )
                 }
                 composable(Route.EditProfile.route) {
@@ -393,9 +423,25 @@ fun MainView() {
                     )
                 }
                 composable(Route.NewPost.route) {
+                    val prevScreen = it.arguments?.getString("prev_screen")
                     NewPostScreen(
-                        navigateToPreviousScreen = { navController.popBackStack() },
-                        setTopBarState = { setTopBarState(it, Route.NewPost.route) },
+                        navigateToPreviousScreen = {
+                            when (prevScreen) {
+                                "feed" -> navigateToRoute(Route.Feed)
+                                "my_profile" -> navigateToRoute(Route.MyProfile)
+                                else -> {
+                                    Log.d(
+                                        "Navigation",
+                                        "Navigate back from NewPost with unknown prevScreen $prevScreen"
+                                    )
+                                    navController.popBackStack()
+                                }
+                            }
+                        },
+                        navigateToAddFandom = {
+                            navigateToRoute(Route.AddFandom)
+                        },
+                        setTopBarState = { state -> setTopBarState(state, Route.NewPost.route) },
                     )
                 }
                 composable(Route.PasswordRecovery.route) {
@@ -410,7 +456,6 @@ fun MainView() {
                         postId = postId,
                         setTopBarState = { setTopBarState(it, Route.Post.route) },
                         goToProfile = { profileId ->
-                            Log.d("Navigation", "Navigate to profile $profileId from post")
                             navigateToRouteWithArgs(
                                 Route.Profile.createRoute(profileId)
                             )

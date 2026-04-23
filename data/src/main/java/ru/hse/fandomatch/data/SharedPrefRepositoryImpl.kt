@@ -11,12 +11,12 @@ class SharedPrefRepositoryImpl(
 ): SharedPrefRepository {
     private val preferences: SharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
 
-    override suspend fun saveUserId(id: String) {
+    override fun saveUserId(id: String) {
         Log.d("SharedPrefRepository", "saveUserId: $id")
         preferences.edit { putString("user_id", id) }
     }
 
-    override suspend fun getUserId(): String? {
+    override fun getUserId(): String? {
         return preferences.getString("user_id", "").let {
             if (it == "") {
                 null
@@ -27,7 +27,7 @@ class SharedPrefRepositoryImpl(
         }
     }
 
-    override suspend fun clearInfo() {
+    override fun clearInfo() {
         Log.d("SharedPrefRepository", "clearInfo")
         preferences.edit { clear() }
     }
@@ -54,5 +54,13 @@ class SharedPrefRepositoryImpl(
 
     override fun clearRefreshToken() {
         preferences.edit { remove("refresh_token") }
+    }
+
+    override fun getNotificationPermissionShown(): Boolean {
+        return preferences.getBoolean("notification_permission_shown", false)
+    }
+
+    override fun saveNotificationPermissionShown(shown: Boolean) {
+        preferences.edit { putBoolean("notification_permission_shown", shown) }
     }
 }

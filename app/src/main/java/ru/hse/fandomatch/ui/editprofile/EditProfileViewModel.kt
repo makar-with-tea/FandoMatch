@@ -10,23 +10,25 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.hse.fandomatch.data.mock.mockCities
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
-import ru.hse.fandomatch.checkDescriptionLength
-import ru.hse.fandomatch.checkNameContent
-import ru.hse.fandomatch.checkNameLength
+import ru.hse.fandomatch.utils.checkDescriptionLength
+import ru.hse.fandomatch.utils.checkNameContent
+import ru.hse.fandomatch.utils.checkNameLength
+import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.ProfileType
-import ru.hse.fandomatch.domain.usecase.chat.GetUploadMediaUrlUseCase
+import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.user.EditProfileUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetCitiesByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 import kotlin.collections.plus
 
 class EditProfileViewModel(
     private val getFandomsByQueryUseCase: GetFandomsByQueryUseCase,
+    private val getCitiesByQueryUseCase: GetCitiesByQueryUseCase,
     private val getUserUseCase: GetUserUseCase,
-    private val getUploadMediaUrlUseCase: GetUploadMediaUrlUseCase,
+    private val uploadMediaUseCase: UploadMediaUseCase,
     private val editProfileUseCase: EditProfileUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
@@ -45,7 +47,8 @@ class EditProfileViewModel(
             EditProfileEvent.AddFandomButtonClicked -> goToAddFandom()
             is EditProfileEvent.AvatarChanged -> updateAvatar(event.avatar)
             is EditProfileEvent.BackgroundChanged -> updateBackground(event.background)
-            is EditProfileEvent.CityChanged -> updateCity(event.cityName)
+            is EditProfileEvent.CitySearched -> searchCity(event.query)
+            is EditProfileEvent.CitySelected -> updateCity(event.city)
             is EditProfileEvent.DescriptionChanged -> updateDescription(event.description)
             is EditProfileEvent.FandomAdded -> addFandom(event.fandom)
             is EditProfileEvent.FandomRemoved -> removeFandom(event.fandom)
@@ -53,6 +56,7 @@ class EditProfileViewModel(
             is EditProfileEvent.NameChanged -> updateName(event.name)
             EditProfileEvent.SaveButtonClicked -> saveData()
             EditProfileEvent.LoadProfileData -> loadProfileData()
+            EditProfileEvent.ToastShown -> _action.value = null
             EditProfileEvent.Clear -> clear()
         }
     }
@@ -62,52 +66,45 @@ class EditProfileViewModel(
     }
 
     private fun updateAvatar(avatar: ByteArray?) {
-        val currentState = _state.value
+        val currentState = _state.value as? EditProfileState.Main ?: return
         if (avatar == null) return
-        viewModelScope.launch(dispatcherIO) {
-            delay(1000)
-            val avatarUrl = "luffy" // todo upload avatar and get url + handle error
-            if (currentState is EditProfileState.Main) {
-                _state.value = currentState.copy(
-                    avatarUrl = avatarUrl,
-                )
-            }
-        }
+        _state.value = currentState.copy(
+            avatarBytes = avatar,
+        )
     }
 
     private fun updateBackground(background: ByteArray?) {
-        val currentState = _state.value
+        val currentState = _state.value as? EditProfileState.Main ?: return
         if (background == null) return
+        _state.value = currentState.copy(
+            backgroundBytes = background,
+        )
+    }
+
+    private fun searchCity(query: String?) {
+        val currentState = _state.value as? EditProfileState.Main ?: return
+        if (query.isNullOrBlank()) {
+            _state.value = currentState.copy(foundCities = emptyList(), areCitiesLoading = false)
+            return
+        }
         viewModelScope.launch(dispatcherIO) {
-            delay(1000)
-            val backgroundUrl = "i_may_be_stupid" // todo upload background and get url + handle error
-            if (currentState is EditProfileState.Main) {
-                _state.value = currentState.copy(
-                    backgroundUrl = backgroundUrl,
-                )
+            _state.value = currentState.copy(foundCities = emptyList(), areCitiesLoading = true)
+            val result = getCitiesByQueryUseCase.execute(query)
+            val foundCities = result.getOrNull() ?: run {
+                Log.e("EditProfileViewModel", "Failed to search cities: ${result.exceptionOrNull()}")
+                withContext(dispatcherMain) {
+                    _state.value = currentState.copy(foundCities = emptyList(), areCitiesLoading = false)
+                }
+                return@launch
             }
+            _state.value = currentState.copy(foundCities = foundCities, areCitiesLoading = false)
         }
     }
 
-
-    private fun updateCity(cityName: String) {
+    private fun updateCity(city: City?) {
         val currentState = _state.value as? EditProfileState.Main ?: return
-        // todo get cities from backend and handle error
-        val cityNames = mockCities.map(City::nameRussian) + mockCities.map(City::nameEnglish)
-        val cityError = when {
-            cityName.isBlank() -> EditProfileState.EditProfileError.IDLE
-            cityName !in cityNames -> EditProfileState.EditProfileError.CITY_NOT_FOUND
-            else -> EditProfileState.EditProfileError.IDLE
-        }
-        val city = mockCities.find {
-            it.nameRussian.equals(
-                cityName,
-                ignoreCase = true
-            ) || it.nameEnglish.equals(cityName, ignoreCase = true)
-        }
         _state.value = currentState.copy(
             city = city,
-            cityError = cityError,
         )
     }
 
@@ -141,23 +138,28 @@ class EditProfileViewModel(
     }
 
     private fun searchFandom(query: String?) {
-        val currentState = state.value
-        if (currentState is EditProfileState.Main) {
-            if (query.isNullOrBlank()) {
-                _state.value = currentState.copy(foundFandoms = emptyList())
-                return
-            }
-            viewModelScope.launch(dispatcherIO) {
-                _state.value = currentState.copy(foundFandoms = emptyList(), areFandomsLoading = true)
-                val result = getFandomsByQueryUseCase.execute(query)
-                val foundFandoms = result.getOrNull() ?: run {
-                    Log.e("EditProfileViewModel", "Failed to search fandoms: ${result.exceptionOrNull()}")
-                    withContext(dispatcherMain) {
-                        _state.value = currentState.copy(foundFandoms = emptyList(), areFandomsLoading = false)
-                    }
-                    return@launch
+        val currentState = state.value as? EditProfileState.Main ?: return
+        if (query.isNullOrBlank()) {
+            _state.value = currentState.copy(foundFandoms = emptyList())
+            return
+        }
+        _state.value = currentState.copy(foundFandoms = emptyList(), areFandomsLoading = true)
+        viewModelScope.launch(dispatcherIO) {
+            val result = getFandomsByQueryUseCase.execute(query)
+            val foundFandoms = result.getOrNull() ?: run {
+                Log.e(
+                    "EditProfileViewModel",
+                    "Failed to search fandoms: ${result.exceptionOrNull()}"
+                )
+                withContext(dispatcherMain) {
+                    _state.value =
+                        currentState.copy(foundFandoms = emptyList(), areFandomsLoading = false)
                 }
-                _state.value = currentState.copy(foundFandoms = foundFandoms, areFandomsLoading = false)
+                return@launch
+            }
+            withContext(dispatcherMain) {
+                _state.value =
+                    currentState.copy(foundFandoms = foundFandoms, areFandomsLoading = false)
             }
         }
     }
@@ -193,12 +195,16 @@ class EditProfileViewModel(
                 name = user.name,
                 login = (user.profileType as ProfileType.Own).login,
                 description = user.description,
-                avatarUrl = user.avatarUrl,
-                backgroundUrl = user.backgroundUrl,
+                avatarBytes = null,
+                avatar = user.avatar,
+                backgroundBytes = null,
+                background = user.background,
                 fandoms = user.fandoms,
                 foundFandoms = emptyList(),
                 areFandomsLoading = false,
                 city = user.city,
+                foundCities = emptyList(),
+                areCitiesLoading = false,
             )
         }
     }
@@ -207,13 +213,43 @@ class EditProfileViewModel(
         val currentState = _state.value as? EditProfileState.Main ?: return
         _state.value = EditProfileState.Loading
         viewModelScope.launch(dispatcherIO) {
+            val avatarMediaId = currentState.avatarBytes?.let {
+                val avatarResult = uploadMediaUseCase.execute(
+                    bytes = currentState.avatarBytes,
+                    mediaType = MediaType.IMAGE
+                )
+                val avatarMediaId = avatarResult.getOrNull() ?: run {
+                    Log.e("EditProfileViewModel", "Failed to upload avatar", avatarResult.exceptionOrNull())
+                    withContext(dispatcherMain) {
+                        _state.value = currentState
+                        _action.value = EditProfileAction.ShowErrorToast
+                    }
+                    return@launch
+                }
+                avatarMediaId
+            } ?: currentState.avatar?.id
+            val backgroundMediaId = currentState.backgroundBytes?.let {
+                val backgroundResult = uploadMediaUseCase.execute(
+                    bytes = currentState.backgroundBytes,
+                    mediaType = MediaType.IMAGE
+                )
+                val backgroundMediaId = backgroundResult.getOrNull() ?: run {
+                    Log.e("EditProfileViewModel", "Failed to upload background", backgroundResult.exceptionOrNull())
+                    withContext(dispatcherMain) {
+                        _state.value = currentState
+                        _action.value = EditProfileAction.ShowErrorToast
+                    }
+                    return@launch
+                }
+                backgroundMediaId
+            } ?: currentState.background?.id
             val result = editProfileUseCase.execute(
                 name = currentState.name,
                 bio = currentState.description,
                 city = currentState.city,
                 fandoms = currentState.fandoms,
-                avatarMediaId = currentState.avatarUrl, // todo get media id from url
-                backgroundMediaId = currentState.backgroundUrl, // todo get media id from url
+                avatarMediaId = avatarMediaId,
+                backgroundMediaId = backgroundMediaId,
             )
             if (result.isFailure) {
                 Log.e(
@@ -222,6 +258,7 @@ class EditProfileViewModel(
                     result.exceptionOrNull()
                 )
                 withContext(dispatcherMain) {
+                    _state.value = currentState
                     _action.value = EditProfileAction.ShowErrorToast
                 }
                 return@launch

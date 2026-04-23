@@ -9,14 +9,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.hse.fandomatch.checkDescriptionLength
+import ru.hse.fandomatch.utils.checkDescriptionLength
+import ru.hse.fandomatch.utils.checkFandomNameLength
 import ru.hse.fandomatch.domain.model.FandomCategory
-import ru.hse.fandomatch.checkFandomNameLength
 import ru.hse.fandomatch.domain.usecase.fandoms.RequestNewFandomUseCase
-import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
 
 class AddFandomViewModel(
-    private val getUserIdUseCase: GetUserIdUseCase,
     private val requestNewFandomUseCase: RequestNewFandomUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
@@ -35,6 +33,7 @@ class AddFandomViewModel(
             is AddFandomEvent.CategoryChanged -> categoryChanged(event.category)
             is AddFandomEvent.DescriptionChanged -> descriptionChanged(event.description)
             AddFandomEvent.SendButtonClicked -> send()
+            AddFandomEvent.ToastShown -> _action.value = null
             AddFandomEvent.Clear -> clear()
         }
     }
@@ -63,7 +62,7 @@ class AddFandomViewModel(
         if (!description.checkDescriptionLength()) {
             _state.value = (_state.value as AddFandomState.Main).copy(
                 description = description,
-                nameError = AddFandomState.AddFandomError.DESCRIPTION_LENGTH,
+                descriptionError = AddFandomState.AddFandomError.DESCRIPTION_LENGTH,
                 isButtonAvailable = false
             )
             return
@@ -72,7 +71,7 @@ class AddFandomViewModel(
     }
 
     private fun send() {
-        val currentState = _state.value as AddFandomState.Main
+        val currentState = _state.value as? AddFandomState.Main ?: return
         _state.value = currentState.copy(
             isLoading = true
         )
@@ -96,31 +95,32 @@ class AddFandomViewModel(
         }
 
         viewModelScope.launch(dispatcherIO) {
-            val result = requestNewFandomUseCase.execute(
+            requestNewFandomUseCase.execute(
                 name = currentState.name,
                 category = currentState.category,
                 description = currentState.description,
             )
-            if (result.isFailure) {
-                Log.e(
-                    "AddFandomViewModel",
-                    "Failed to request new fandom",
-                    result.exceptionOrNull()
-                )
-                withContext(dispatcherMain) {
-                    _state.value = currentState.copy(
-                        isLoading = false
+                .onFailure {
+                    Log.e(
+                        "AddFandomViewModel",
+                        "Failed to request new fandom",
+                        it
                     )
-                    _action.value = AddFandomAction.ShowNetworkErrorToast
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            isLoading = false
+                        )
+                        _action.value = AddFandomAction.ShowNetworkErrorToast
+                    }
                 }
-            } else {
-                withContext(dispatcherMain) {
-                    _state.value = currentState.copy(
-                        isLoading = false
-                    )
-                    _action.value = AddFandomAction.ShowSuccessToastAndGoBack
+                .onSuccess {
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            isLoading = false
+                        )
+                        _action.value = AddFandomAction.ShowSuccessToastAndGoBack
+                    }
                 }
-            }
         }
     }
 

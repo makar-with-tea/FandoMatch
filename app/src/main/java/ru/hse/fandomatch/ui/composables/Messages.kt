@@ -25,15 +25,16 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.Message
-import ru.hse.fandomatch.epochMillisToTimeString
+import ru.hse.fandomatch.utils.epochMillisToTimeString
 
 @Composable
 internal fun Message(
     modifier: Modifier,
     message: Message,
     needsTail: Boolean,
-    onImageClicked: (List<String>, Int) -> Unit,
+    onItemClicked: (List<MediaItem>, Int) -> Unit,
     otherSidePadding: Dp = 40.dp,
 ) {
     Box(
@@ -45,12 +46,12 @@ internal fun Message(
             modifier = Modifier.padding(start = otherSidePadding),
             needsTail = needsTail,
             backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-        ) { MessageContent(message, onImageClicked) }
+        ) { MessageContent(message, onItemClicked) }
         else IncomingMessageBox(
             modifier = Modifier.padding(end = otherSidePadding),
             needsTail = needsTail,
             backgroundColor = MaterialTheme.colorScheme.tertiaryContainer,
-        ) { MessageContent(message, onImageClicked) }
+        ) { MessageContent(message, onItemClicked) }
     }
 }
 
@@ -149,14 +150,14 @@ private fun OutgoingMessageBox(
 @Composable
 private fun MessageContent(
     message: Message,
-    onImageClicked: (List<String>, Int) -> Unit,
+    onItemClicked: (List<MediaItem>, Int) -> Unit,
 ) {
     Column {
-        if (message.imageUrls.isNotEmpty()) {
-            ImagesGrid(
-                imageUrls = message.imageUrls,
+        if (message.mediaItems.isNotEmpty()) {
+            MediaItemsGrid(
+                mediaItems = message.mediaItems,
                 modifier = Modifier.padding(bottom = 4.dp),
-                onImageClicked = onImageClicked,
+                onItemClicked = onItemClicked,
                 maxHeight = 300.dp
             )
         }
@@ -168,7 +169,7 @@ private fun MessageContent(
                 modifier = Modifier.padding(
                     start = 8.dp,
                     end = 8.dp,
-                    top = if (message.imageUrls.isEmpty()) 4.dp else 0.dp,
+                    top = if (message.mediaItems.isEmpty()) 4.dp else 0.dp,
                 )
             )
         }

@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -29,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -53,7 +56,7 @@ import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.navigation.EndIconState
-import ru.hse.fandomatch.getColor
+import ru.hse.fandomatch.utils.getColor
 
 
 @Composable
@@ -188,6 +191,7 @@ fun FandomInput(
     onFandomAdded: (Fandom) -> Unit,
     onFandomRemoved: (Fandom) -> Unit,
     onSearch: (String?) -> Unit,
+    goToAddFandom: () -> Unit,
     areFandomsLoading: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -293,6 +297,29 @@ fun FandomInput(
             ),
             endIconAction = { fandom -> onFandomRemoved(fandom) }
         )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth(),
+        ) {
+            Text(
+                text = stringResource(R.string.did_not_found_fandom_label),
+                fontSize = 14.sp
+            )
+            TextButton(
+                modifier = Modifier.height(32.dp),
+                onClick = {
+                    goToAddFandom()
+                },
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.here_you_go_button),
+                    fontSize = 14.sp
+                )
+            }
+        }
     }
 }
 

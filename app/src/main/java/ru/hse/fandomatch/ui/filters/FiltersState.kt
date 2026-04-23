@@ -31,12 +31,15 @@ sealed class FiltersEvent {
     data class LocationToggled(val isChecked: Boolean) : FiltersEvent()
     object ResetFilters : FiltersEvent()
     object ApplyFilters : FiltersEvent()
+    object ToastShown : FiltersEvent()
+    object AddFandomClicked: FiltersEvent()
     object Clear : FiltersEvent()
     object LoadInitialFilters : FiltersEvent()
 }
 
 sealed class FiltersAction {
     object NavigateToMatches : FiltersAction()
+    object NavigateToAddFandom : FiltersAction()
     object ShowErrorToast : FiltersAction()
 }
 

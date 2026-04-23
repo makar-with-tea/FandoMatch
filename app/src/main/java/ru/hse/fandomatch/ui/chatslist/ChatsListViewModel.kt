@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
 
@@ -44,16 +45,23 @@ class ChatsListViewModel(
     }
 
     private fun loadChats() {
-        // todo error handling
         viewModelScope.launch(dispatcherIO) {
-            _allChats = subscribeToChatPreviewsUseCase.execute()
+            val result = subscribeToChatPreviewsUseCase.execute()
+            val chatPreviewsFlow = result.getOrNull() ?: run {
+                Log.e("ChatsListViewModel", "Failed to subscribe to chat previews: ${result.exceptionOrNull()}")
+                withContext(dispatcherMain) {
+                    _state.value = ChatsListState.Error
+                }
+                return@launch
+            }
+            _allChats = chatPreviewsFlow
             _allChats.collect {
                 Log.d("ChatsListViewModel", "Loaded chat previews: $it")
                 val query = when (val currentState = _state.value) {
                     is ChatsListState.Main -> currentState.filteredByQuery
                     else -> null
                 }
-                searchChats(query)
+                withContext(dispatcherMain) { searchChats(query) }
             }
         }
     }

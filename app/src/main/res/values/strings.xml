@@ -163,10 +163,12 @@
     <string name="description_length_error">Описание должно быть не длиннее 500 символов</string>
     <string name="city_label">Ваш город</string>
     <string name="save_profile_button">Сохранить</string>
-    <string name="city_not_found_error">Город не найден</string>
+    <string name="city_not_found_error">Города не найдены</string>
+    <string name="search_city_label">Введите название города...</string>
     <string name="did_not_found_fandom_label">Не нашли фандом?</string>
     <string name="here_you_go_button">Вам сюда!</string>
     <string name="edit_profile_error_toast">Не удалось сохранить изменения профиля</string>
+    <string name="your_fandoms_label">Ваши фандомы</string>
 
     <string name="settings_title">Настройки</string>
     <string name="change_email_title">Смена почты</string>
@@ -182,7 +184,7 @@
     <string name="old_password_label">Старый пароль</string>
     <string name="new_password_label">Новый пароль</string>
     <string name="save_button">Сохранить</string>
-    <string name="loading_error">Ошибка загрузки</string>
+    <string name="loading_error">Ошибка сети</string>
     <string name="unknown_error">Неизвестная ошибка</string>
     <string name="retry_button_text">Попробовать снова</string>
     <string name="account_not_found_error">Аккаунт не найден</string>
@@ -215,8 +217,13 @@
     <string name="create_post_label">Создать пост</string>
     <string name="post_button">Опубликовать</string>
     <string name="post_content_label">Что у вас на уме?</string>
+    <string name="post_fandoms_label">Фандомы поста</string>
     <string name="post_content_too_long_error">Содержание поста не должно быть длиннее 2000 символов</string>
 
     <string name="error_icon_description">Ошибка</string>
     <string name="basic_error_message">Произошла ошибка загрузки :(\nПожалуйста, проверьте свое интернет-соединение</string>
+
+    <string name="success_downloading_media_toast">Медиа успешно загружено</string>
+    <string name="error_downloading_media_toast">Ошибка загрузки медиа</string>
+    <string name="cancel_button_text">Отмена</string>
 </resources>

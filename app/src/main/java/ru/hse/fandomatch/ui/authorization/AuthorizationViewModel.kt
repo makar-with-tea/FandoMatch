@@ -10,8 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
-import ru.hse.fandomatch.domain.usecase.user.LoginUseCase
-import java.lang.RuntimeException
+import ru.hse.fandomatch.domain.usecase.auth.LoginUseCase
 
 class AuthorizationViewModel(
     private val loginUseCase: LoginUseCase,
@@ -88,30 +87,31 @@ class AuthorizationViewModel(
         }
 
         viewModelScope.launch(dispatcherIO) {
-            val result = loginUseCase.execute(currentState.login, currentState.password)
-            if (result.isFailure) {
-                withContext(dispatcherMain) {
-                    val e = result.exceptionOrNull() ?: RuntimeException("Unknown error")
-                    if (e is InvalidCredentialsException) {
-                        _state.value = currentState.copy(
-                            loginError = AuthorizationState.AuthorizationError.IDLE,
-                            // todo обработать разные ошибки для логина и пароля
-                            passwordError = AuthorizationState.AuthorizationError.INVALID_CREDENTIALS,
-                            isLoading = false,
-                        )
-                    } else {
-                        _state.value = currentState.copy(
-                            passwordError = AuthorizationState.AuthorizationError.NETWORK,
-                            loginError = AuthorizationState.AuthorizationError.NETWORK,
-                            isLoading = false,
-                        )
+            loginUseCase.execute(currentState.login, currentState.password)
+                .onFailure { e ->
+                    withContext(dispatcherMain) {
+                        Log.e("AuthorizationViewModel", "Login failed", e)
+                        // todo корректная ошибка (даша?)
+                        if (e is InvalidCredentialsException) {
+                            _state.value = currentState.copy(
+                                loginError = AuthorizationState.AuthorizationError.IDLE,
+                                passwordError = AuthorizationState.AuthorizationError.INVALID_CREDENTIALS,
+                                isLoading = false,
+                            )
+                        } else {
+                            _state.value = currentState.copy(
+                                passwordError = AuthorizationState.AuthorizationError.NETWORK,
+                                loginError = AuthorizationState.AuthorizationError.NETWORK,
+                                isLoading = false,
+                            )
+                        }
                     }
                 }
-            } else {
-                withContext(dispatcherMain) {
-                    _action.value = AuthorizationAction.NavigateToMatches
+                .onSuccess {
+                    withContext(dispatcherMain) {
+                        _action.value = AuthorizationAction.NavigateToMatches
+                    }
                 }
-            }
         }
     }
 

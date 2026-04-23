@@ -15,7 +15,9 @@ import ru.hse.fandomatch.domain.model.Filters
 import ru.hse.fandomatch.domain.model.FullPost
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.OtherProfileItem
+import ru.hse.fandomatch.domain.model.UploadMedia
 import ru.hse.fandomatch.domain.model.User
+import ru.hse.fandomatch.domain.model.UserPreferences
 
 interface GlobalRepository {
     // User
@@ -27,10 +29,11 @@ interface GlobalRepository {
         login: String,
         dateOfBirthMillis: Long,
         gender: Gender,
-        avatarByteArray: ByteArray?,
+        avatarMediaId: String?,
         password: String
-    ): AuthInfo // todo
-
+    ): AuthInfo
+    suspend fun logout()
+    suspend fun refreshToken(refreshToken: String): AuthInfo
     suspend fun updateUser(
         name: String,
         bio: String?,
@@ -41,12 +44,20 @@ interface GlobalRepository {
     )
     suspend fun changePassword(oldPassword: String, newPassword: String)
 
-    suspend fun deleteUser(login: String)
+    suspend fun deleteUser()
     suspend fun getFriends(id: String): List<OtherProfileItem>
     suspend fun getFriendRequests(id: String): List<OtherProfileItem>
     suspend fun getVerificationCode(email: String)
     suspend fun checkVerificationCode(code: String, email: String): Boolean
     suspend fun resetPassword(code: String, newPassword: String)
+    suspend fun getCitiesByQuery(query: String): List<City>
+    suspend fun getUserPreferences(): UserPreferences
+    suspend fun updateUserPreferences(
+        matchNotificationsEnabled: Boolean,
+        messageNotificationsEnabled: Boolean,
+        hideMyPostsFromNonMatches: Boolean
+    )
+    suspend fun changeEmail(newEmail: String)
 
     // Matches
 
@@ -78,10 +89,16 @@ interface GlobalRepository {
     suspend fun sendMessage(
         receiverId: String,
         content: String,
-        images: List<ByteArray>,
+        mediaIdsWithTypes: List<Pair<String, MediaType>>,
         timestamp: Long,
     )
-    suspend fun getUploadMediaUrl(mediaType: MediaType): String
+    suspend fun getUploadMediaUrl(mediaType: MediaType): UploadMedia
+
+    suspend fun uploadToPresignedUrl(
+        url: String,
+        bytes: ByteArray,
+        contentType: String
+    )
 
     // Posts
     suspend fun getFeedPosts(
@@ -96,6 +113,11 @@ interface GlobalRepository {
     ): List<Post>
     suspend fun getFullPost(postId: String): FullPost
     suspend fun likePost(postId: String)
+    suspend fun createPost(
+        content: String,
+        mediaIdsWithTypes: List<Pair<String, MediaType>>,
+        fandomIds: List<String>,
+    )
 
     // Fandoms
     suspend fun getFandomCategories(): List<FandomCategory>
