@@ -65,6 +65,13 @@ class GlobalRepositoryMock: GlobalRepository {
             ),
             avatar = avatarMediaId?.let { mockUser.avatar?.copy(id = avatarMediaId) }
         )
+        mockUserPosts = mockUserPosts.map {
+            it.copy(
+                authorName = name,
+                authorLogin = login,
+                authorAvatar = mockUser.avatar,
+            )
+        }
         return mockAuthInfo.also {
             Log.d("GlobalRepositoryMock", "register: successful for user $login")
         }
@@ -96,7 +103,7 @@ class GlobalRepositoryMock: GlobalRepository {
         mockUser = mockUser.copy(
             name = name,
             description = bio,
-            avatar = avatarMediaId?.let { mockUser.avatar?.copy(id = avatarMediaId) },
+            avatar = avatarMediaId?.let { "luffy".getMediaByName().copy(id = avatarMediaId) },
             background = backgroundMediaId?.let { mockUser.background?.copy(id = backgroundMediaId) },
             fandoms = fandoms,
             city = city,
@@ -459,8 +466,8 @@ class GlobalRepositoryMock: GlobalRepository {
             content = content,
             mediaItems = mediaIdsWithTypes.map { (mediaId, type) ->
                 when (type) {
-                    MediaType.IMAGE -> "luffy".getMediaByName().copy(id = mediaId)
-                    MediaType.VIDEO -> "video".getMediaByName().copy(id = mediaId)
+                    MediaType.IMAGE -> "dzimbei".getMediaByName().copy(id = mediaId)
+                    MediaType.VIDEO -> "noenor_edit".getMediaByName().copy(id = mediaId)
                 }
             },
             fandoms = fandomIds.mapNotNull { id -> mockFandoms.find { it.id == id } },

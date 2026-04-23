@@ -57,10 +57,7 @@ class MediaRepositoryImpl(
                 throw IllegalStateException("HTTP $responseCode while downloading media")
             }
 
-            val mimeType = connection.contentType
-                ?.substringBefore(';')
-                ?.takeIf { it.isNotBlank() }
-                ?: defaultMimeType(mediaType)
+            val mimeType = resolveMimeType(connection.contentType, mediaType)
 
             val bytes = connection.inputStream.use { it.readBytes() }
             saveMediaBytes(context, bytes, mimeType, mediaType)
@@ -165,6 +162,21 @@ class MediaRepositoryImpl(
     private fun defaultMimeType(mediaType: MediaType): String = when (mediaType) {
         MediaType.IMAGE -> "image/jpeg"
         MediaType.VIDEO -> "video/mp4"
+    }
+
+    private fun resolveMimeType(contentType: String?, mediaType: MediaType): String {
+        val normalizedMime = contentType
+            ?.substringBefore(';')
+            ?.trim()
+            ?.lowercase(Locale.ROOT)
+            ?.takeIf { it.isNotBlank() }
+
+        val isExpectedForType = when (mediaType) {
+            MediaType.IMAGE -> normalizedMime?.startsWith("image/") == true
+            MediaType.VIDEO -> normalizedMime?.startsWith("video/") == true
+        }
+
+        return if (isExpectedForType) normalizedMime!! else defaultMimeType(mediaType)
     }
 
     private fun buildFileName(mediaType: MediaType, mimeType: String): String {

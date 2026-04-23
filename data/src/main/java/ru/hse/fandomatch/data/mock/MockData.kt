@@ -251,7 +251,7 @@ internal val mockMessages: MutableStateFlow<List<Message>> = MutableStateFlow(li
         content = "Но хочу пересмотреть когда-нибудь заново)",
         timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
             .toEpochSecond(ZoneOffset.UTC) * 1000,
-        mediaItems = listOf("video", "luffy").map { it.getMediaByName() },
+        mediaItems = listOf(),
     ),
     Message(
         messageId = "10",
@@ -434,7 +434,7 @@ var mockPosts = listOf(
         authorLogin = "alice",
         authorAvatar = "luffy".getMediaByName(),
         content = "Привет! Я только что зарегистрировалась и хочу поделиться своей любовью к аниме и музыке!",
-        mediaItems = listOf("noenor_edit", "peace_was_never_an_option").map { it.getMediaByName() },
+        mediaItems = listOf("noenor_edit", "luffy").map { it.getMediaByName() },
         likeCount = 10,
         commentCount = 5,
         isLikedByCurrentUser = false,
