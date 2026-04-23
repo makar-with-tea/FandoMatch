@@ -87,31 +87,31 @@ class AuthorizationViewModel(
         }
 
         viewModelScope.launch(dispatcherIO) {
-            val result = loginUseCase.execute(currentState.login, currentState.password)
-            if (result.isFailure) {
-                withContext(dispatcherMain) {
-                    val e = result.exceptionOrNull()
-                    Log.e("AuthorizationViewModel", "Login failed", e)
-                    // todo корректная ошибка (даша?)
-                    if (e is InvalidCredentialsException) {
-                        _state.value = currentState.copy(
-                            loginError = AuthorizationState.AuthorizationError.IDLE,
-                            passwordError = AuthorizationState.AuthorizationError.INVALID_CREDENTIALS,
-                            isLoading = false,
-                        )
-                    } else {
-                        _state.value = currentState.copy(
-                            passwordError = AuthorizationState.AuthorizationError.NETWORK,
-                            loginError = AuthorizationState.AuthorizationError.NETWORK,
-                            isLoading = false,
-                        )
+            loginUseCase.execute(currentState.login, currentState.password)
+                .onFailure { e ->
+                    withContext(dispatcherMain) {
+                        Log.e("AuthorizationViewModel", "Login failed", e)
+                        // todo корректная ошибка (даша?)
+                        if (e is InvalidCredentialsException) {
+                            _state.value = currentState.copy(
+                                loginError = AuthorizationState.AuthorizationError.IDLE,
+                                passwordError = AuthorizationState.AuthorizationError.INVALID_CREDENTIALS,
+                                isLoading = false,
+                            )
+                        } else {
+                            _state.value = currentState.copy(
+                                passwordError = AuthorizationState.AuthorizationError.NETWORK,
+                                loginError = AuthorizationState.AuthorizationError.NETWORK,
+                                isLoading = false,
+                            )
+                        }
                     }
                 }
-            } else {
-                withContext(dispatcherMain) {
-                    _action.value = AuthorizationAction.NavigateToMatches
+                .onSuccess {
+                    withContext(dispatcherMain) {
+                        _action.value = AuthorizationAction.NavigateToMatches
+                    }
                 }
-            }
         }
     }
 

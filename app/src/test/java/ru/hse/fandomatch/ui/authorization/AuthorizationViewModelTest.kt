@@ -4,7 +4,9 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -14,7 +16,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.*
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
 import ru.hse.fandomatch.domain.usecase.auth.LoginUseCase
 
@@ -26,114 +29,118 @@ class AuthorizationViewModelTest {
 
     private lateinit var viewModel: AuthorizationViewModel
     private lateinit var loginUseCase: LoginUseCase
-    private val testDispatcher = StandardTestDispatcher()
+    private lateinit var testScheduler: TestCoroutineScheduler
+    private lateinit var testDispatcher: TestDispatcher
 
     @Before
     fun setUp() {
+        testScheduler = TestCoroutineScheduler()
+        testDispatcher = StandardTestDispatcher(testScheduler)
         Dispatchers.setMain(testDispatcher)
         loginUseCase = mock(LoginUseCase::class.java)
         viewModel = AuthorizationViewModel(
             loginUseCase = loginUseCase,
             dispatcherIO = testDispatcher,
-            dispatcherMain = testDispatcher
+            dispatcherMain = testDispatcher,
         )
     }
 
     @Test
-    fun `successful login triggers navigation action`() = runTest {
-        // Arrange
-        val login = "user"
-        val password = "pass"
-        `when`(loginUseCase.execute(login, password)).thenReturn(Unit)
+    fun `login changed updates login and error`() = runTest(testScheduler) {
+        viewModel.obtainEvent(AuthorizationEvent.LoginChanged("user"))
 
-        // Act
-        viewModel.obtainEvent(AuthorizationEvent.LoginChanged(login))
-        viewModel.obtainEvent(AuthorizationEvent.PasswordChanged(password))
-        viewModel.obtainEvent(AuthorizationEvent.LoginButtonClicked)
-        advanceUntilIdle()
-
-        // Assert
-        val action = viewModel.action.first()
-        assertEquals(AuthorizationAction.NavigateToMatches, action)
+        val state = viewModel.state.first() as AuthorizationState.Main
+        assertEquals("user", state.login)
+        assertEquals(AuthorizationState.AuthorizationError.IDLE, state.loginError)
     }
 
     @Test
-    fun `login with empty fields sets errors`() = runTest {
-        // Act
+    fun `password changed updates password and error`() = runTest(testScheduler) {
+        viewModel.obtainEvent(AuthorizationEvent.PasswordChanged("pass"))
+
+        val state = viewModel.state.first() as AuthorizationState.Main
+        assertEquals("pass", state.password)
+        assertEquals(AuthorizationState.AuthorizationError.IDLE, state.passwordError)
+    }
+
+    @Test
+    fun `show password toggles visibility`() = runTest(testScheduler) {
+        val initial = (viewModel.state.first() as AuthorizationState.Main).passwordVisibility
+
+        viewModel.obtainEvent(AuthorizationEvent.ShowPasswordButtonClicked)
+
+        val state = viewModel.state.first() as AuthorizationState.Main
+        assertEquals(!initial, state.passwordVisibility)
+    }
+
+    @Test
+    fun `forgot password button emits navigation action`() = runTest(testScheduler) {
+        viewModel.obtainEvent(AuthorizationEvent.ForgotPasswordButtonClicked)
+
+        assertEquals(AuthorizationAction.NavigateToPasswordRecovery, viewModel.action.first())
+    }
+
+    @Test
+    fun `login button with empty fields sets validation errors`() = runTest(testScheduler) {
         viewModel.obtainEvent(AuthorizationEvent.LoginChanged(""))
         viewModel.obtainEvent(AuthorizationEvent.PasswordChanged(""))
         viewModel.obtainEvent(AuthorizationEvent.LoginButtonClicked)
-        advanceUntilIdle()
 
-        // Assert
         val state = viewModel.state.first() as AuthorizationState.Main
         assertEquals(AuthorizationState.AuthorizationError.EMPTY_LOGIN, state.loginError)
         assertEquals(AuthorizationState.AuthorizationError.EMPTY_PASSWORD, state.passwordError)
     }
 
     @Test
-    fun `login with invalid credentials sets error`() = runTest {
-        // Arrange
-        val login = "user"
-        val password = "wrong"
-        `when`(loginUseCase.execute(login, password)).thenThrow(InvalidCredentialsException())
+    fun `login button success emits navigate to matches action`() = runTest(testScheduler) {
+        `when`(loginUseCase.execute("user", "pass")).thenReturn(Result.success(Unit))
 
-        // Act
-        viewModel.obtainEvent(AuthorizationEvent.LoginChanged(login))
-        viewModel.obtainEvent(AuthorizationEvent.PasswordChanged(password))
+        viewModel.obtainEvent(AuthorizationEvent.LoginChanged("user"))
+        viewModel.obtainEvent(AuthorizationEvent.PasswordChanged("pass"))
         viewModel.obtainEvent(AuthorizationEvent.LoginButtonClicked)
         advanceUntilIdle()
 
-        // Assert
+        assertEquals(AuthorizationAction.NavigateToMatches, viewModel.action.first())
+    }
+
+    @Test
+    fun `login button invalid credentials sets invalid credentials error`() = runTest(testScheduler) {
+        `when`(loginUseCase.execute("user", "wrong")).thenReturn(
+            Result.failure(InvalidCredentialsException())
+        )
+
+        viewModel.obtainEvent(AuthorizationEvent.LoginChanged("user"))
+        viewModel.obtainEvent(AuthorizationEvent.PasswordChanged("wrong"))
+        viewModel.obtainEvent(AuthorizationEvent.LoginButtonClicked)
+        advanceUntilIdle()
+
         val state = viewModel.state.first() as AuthorizationState.Main
         assertEquals(AuthorizationState.AuthorizationError.INVALID_CREDENTIALS, state.passwordError)
+        assertEquals(AuthorizationState.AuthorizationError.IDLE, state.loginError)
     }
 
     @Test
-    fun `login with network error sets network error`() = runTest {
-        // Arrange
-        val login = "user"
-        val password = "pass"
-        `when`(loginUseCase.execute(login, password)).thenThrow(RuntimeException())
+    fun `login button network error sets network errors`() = runTest(testScheduler) {
+        `when`(loginUseCase.execute("user", "pass")).thenReturn(Result.failure(RuntimeException()))
 
-        // Act
-        viewModel.obtainEvent(AuthorizationEvent.LoginChanged(login))
-        viewModel.obtainEvent(AuthorizationEvent.PasswordChanged(password))
+        viewModel.obtainEvent(AuthorizationEvent.LoginChanged("user"))
+        viewModel.obtainEvent(AuthorizationEvent.PasswordChanged("pass"))
         viewModel.obtainEvent(AuthorizationEvent.LoginButtonClicked)
         advanceUntilIdle()
 
-        // Assert
         val state = viewModel.state.first() as AuthorizationState.Main
-        assertEquals(AuthorizationState.AuthorizationError.NETWORK, state.passwordError)
         assertEquals(AuthorizationState.AuthorizationError.NETWORK, state.loginError)
+        assertEquals(AuthorizationState.AuthorizationError.NETWORK, state.passwordError)
     }
 
     @Test
-    fun `clear resets state and action`() = runTest {
-        // Act
+    fun `clear resets state and action`() = runTest(testScheduler) {
+        viewModel.obtainEvent(AuthorizationEvent.LoginChanged("user"))
+        viewModel.obtainEvent(AuthorizationEvent.PasswordChanged("pass"))
         viewModel.obtainEvent(AuthorizationEvent.Clear)
-        advanceUntilIdle()
 
-        // Assert
-        val state = viewModel.state.first()
-        val action = viewModel.action.first()
-        assertEquals(AuthorizationState.Main(), state)
-        assertEquals(null, action)
-    }
-
-    @Test
-    fun `show password button toggles visibility`() = runTest {
-        // Arrange
-        val initialState = viewModel.state.first() as AuthorizationState.Main
-        val initialVisibility = initialState.passwordVisibility
-
-        // Act
-        viewModel.obtainEvent(AuthorizationEvent.ShowPasswordButtonClicked)
-        advanceUntilIdle()
-
-        // Assert
-        val state = viewModel.state.first() as AuthorizationState.Main
-        assertEquals(!initialVisibility, state.passwordVisibility)
+        assertEquals(AuthorizationState.Main(), viewModel.state.first())
+        assertEquals(null, viewModel.action.first())
     }
 
     @After

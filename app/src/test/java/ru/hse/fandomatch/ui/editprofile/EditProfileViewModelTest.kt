@@ -9,13 +9,26 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import ru.hse.fandomatch.data.mock.mockUser
+import org.mockito.Mockito.`when`
+import org.mockito.Mockito.mock
+import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
+import ru.hse.fandomatch.domain.model.MediaItem
+import ru.hse.fandomatch.domain.model.MediaType
+import ru.hse.fandomatch.domain.model.ProfileType
+import ru.hse.fandomatch.domain.model.User
+import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
+import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
+import ru.hse.fandomatch.domain.usecase.user.EditProfileUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetCitiesByQueryUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditProfileViewModelTest {
@@ -24,169 +37,249 @@ class EditProfileViewModelTest {
     val instantExecutorRule = InstantTaskExecutorRule()
 
     private lateinit var viewModel: EditProfileViewModel
+    private lateinit var getFandomsByQueryUseCase: GetFandomsByQueryUseCase
+    private lateinit var getCitiesByQueryUseCase: GetCitiesByQueryUseCase
+    private lateinit var getUserUseCase: GetUserUseCase
+    private lateinit var uploadMediaUseCase: UploadMediaUseCase
+    private lateinit var editProfileUseCase: EditProfileUseCase
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        getFandomsByQueryUseCase = mock(GetFandomsByQueryUseCase::class.java)
+        getCitiesByQueryUseCase = mock(GetCitiesByQueryUseCase::class.java)
+        getUserUseCase = mock(GetUserUseCase::class.java)
+        uploadMediaUseCase = mock(UploadMediaUseCase::class.java)
+        editProfileUseCase = mock(EditProfileUseCase::class.java)
         viewModel = EditProfileViewModel(
+            getFandomsByQueryUseCase = getFandomsByQueryUseCase,
+            getCitiesByQueryUseCase = getCitiesByQueryUseCase,
+            getUserUseCase = getUserUseCase,
+            uploadMediaUseCase = uploadMediaUseCase,
+            editProfileUseCase = editProfileUseCase,
             dispatcherIO = testDispatcher,
-            dispatcherMain = testDispatcher
+            dispatcherMain = testDispatcher,
         )
     }
 
     @Test
-    fun `initial state is Idle`() = runTest {
-        assertTrue(viewModel.state.value is EditProfileState.Idle)
+    fun `load profile data success moves to main state`() = runTest {
+        `when`(getUserUseCase.execute(null, true)).thenReturn(Result.success(user()))
+
+        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+        advanceUntilIdle()
+
+        val state = viewModel.state.value
+        assertTrue(state is EditProfileState.Main)
+        state as EditProfileState.Main
+        assertEquals("John", state.name)
+        assertEquals("john", state.login)
+        assertEquals(1, state.fandoms.size)
     }
 
     @Test
-    fun `LoadProfileData sets Loading then Main state`() = runTest {
+    fun `load profile data failure sets error state`() = runTest {
+        `when`(getUserUseCase.execute(null, true)).thenReturn(Result.failure(RuntimeException()))
+
         viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
         advanceUntilIdle()
-        assertTrue(viewModel.state.value is EditProfileState.Main)
-        val state = viewModel.state.value as EditProfileState.Main
-        assertEquals(mockUser.name, state.name)
-        assertEquals(mockUser.login, state.login)
+
+        assertEquals(EditProfileState.Error, viewModel.state.value)
     }
 
     @Test
-    fun `NameChanged with invalid length sets error`() = runTest {
-        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+    fun `name changed validates name`() = runTest {
+        loadMainState()
         advanceUntilIdle()
+
         viewModel.obtainEvent(EditProfileEvent.NameChanged("A"))
-        val state = viewModel.state.value as EditProfileState.Main
+        var state = viewModel.state.value as EditProfileState.Main
         assertEquals(EditProfileState.EditProfileError.NAME_LENGTH, state.nameError)
-    }
 
-    @Test
-    fun `NameChanged with invalid content sets error`() = runTest {
-        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
-        advanceUntilIdle()
-        viewModel.obtainEvent(EditProfileEvent.NameChanged("123456"))
-        val state = viewModel.state.value as EditProfileState.Main
-        assertEquals(EditProfileState.EditProfileError.NAME_CONTENT, state.nameError)
-    }
-
-    @Test
-    fun `NameChanged with valid name clears error`() = runTest {
-        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
-        advanceUntilIdle()
-        viewModel.obtainEvent(EditProfileEvent.NameChanged("Иван Иванов"))
-        val state = viewModel.state.value as EditProfileState.Main
+        viewModel.obtainEvent(EditProfileEvent.NameChanged("Ivan Ivanov"))
+        state = viewModel.state.value as EditProfileState.Main
         assertEquals(EditProfileState.EditProfileError.IDLE, state.nameError)
-        assertEquals("Иван Иванов", state.name)
     }
 
     @Test
-    fun `DescriptionChanged with too long description sets error`() = runTest {
-        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+    fun `description changed validates length`() = runTest {
+        loadMainState()
         advanceUntilIdle()
-        val longDesc = "a".repeat(2000)
-        viewModel.obtainEvent(EditProfileEvent.DescriptionChanged(longDesc))
+
+        viewModel.obtainEvent(EditProfileEvent.DescriptionChanged("a".repeat(2000)))
         val state = viewModel.state.value as EditProfileState.Main
         assertEquals(EditProfileState.EditProfileError.DESCRIPTION_LENGTH, state.descriptionError)
     }
 
     @Test
-    fun `DescriptionChanged with valid description clears error`() = runTest {
-        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+    fun `avatar and background changed update bytes`() = runTest {
+        loadMainState()
         advanceUntilIdle()
-        viewModel.obtainEvent(EditProfileEvent.DescriptionChanged("Hello!"))
+
+        viewModel.obtainEvent(EditProfileEvent.AvatarChanged(byteArrayOf(1, 2, 3)))
+        viewModel.obtainEvent(EditProfileEvent.BackgroundChanged(byteArrayOf(4, 5, 6)))
+
         val state = viewModel.state.value as EditProfileState.Main
-        assertEquals(EditProfileState.EditProfileError.IDLE, state.descriptionError)
-        assertEquals("Hello!", state.description)
+        assertEquals(true, state.avatarBytes?.isNotEmpty())
+        assertEquals(true, state.backgroundBytes?.isNotEmpty())
     }
 
     @Test
-    fun `CityChanged with unknown city sets error`() = runTest {
-        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+    fun `fandom added removed and searched update state`() = runTest {
+        loadMainState()
         advanceUntilIdle()
-        viewModel.obtainEvent(EditProfileEvent.CitySearched("Atlantis"))
-        val state = viewModel.state.value as EditProfileState.Main
-        assertEquals(EditProfileState.EditProfileError.CITY_NOT_FOUND, state.cityError)
-    }
+        val fandom = fandom("2")
+        `when`(getFandomsByQueryUseCase.execute("Star")).thenReturn(Result.success(listOf(fandom)))
 
-    @Test
-    fun `CityChanged with known city clears error`() = runTest {
-        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
-        advanceUntilIdle()
-        val city = "Москва"
-        viewModel.obtainEvent(EditProfileEvent.CitySearched(city))
-        val state = viewModel.state.value as EditProfileState.Main
-        assertEquals(EditProfileState.EditProfileError.IDLE, state.cityError)
-        assertEquals(city, state.city)
-    }
-
-    @Test
-    fun `FandomAdded adds fandom to list`() = runTest {
-        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
-        advanceUntilIdle()
-        val fandom = Fandom(100, "TestFandom", FandomCategory.OTHER)
         viewModel.obtainEvent(EditProfileEvent.FandomAdded(fandom))
-        val state = viewModel.state.value as EditProfileState.Main
-        assertTrue(state.fandoms.contains(fandom))
-    }
+        var state = viewModel.state.value as EditProfileState.Main
+        assertTrue(fandom in state.fandoms)
 
-    @Test
-    fun `FandomRemoved removes fandom from list`() = runTest {
-        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
-        advanceUntilIdle()
-        val fandom = (viewModel.state.value as EditProfileState.Main).fandoms.first()
         viewModel.obtainEvent(EditProfileEvent.FandomRemoved(fandom))
-        val state = viewModel.state.value as EditProfileState.Main
-        assertFalse(state.fandoms.contains(fandom))
-    }
+        state = viewModel.state.value as EditProfileState.Main
+        assertTrue(fandom !in state.fandoms)
 
-    @Test
-    fun `FandomSearched with query sets foundFandoms and areFandomsLoading`() = runTest {
-        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+        viewModel.obtainEvent(EditProfileEvent.FandomSearched("Star"))
         advanceUntilIdle()
-        viewModel.obtainEvent(EditProfileEvent.FandomSearched("One"))
-        advanceUntilIdle()
-        val state = viewModel.state.value as EditProfileState.Main
-        assertTrue(state.foundFandoms.all { it.name.contains("One", ignoreCase = true) })
+        state = viewModel.state.value as EditProfileState.Main
+        assertEquals(listOf(fandom), state.foundFandoms)
         assertFalse(state.areFandomsLoading)
-    }
 
-    @Test
-    fun `FandomSearched with blank query clears foundFandoms`() = runTest {
-        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
-        advanceUntilIdle()
         viewModel.obtainEvent(EditProfileEvent.FandomSearched(""))
-        val state = viewModel.state.value as EditProfileState.Main
+        state = viewModel.state.value as EditProfileState.Main
         assertTrue(state.foundFandoms.isEmpty())
     }
 
     @Test
-    fun `AddFandomButtonClicked sets NavigateToAddFandom action`() = runTest {
-        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+    fun `city searched and selected update state`() = runTest {
+        loadMainState()
         advanceUntilIdle()
+        val cities = listOf(City("Москва", "Moscow"))
+        `when`(getCitiesByQueryUseCase.execute("Mos")).thenReturn(Result.success(cities))
+
+        viewModel.obtainEvent(EditProfileEvent.CitySearched("Mos"))
+        advanceUntilIdle()
+        var state = viewModel.state.value as EditProfileState.Main
+        assertEquals(cities, state.foundCities)
+        assertFalse(state.areCitiesLoading)
+
+        viewModel.obtainEvent(EditProfileEvent.CitySelected(cities.first()))
+        state = viewModel.state.value as EditProfileState.Main
+        assertEquals(cities.first(), state.city)
+    }
+
+    @Test
+    fun `add fandom button emits navigation action`() = runTest {
+        loadMainState()
+        advanceUntilIdle()
+
         viewModel.obtainEvent(EditProfileEvent.AddFandomButtonClicked)
+
         assertEquals(EditProfileAction.NavigateToAddFandom, viewModel.action.value)
     }
 
     @Test
-    fun `SaveButtonClicked sets Loading then NavigateToMyProfile action`() = runTest {
-        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+    fun `save button success emits navigate action`() = runTest {
+        loadMainState()
         advanceUntilIdle()
+        val avatarBytes = byteArrayOf(1, 2, 3)
+        val backgroundBytes = byteArrayOf(4, 5, 6)
+        viewModel.obtainEvent(EditProfileEvent.NameChanged("John Doe"))
+        viewModel.obtainEvent(EditProfileEvent.AvatarChanged(avatarBytes))
+        viewModel.obtainEvent(EditProfileEvent.BackgroundChanged(backgroundBytes))
+        `when`(uploadMediaUseCase.execute(avatarBytes, MediaType.IMAGE)).thenReturn(Result.success("avatar-id"))
+        `when`(uploadMediaUseCase.execute(backgroundBytes, MediaType.IMAGE)).thenReturn(Result.success("background-id"))
+        `when`(
+            editProfileUseCase.execute(
+                name = "John Doe",
+                bio = "bio",
+                city = City("Москва", "Moscow"),
+                fandoms = listOf(fandom("1")),
+                avatarMediaId = "avatar-id",
+                backgroundMediaId = "background-id",
+            )
+        ).thenReturn(Result.success(Unit))
+
         viewModel.obtainEvent(EditProfileEvent.SaveButtonClicked)
         advanceUntilIdle()
+
         assertEquals(EditProfileAction.NavigateToMyProfile, viewModel.action.value)
     }
 
     @Test
-    fun `Clear resets state and action`() = runTest {
-        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+    fun `save button upload failure emits error toast`() = runTest {
+        loadMainState()
         advanceUntilIdle()
-        viewModel.obtainEvent(EditProfileEvent.AddFandomButtonClicked)
+        val avatarBytes = byteArrayOf(1, 2, 3)
+        viewModel.obtainEvent(EditProfileEvent.AvatarChanged(avatarBytes))
+        `when`(uploadMediaUseCase.execute(avatarBytes, MediaType.IMAGE)).thenReturn(Result.failure(RuntimeException()))
+
+        viewModel.obtainEvent(EditProfileEvent.SaveButtonClicked)
+        advanceUntilIdle()
+
+        assertEquals(EditProfileAction.ShowErrorToast, viewModel.action.value)
+    }
+
+    @Test
+    fun `save button profile update failure emits error toast and toast shown clears it`() = runTest {
+        loadMainState()
+        advanceUntilIdle()
+        `when`(
+            editProfileUseCase.execute(
+                name = "John",
+                bio = "bio",
+                city = City("Москва", "Moscow"),
+                fandoms = listOf(fandom("1")),
+                avatarMediaId = "avatar-1",
+                backgroundMediaId = "background-1",
+            )
+        ).thenReturn(Result.failure(RuntimeException()))
+
+        viewModel.obtainEvent(EditProfileEvent.SaveButtonClicked)
+        advanceUntilIdle()
+        assertEquals(EditProfileAction.ShowErrorToast, viewModel.action.value)
+
+        viewModel.obtainEvent(EditProfileEvent.ToastShown)
+        assertEquals(null, viewModel.action.value)
+    }
+
+    @Test
+    fun `clear resets state and action`() = runTest {
+        loadMainState()
+        advanceUntilIdle()
         viewModel.obtainEvent(EditProfileEvent.Clear)
-        assertTrue(viewModel.state.value is EditProfileState.Idle)
-        assertNull(viewModel.action.value)
+
+        assertEquals(EditProfileState.Idle, viewModel.state.value)
+        assertEquals(null, viewModel.action.value)
     }
 
     @After
     fun tearDown() {
         Dispatchers.resetMain()
     }
+
+    private suspend fun loadMainState() {
+        `when`(getUserUseCase.execute(null, true)).thenReturn(Result.success(user()))
+        viewModel.obtainEvent(EditProfileEvent.LoadProfileData)
+    }
+
+    private fun user() = User(
+        id = "1",
+        fandoms = listOf(fandom("1")),
+        description = "bio",
+        name = "John",
+        gender = ru.hse.fandomatch.domain.model.Gender.MALE,
+        age = 20,
+        avatar = MediaItem("avatar-1", MediaType.IMAGE, "avatar-url"),
+        background = MediaItem("background-1", MediaType.IMAGE, "background-url"),
+        city = City("Москва", "Moscow"),
+        profileType = ProfileType.Own(login = "john", email = "john@mail.com"),
+    )
+
+    private fun fandom(id: String) = Fandom(
+        id = id,
+        name = "Fandom$id",
+        category = FandomCategory.BOOKS,
+    )
 }

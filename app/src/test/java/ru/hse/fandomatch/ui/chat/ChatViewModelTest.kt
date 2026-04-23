@@ -3,6 +3,7 @@ package ru.hse.fandomatch.ui.chat
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -20,10 +21,14 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 import ru.hse.fandomatch.domain.model.Chat
+import ru.hse.fandomatch.domain.model.MediaItem
+import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.Message
-import ru.hse.fandomatch.domain.repos.GlobalRepository
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
+import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
+import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
+import ru.hse.fandomatch.domain.usecase.media.DownloadMediaToGalleryUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChatViewModelTest {
@@ -32,296 +37,158 @@ class ChatViewModelTest {
     val instantExecutorRule = InstantTaskExecutorRule()
 
     private lateinit var viewModel: ChatViewModel
-    private lateinit var globalRepository: GlobalRepository
+    private lateinit var sendMessageUseCase: SendMessageUseCase
+    private lateinit var loadChatInfoUseCase: LoadChatInfoUseCase
+    private lateinit var subscribeToChatMessagesUseCase: SubscribeToChatMessagesUseCase
+    private lateinit var uploadMediaUseCase: UploadMediaUseCase
+    private lateinit var downloadMediaToGalleryUseCase: DownloadMediaToGalleryUseCase
+    private lateinit var messagesFlow: MutableStateFlow<List<Message>>
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-
-        globalRepository = mock(GlobalRepository::class.java)
-
+        sendMessageUseCase = mock(SendMessageUseCase::class.java)
+        loadChatInfoUseCase = mock(LoadChatInfoUseCase::class.java)
+        subscribeToChatMessagesUseCase = mock(SubscribeToChatMessagesUseCase::class.java)
+        uploadMediaUseCase = mock(UploadMediaUseCase::class.java)
+        downloadMediaToGalleryUseCase = mock(DownloadMediaToGalleryUseCase::class.java)
+        messagesFlow = MutableStateFlow(emptyList())
         viewModel = ChatViewModel(
-            sendMessageUseCase = SendMessageUseCase(globalRepository),
-            loadChatInfoUseCase = LoadChatInfoUseCase(globalRepository),
+            sendMessageUseCase = sendMessageUseCase,
+            loadChatInfoUseCase = loadChatInfoUseCase,
+            subscribeToChatMessagesUseCase = subscribeToChatMessagesUseCase,
+            uploadMediaUseCase = uploadMediaUseCase,
+            downloadMediaToGalleryUseCase = downloadMediaToGalleryUseCase,
             dispatcherIO = testDispatcher,
-            dispatcherMain = testDispatcher
+            dispatcherMain = testDispatcher,
         )
     }
 
     @Test
-    fun `loadChat with null userId sets error state`() = runTest {
-        // Act
+    fun `load chat with null profile id sets error state`() = runTest {
         viewModel.obtainEvent(ChatEvent.LoadChat(null))
         advanceUntilIdle()
 
-        // Assert
-        val state = viewModel.state.first()
-        assertEquals(ChatState.Error, state)
-        verify(globalRepository, never()).loadChatInfo(org.mockito.Mockito.anyLong())
+        assertEquals(ChatState.Error, viewModel.state.first())
+        verify(loadChatInfoUseCase, never()).execute(org.mockito.Mockito.anyString())
     }
 
     @Test
-    fun `loadChat with valid userId sets loading state immediately`() = runTest {
-        // Arrange
-        val userId = 10L
-        val chat = createChat(
-            messages = listOf(
-                Message(
-                    messageId = 1L,
-                    isFromThisUser = false,
-                    content = "hello",
-                    timestamp = 1000L
-                )
-            )
-        )
-        `when`(globalRepository.loadChatInfo(userId)).thenReturn(chat)
+    fun `load chat success sets main state`() = runTest {
+        `when`(loadChatInfoUseCase.execute("10")).thenReturn(Result.success(chat()))
+        `when`(subscribeToChatMessagesUseCase.execute("10", "chat-1")).thenReturn(Result.success(messagesFlow))
+        messagesFlow.value = listOf(message("1", false, "hello", 1000L))
 
-        // Act
-        viewModel.obtainEvent(ChatEvent.LoadChat(userId))
-
-        // Assert
-        val state = viewModel.state.first()
-        assertEquals(ChatState.Loading, state)
-    }
-
-    @Test
-    fun `loadChat with valid userId maps chat info to main state`() = runTest {
-        // Arrange
-        val userId = 10L
-        val chat = createChat(
-            chatId = 5L,
-            participantId = 99L,
-            participantName = "Nami",
-            participantAvatarUrl = "avatar_url",
-            messages = listOf(
-                Message(
-                    messageId = 1L,
-                    isFromThisUser = false,
-                    content = "hello",
-                    timestamp = 1000L
-                )
-            )
-        )
-        `when`(globalRepository.loadChatInfo(userId)).thenReturn(chat)
-
-        // Act
-        viewModel.obtainEvent(ChatEvent.LoadChat(userId))
+        viewModel.obtainEvent(ChatEvent.LoadChat("10"))
         advanceUntilIdle()
 
-        // Assert
         val state = viewModel.state.first()
         assertTrue(state is ChatState.Main)
-
         state as ChatState.Main
-        assertEquals(5L, state.chatId)
-        assertEquals(99L, state.participantId)
+        assertEquals("chat-1", state.chatId)
+        assertEquals("10", state.participantId)
         assertEquals("Nami", state.participantName)
-        assertEquals("avatar_url", state.participantAvatarUrl)
-        assertEquals(ChatState.ChatError.IDLE, state.error)
-
-        verify(globalRepository).loadChatInfo(userId)
     }
 
     @Test
-    fun `loadChat reverses messages and calculates tails correctly`() = runTest {
-        // Arrange
-        val userId = 10L
-        val message1 = Message(
-            messageId = 1L,
-            isFromThisUser = true,
-            content = "first",
-            timestamp = 1000L
-        )
-        val message2 = Message(
-            messageId = 2L,
-            isFromThisUser = true,
-            content = "second",
-            timestamp = 2000L
-        )
-        val message3 = Message(
-            messageId = 3L,
-            isFromThisUser = false,
-            content = "third",
-            timestamp = 3000L
-        )
+    fun `load chat failure sets error state`() = runTest {
+        `when`(loadChatInfoUseCase.execute("10")).thenReturn(Result.failure(RuntimeException()))
 
-        val chat = createChat(messages = listOf(message1, message2, message3))
-        `when`(globalRepository.loadChatInfo(userId)).thenReturn(chat)
-
-        // Act
-        viewModel.obtainEvent(ChatEvent.LoadChat(userId))
+        viewModel.obtainEvent(ChatEvent.LoadChat("10"))
         advanceUntilIdle()
 
-        // Assert
+        assertEquals(ChatState.Error, viewModel.state.first())
+    }
+
+    @Test
+    fun `message draft and attachments events update state`() = runTest {
+        prepareMainState()
+        advanceUntilIdle()
+
+        viewModel.obtainEvent(ChatEvent.MessageDraftChanged("draft"))
+        viewModel.obtainEvent(ChatEvent.AttachmentsChanged(listOf(byteArrayOf(1, 2, 3) to MediaType.IMAGE)))
+
         val state = viewModel.state.first() as ChatState.Main
-
-        assertEquals(3, state.uiElements.size)
-
-        assertEquals(message3, state.uiElements[0].first)
-        assertEquals(true, state.uiElements[0].second)
-
-        assertEquals(message2, state.uiElements[1].first)
-        assertEquals(true, state.uiElements[1].second)
-
-        assertEquals(message1, state.uiElements[2].first)
-        assertEquals(false, state.uiElements[2].second)
+        assertEquals("draft", state.messageDraft)
+        assertEquals(1, state.attachedFilesWithTypes.size)
     }
 
     @Test
-    fun `sendMessage from main state adds new message to top`() = runTest {
-        // Arrange
-        val userId = 10L
-        val existingMessage = Message(
-            messageId = 1L,
-            isFromThisUser = false,
-            content = "old message",
-            timestamp = 1000L
-        )
-        val chat = createChat(
-            participantId = 77L,
-            messages = listOf(existingMessage)
-        )
-        `when`(globalRepository.loadChatInfo(userId)).thenReturn(chat)
-
-        viewModel.obtainEvent(ChatEvent.LoadChat(userId))
+    fun `send message success clears draft and attachments`() = runTest {
+        prepareMainState()
         advanceUntilIdle()
-
-        val images = listOf(byteArrayOf(1, 2, 3))
-
-        // Act
-        viewModel.obtainEvent(
-            ChatEvent.SendMessage(
-                message = "new message",
-                images = images,
-                timestamp = 123L
+        viewModel.obtainEvent(ChatEvent.MessageDraftChanged("hello"))
+        viewModel.obtainEvent(ChatEvent.AttachmentsChanged(listOf(byteArrayOf(1, 2, 3) to MediaType.IMAGE)))
+        `when`(uploadMediaUseCase.execute(byteArrayOf(1, 2, 3), MediaType.IMAGE)).thenReturn(Result.success("media-id"))
+        `when`(
+            sendMessageUseCase.execute(
+                userId = "participant-1",
+                content = "hello",
+                mediaIdsWithTypes = listOf("media-id" to MediaType.IMAGE),
+                timestamp = 123000L,
             )
-        )
+        ).thenReturn(Result.success(Unit))
+
+        viewModel.obtainEvent(ChatEvent.SendMessage(timestamp = 123L))
         advanceUntilIdle()
 
-        // Assert
         val state = viewModel.state.first() as ChatState.Main
-
-        assertEquals(2, state.uiElements.size)
-
-        val newMessage = state.uiElements[0].first
-        val newMessageNeedsTail = state.uiElements[0].second
-
-        assertEquals(2L, newMessage.messageId)
-        assertEquals(true, newMessage.isFromThisUser)
-        assertEquals("new message", newMessage.content)
-        assertEquals(123000L, newMessage.timestamp)
-        assertEquals(listOf("luffy"), newMessage.imageUrls)
-        assertEquals(true, newMessageNeedsTail)
+        assertEquals("", state.messageDraft)
+        assertTrue(state.attachedFilesWithTypes.isEmpty())
     }
 
     @Test
-    fun `sendMessage from main state removes tail from previous newest message`() = runTest {
-        // Arrange
-        val userId = 10L
-        val existingMessage = Message(
-            messageId = 1L,
-            isFromThisUser = false,
-            content = "old message",
-            timestamp = 1000L
-        )
-        val chat = createChat(
-            participantId = 77L,
-            messages = listOf(existingMessage)
-        )
-        `when`(globalRepository.loadChatInfo(userId)).thenReturn(chat)
-
-        viewModel.obtainEvent(ChatEvent.LoadChat(userId))
+    fun `send message blank with no attachments does nothing`() = runTest {
+        prepareMainState()
         advanceUntilIdle()
 
-        // Act
-        viewModel.obtainEvent(
-            ChatEvent.SendMessage(
-                message = "new message",
-                images = emptyList(),
-                timestamp = 123L
-            )
-        )
+        viewModel.obtainEvent(ChatEvent.SendMessage(timestamp = 123L))
         advanceUntilIdle()
 
-        // Assert
         val state = viewModel.state.first() as ChatState.Main
-        val previousMessageNeedsTail = state.uiElements[1].second
-
-        assertEquals(false, previousMessageNeedsTail)
+        assertEquals("", state.messageDraft)
+        assertTrue(state.attachedFilesWithTypes.isEmpty())
     }
 
     @Test
-    fun `sendMessage calls repository with participantId and timestamp in milliseconds`() = runTest {
-        // Arrange
-        val userId = 10L
-        val chat = createChat(
-            participantId = 77L,
-            messages = emptyList()
-        )
-        `when`(globalRepository.loadChatInfo(userId)).thenReturn(chat)
-
-        viewModel.obtainEvent(ChatEvent.LoadChat(userId))
+    fun `profile clicked emits navigation action`() = runTest {
+        prepareMainState()
         advanceUntilIdle()
 
-        val images = listOf(byteArrayOf(5, 6, 7))
+        viewModel.obtainEvent(ChatEvent.ProfileClicked)
 
-        // Act
-        viewModel.obtainEvent(
-            ChatEvent.SendMessage(
-                message = "hello",
-                images = images,
-                timestamp = 321L
-            )
-        )
-        advanceUntilIdle()
-
-        // Assert
-        verify(globalRepository).sendMessage(
-            77L,
-            "hello",
-            images,
-            321000L
-        )
+        assertEquals(ChatAction.GoToProfile("participant-1"), viewModel.action.first())
     }
 
     @Test
-    fun `sendMessage when state is not main does not change state`() = runTest {
-        // Act
-        viewModel.obtainEvent(
-            ChatEvent.SendMessage(
-                message = "hello",
-                images = emptyList(),
-                timestamp = 111L
-            )
-        )
+    fun `download media success and failure emit actions`() = runTest {
+        prepareMainState()
         advanceUntilIdle()
+        `when`(downloadMediaToGalleryUseCase.execute("url", MediaType.IMAGE)).thenReturn(Result.success(Unit))
 
-        // Assert
-        val state = viewModel.state.first()
-        assertEquals(ChatState.Idle, state)
+        viewModel.obtainEvent(ChatEvent.DownloadMediaItem(MediaItem("1", MediaType.IMAGE, "url")))
+        advanceUntilIdle()
+        assertEquals(ChatAction.ShowSuccessDownloadToast, viewModel.action.first())
+
+        `when`(downloadMediaToGalleryUseCase.execute("url2", MediaType.IMAGE)).thenReturn(Result.failure(RuntimeException()))
+        viewModel.obtainEvent(ChatEvent.DownloadMediaItem(MediaItem("2", MediaType.IMAGE, "url2")))
+        advanceUntilIdle()
+        assertEquals(ChatAction.ShowErrorDownloadToast, viewModel.action.first())
+
+        viewModel.obtainEvent(ChatEvent.ToastShown)
+        assertEquals(null, viewModel.action.first())
     }
 
     @Test
     fun `clear resets state and action`() = runTest {
-        // Arrange
-        val userId = 10L
-        val chat = createChat(messages = emptyList())
-        `when`(globalRepository.loadChatInfo(userId)).thenReturn(chat)
-
-        viewModel.obtainEvent(ChatEvent.LoadChat(userId))
+        prepareMainState()
         advanceUntilIdle()
-
-        // Act
         viewModel.obtainEvent(ChatEvent.Clear)
         advanceUntilIdle()
 
-        // Assert
-        val state = viewModel.state.first()
-        val action = viewModel.action.first()
-
-        assertEquals(ChatState.Idle, state)
-        assertEquals(null, action)
+        assertEquals(ChatState.Idle, viewModel.state.first())
+        assertEquals(null, viewModel.action.first())
     }
 
     @After
@@ -329,19 +196,24 @@ class ChatViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createChat(
-        chatId: Long = 1L,
-        participantId: Long = 2L,
-        participantName: String = "Luffy",
-        participantAvatarUrl: String? = "avatar",
-        messages: List<Message>
-    ): Chat {
-        return Chat(
-            chatId = chatId,
-            participantId = participantId,
-            participantName = participantName,
-            participantAvatarUrl = participantAvatarUrl,
-            messages = messages
-        )
+    private suspend fun prepareMainState() {
+        `when`(loadChatInfoUseCase.execute("10")).thenReturn(Result.success(chat()))
+        `when`(subscribeToChatMessagesUseCase.execute("10", "chat-1")).thenReturn(Result.success(messagesFlow))
+        messagesFlow.value = listOf(message("1", false, "hello", 1000L))
+        viewModel.obtainEvent(ChatEvent.LoadChat("10"))
     }
+
+    private fun chat() = Chat(
+        chatId = "chat-1",
+        participantId = "participant-1",
+        participantName = "Nami",
+        participantAvatarUrl = "avatar-url",
+    )
+
+    private fun message(id: String, fromThisUser: Boolean, content: String, timestamp: Long) = Message(
+        messageId = id,
+        isFromThisUser = fromThisUser,
+        content = content,
+        timestamp = timestamp,
+    )
 }

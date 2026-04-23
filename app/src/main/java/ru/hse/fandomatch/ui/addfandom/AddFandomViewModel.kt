@@ -62,7 +62,7 @@ class AddFandomViewModel(
         if (!description.checkDescriptionLength()) {
             _state.value = (_state.value as AddFandomState.Main).copy(
                 description = description,
-                nameError = AddFandomState.AddFandomError.DESCRIPTION_LENGTH,
+                descriptionError = AddFandomState.AddFandomError.DESCRIPTION_LENGTH,
                 isButtonAvailable = false
             )
             return
