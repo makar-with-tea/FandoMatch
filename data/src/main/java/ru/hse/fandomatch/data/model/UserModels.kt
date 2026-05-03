@@ -10,7 +10,7 @@ data class UserRegistrationRequestDTO(
     val name: String,
     @SerializedName("hashed_password")
     val hashedPassword: String
-)
+) // todo даша: гендер, аватар
 
 data class UserRegistrationResponseDTO(
     val status: ResponseStatusDTO,
@@ -19,8 +19,7 @@ data class UserRegistrationResponseDTO(
 )
 
 data class UserLoginRequestDTO(
-    val email: String? = null,
-    val username: String? = null,
+    val username: String,
     @SerializedName("hashed_password")
     val hashedPassword: String
 )

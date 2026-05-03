@@ -1,6 +1,7 @@
 package ru.hse.fandomatch.data.model
 
 import com.google.gson.annotations.SerializedName
+import ru.hse.fandomatch.domain.exception.NotAuthorizedException
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Comment
 import ru.hse.fandomatch.domain.model.Fandom
@@ -24,7 +25,13 @@ data class ErrorDTO(
     val errorCode: String,
     @SerializedName("error_message")
     val errorMessage: String? = null
-)
+) {
+    fun checkAuth() {
+        if (errorCode == "401") {
+            throw NotAuthorizedException()
+        }
+    }
+}
 
 class EmptySuccessDTO
 
@@ -106,55 +113,7 @@ enum class GenderDTO {
     }
 }
 
-enum class CityCodeDTO {
-    @SerializedName("MOSCOW")
-    MOSCOW,
-
-    @SerializedName("SAINT_PETERSBURG")
-    SAINT_PETERSBURG,
-
-    @SerializedName("NOVOSIBIRSK")
-    NOVOSIBIRSK,
-
-    @SerializedName("YEKATERINBURG")
-    YEKATERINBURG,
-
-    @SerializedName("KAZAN")
-    KAZAN,
-
-    @SerializedName("NIZHNY_NOVGOROD")
-    NIZHNY_NOVGOROD,
-
-    @SerializedName("CHELYABINSK")
-    CHELYABINSK,
-
-    @SerializedName("SAMARA")
-    SAMARA,
-
-    @SerializedName("ROSTOV_ON_DON")
-    ROSTOV_ON_DON,
-
-    @SerializedName("UFA")
-    UFA,
-
-    @SerializedName("KRASNOYARSK")
-    KRASNOYARSK,
-
-    @SerializedName("VORONEZH")
-    VORONEZH,
-
-    @SerializedName("PERM")
-    PERM,
-
-    @SerializedName("VOLGOGRAD")
-    VOLGOGRAD,
-
-    @SerializedName("OTHER")
-    OTHER
-}
-
 data class CityDTO(
-    val code: CityCodeDTO,
     @SerializedName("name_en")
     val nameEn: String,
     @SerializedName("name_ru")
@@ -167,23 +126,6 @@ data class CityDTO(
 
     companion object {
         fun fromDomain(city: City) = CityDTO(
-            code = when (city.nameEnglish) {
-                "Moscow" -> CityCodeDTO.MOSCOW
-                "Saint Petersburg" -> CityCodeDTO.SAINT_PETERSBURG
-                "Novosibirsk" -> CityCodeDTO.NOVOSIBIRSK
-                "Yekaterinburg" -> CityCodeDTO.YEKATERINBURG
-                "Kazan" -> CityCodeDTO.KAZAN
-                "Nizhny Novgorod" -> CityCodeDTO.NIZHNY_NOVGOROD
-                "Chelyabinsk" -> CityCodeDTO.CHELYABINSK
-                "Samara" -> CityCodeDTO.SAMARA
-                "Rostov-on-Don" -> CityCodeDTO.ROSTOV_ON_DON
-                "Ufa" -> CityCodeDTO.UFA
-                "Krasnoyarsk" -> CityCodeDTO.KRASNOYARSK
-                "Voronezh" -> CityCodeDTO.VORONEZH
-                "Perm" -> CityCodeDTO.PERM
-                "Volgograd" -> CityCodeDTO.VOLGOGRAD
-                else -> CityCodeDTO.OTHER
-            },
             nameEn = city.nameEnglish,
             nameRu = city.nameRussian
         )
@@ -281,7 +223,7 @@ enum class FandomCategoryDTO {
 }
 
 data class UserProfileRequestDTO(
-    val username: String
+    val uuid: String
 )
 
 data class UserProfileResponseDTO(
@@ -319,7 +261,7 @@ data class FullUserProfileResponseDTO(
     val avatar: MediaItemDTO? = null,
     val background: MediaItemDTO? = null,
     val name: String,
-    val gender: GenderDTO? = null,
+    val gender: GenderDTO,
     @SerializedName("birth_date")
     val birthDate: Long,
     val age: Long,
@@ -338,7 +280,9 @@ data class PublicUserProfileResponseDTO(
     val city: CityDTO? = null,
     val fandoms: List<FandomDTO>,
     @SerializedName("has_current_user_reacted")
-    val hasCurrentUserReacted: Boolean
+    val hasCurrentUserReacted: Boolean,
+    val age: Long,
+    val gender: GenderDTO
 ) : BaseUserProfileDTO
 
 data class FriendUserProfileResponseDTO(
@@ -351,7 +295,9 @@ data class FriendUserProfileResponseDTO(
     val avatar: MediaItemDTO? = null,
     val background: MediaItemDTO? = null,
     val city: CityDTO? = null,
-    val fandoms: List<FandomDTO>? = null
+    val fandoms: List<FandomDTO>? = null,
+    val age: Long,
+    val gender: GenderDTO
 ) : BaseUserProfileDTO
 
 data class EditUserProfileRequestDTO(
@@ -663,12 +609,12 @@ data class FandomListResponseDTO(
 data class FandomDTO(
     val id: String,
     val name: String,
-    val category: FandomCategoryDTO? = null
+    val category: FandomCategoryDTO
 ) {
     fun toDomain() = Fandom(
         id = id,
         name = name,
-        category = category!!.toDomain() // todo даша
+        category = category.toDomain()
     )
 
     companion object {
@@ -681,7 +627,7 @@ data class FandomDTO(
 }
 
 data class FandomCategoryListDataDTO(
-    val categories: List<String>
+    val categories: List<FandomCategoryDTO>
 )
 
 data class FandomCategoryListResponseDTO(

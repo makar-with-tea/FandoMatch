@@ -7,10 +7,21 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import ru.hse.fandomatch.MainActivity
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.domain.usecase.auth.SaveDeviceTokenUseCase
 
-class FandoMatchMessagingService(): FirebaseMessagingService() {
+class FandoMatchMessagingService : FirebaseMessagingService(), KoinComponent {
+    private val saveDeviceTokenUseCase: SaveDeviceTokenUseCase by inject()
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
         Log.i("FCM", "Message data payload: ${message.data}")
@@ -75,11 +86,17 @@ class FandoMatchMessagingService(): FirebaseMessagingService() {
     override fun onNewToken(token: String) {
         Log.d("FCM", "Refreshed token: $token")
 
-        // If you want to send messages to this application instance or
-        // manage this apps subscriptions on the server side, send the
-        // FCM registration token to your app server.
-        // todo
-//        sendRegistrationToServer(token)
+        serviceScope.launch {
+            saveDeviceTokenUseCase.execute(token)
+                .onFailure { error ->
+                    Log.e("FCM", "Failed to save device token", error)
+                }
+        }
+    }
+
+    override fun onDestroy() {
+        serviceScope.cancel()
+        super.onDestroy()
     }
 }
 

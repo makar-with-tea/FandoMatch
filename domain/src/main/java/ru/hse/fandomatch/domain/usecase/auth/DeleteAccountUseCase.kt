@@ -6,11 +6,14 @@ import ru.hse.fandomatch.domain.repos.SharedPrefRepository
 class DeleteAccountUseCase(
     private val globalRepository: GlobalRepository,
     private val sharedPrefRepository: SharedPrefRepository,
+    private val refreshAuthUseCase: RefreshAuthUseCase,
 ) {
     suspend fun execute(): Result<Unit> {
         return runCatching {
-            globalRepository.deleteUser()
-            sharedPrefRepository.clearInfo()
+            refreshAuthUseCase.execute {
+                globalRepository.deleteUser()
+                sharedPrefRepository.clearInfo()
+            }
         }
     }
 }

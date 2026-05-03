@@ -59,6 +59,7 @@ import ru.hse.fandomatch.domain.usecase.auth.LogoutUseCase
 import ru.hse.fandomatch.domain.usecase.auth.RefreshAuthUseCase
 import ru.hse.fandomatch.domain.usecase.auth.RegisterUseCase
 import ru.hse.fandomatch.domain.usecase.auth.ResetPasswordUseCase
+import ru.hse.fandomatch.domain.usecase.auth.SaveDeviceTokenUseCase
 import ru.hse.fandomatch.domain.usecase.auth.SetPermissionShownUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserPreferencesUseCase
 import ru.hse.fandomatch.domain.usecase.user.UpdateUserPreferencesUseCase
@@ -176,7 +177,7 @@ val domainModule = module {
     factory<ChangeEmailUseCase> { ChangeEmailUseCase(get()) }
     factory<ChangePasswordUseCase> { ChangePasswordUseCase(get()) }
     factory<CheckVerificationCodeUseCase> { CheckVerificationCodeUseCase(get()) }
-    factory<DeleteAccountUseCase> { DeleteAccountUseCase(get(), get()) }
+    factory<DeleteAccountUseCase> { DeleteAccountUseCase(get(), get(), get()) }
     factory<GetPastLoginUseCase> { GetPastLoginUseCase(get()) }
     factory<GetPermissionShownUseCase> { GetPermissionShownUseCase(get()) }
     factory<GetVerificationCodeUseCase> { GetVerificationCodeUseCase(get()) }
@@ -185,36 +186,37 @@ val domainModule = module {
     factory<RefreshAuthUseCase> { RefreshAuthUseCase(get(), get()) }
     factory<RegisterUseCase> { RegisterUseCase(get(), get()) }
     factory<ResetPasswordUseCase> { ResetPasswordUseCase(get()) }
+    factory<SaveDeviceTokenUseCase> { SaveDeviceTokenUseCase(get()) }
     factory<SetPermissionShownUseCase> { SetPermissionShownUseCase(get()) }
 
     factory<LoadChatInfoUseCase> { LoadChatInfoUseCase(get()) }
     factory<SendMessageUseCase> { SendMessageUseCase(get()) }
-    factory<SubscribeToChatMessagesUseCase> { SubscribeToChatMessagesUseCase(get()) }
-    factory<SubscribeToChatPreviewsUseCase> { SubscribeToChatPreviewsUseCase(get()) }
+    factory<SubscribeToChatMessagesUseCase> { SubscribeToChatMessagesUseCase(get(), get()) }
+    factory<SubscribeToChatPreviewsUseCase> { SubscribeToChatPreviewsUseCase(get(), get()) }
     factory<UploadMediaUseCase> { UploadMediaUseCase(get()) }
     factory<DownloadMediaToGalleryUseCase> { DownloadMediaToGalleryUseCase(get()) }
 
     factory<GetFandomsByQueryUseCase> { GetFandomsByQueryUseCase(get()) }
-    factory<RequestNewFandomUseCase> { RequestNewFandomUseCase(get(), get()) }
+    factory<RequestNewFandomUseCase> { RequestNewFandomUseCase(get(), get(), get()) }
 
     factory<ApplyFiltersUseCase> { ApplyFiltersUseCase(get(), get()) }
     factory<LikeOrDislikeProfileUseCase> { LikeOrDislikeProfileUseCase(get()) }
-    factory<LoadInitialFiltersUseCase> { LoadInitialFiltersUseCase(get()) }
-    factory<LoadSuggestedProfilesUseCase> { LoadSuggestedProfilesUseCase(get()) }
+    factory<LoadInitialFiltersUseCase> { LoadInitialFiltersUseCase(get(), get()) }
+    factory<LoadSuggestedProfilesUseCase> { LoadSuggestedProfilesUseCase(get(), get()) }
 
-    factory<CreatePostUseCase> { CreatePostUseCase(get()) }
-    factory<GetFeedUseCase> { GetFeedUseCase(get(), get()) }
-    factory<GetFullPostUseCase> { GetFullPostUseCase(get()) }
+    factory<CreatePostUseCase> { CreatePostUseCase(get(), get()) }
+    factory<GetFeedUseCase> { GetFeedUseCase(get(), get(), get()) }
+    factory<GetFullPostUseCase> { GetFullPostUseCase(get(), get()) }
     factory<GetUserPostsUseCase> { GetUserPostsUseCase(get(), get()) }
     factory<LikePostUseCase> { LikePostUseCase(get()) }
     factory<SendCommentUseCase> { SendCommentUseCase(get()) }
 
-    factory<EditProfileUseCase> { EditProfileUseCase(get()) }
+    factory<EditProfileUseCase> { EditProfileUseCase(get(), get()) }
     factory<GetCitiesByQueryUseCase> { GetCitiesByQueryUseCase(get()) }
     factory<GetFriendRequestsUseCase> { GetFriendRequestsUseCase(get(), get()) }
     factory<GetFriendsUseCase> { GetFriendsUseCase(get(), get()) }
     factory<GetUserIdUseCase> { GetUserIdUseCase(get()) }
-    factory<GetUserPreferencesUseCase> { GetUserPreferencesUseCase(get()) }
-    factory<GetUserUseCase> { GetUserUseCase(get(), get()) }
+    factory<GetUserPreferencesUseCase> { GetUserPreferencesUseCase(get(), get()) }
+    factory<GetUserUseCase> { GetUserUseCase(get(), get(), get()) }
     factory<UpdateUserPreferencesUseCase> { UpdateUserPreferencesUseCase(get()) }
 }

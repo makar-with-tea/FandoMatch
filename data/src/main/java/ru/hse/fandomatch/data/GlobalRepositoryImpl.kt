@@ -19,6 +19,7 @@ import ru.hse.fandomatch.data.model.ChatMessagesRequestDTO
 import ru.hse.fandomatch.data.model.ChatPreviewsRequestDTO
 import ru.hse.fandomatch.data.model.CityDTO
 import ru.hse.fandomatch.data.model.CreatePostRequestDTO
+import ru.hse.fandomatch.data.model.DeviceTokenRequestDTO
 import ru.hse.fandomatch.data.model.EditUserProfileRequestDTO
 import ru.hse.fandomatch.data.model.FandomCategoryDTO
 import ru.hse.fandomatch.data.model.FandomDTO
@@ -96,8 +97,8 @@ class GlobalRepositoryImpl(
                             fandoms = userDTO.fandoms?.map { it.toDomain() } ?: emptyList(),
                             description = userDTO.bio,
                             name = userDTO.name,
-                            gender = Gender.FEMALE, // todo даша
-                            age = 0, // todo даша
+                            gender = userDTO.gender.toDomain(),
+                            age = userDTO.age.toInt(),
                             avatar = userDTO.avatar?.toDomain(),
                             background = userDTO.background?.toDomain(),
                             city = userDTO.city?.toDomain(),
@@ -109,8 +110,7 @@ class GlobalRepositoryImpl(
                             fandoms = userDTO.fandoms.map { it.toDomain() },
                             description = userDTO.bio,
                             name = userDTO.name,
-                            gender = userDTO.gender?.toDomain()
-                                ?: Gender.NOT_SPECIFIED, // todo даша
+                            gender = userDTO.gender.toDomain(),
                             age = userDTO.age.toInt(),
                             avatar = userDTO.avatar?.toDomain(),
                             background = userDTO.background?.toDomain(),
@@ -126,8 +126,8 @@ class GlobalRepositoryImpl(
                             fandoms = userDTO.fandoms.map { it.toDomain() },
                             description = userDTO.bio,
                             name = userDTO.name,
-                            gender = Gender.NOT_SPECIFIED, // todo даша
-                            age = 0, // todo даша
+                            gender = userDTO.gender.toDomain(),
+                            age = userDTO.age.toInt(),
                             avatar = userDTO.avatar?.toDomain(),
                             background = userDTO.background?.toDomain(),
                             city = userDTO.city?.toDomain(),
@@ -139,8 +139,9 @@ class GlobalRepositoryImpl(
             }
 
             ResponseStatusDTO.ERROR -> {
-                response.errorResponse!!.let { (errorCode, errorMessage) ->
-                    throw Exception("Failed to load user profile: $errorCode, $errorMessage")
+                response.errorResponse!!.let {
+                    it.checkAuth()
+                    throw Exception("Failed to load user profile: ${it.errorCode}, ${it.errorMessage}")
                 }
             }
         }
@@ -152,9 +153,8 @@ class GlobalRepositoryImpl(
     ): AuthInfo {
         val response = userApiService.login(
             UserLoginRequestDTO(
-                email = null,
                 username = login,
-                hashedPassword = PasswordHasher.sha256(password) // todo даша hashing
+                hashedPassword = PasswordHasher.sha256(password)
             )
         )
         when (response.status) {
@@ -187,7 +187,7 @@ class GlobalRepositoryImpl(
                 email = email,
                 username = login,
                 birthDate = dateOfBirthMillis,
-                hashedPassword = PasswordHasher.sha256(password) // todo даша hashing
+                hashedPassword = PasswordHasher.sha256(password)
             )
         )
         when (response.status) {
@@ -249,20 +249,20 @@ class GlobalRepositoryImpl(
                 avatarMediaId = avatarMediaId,
                 backgroundMediaId = backgroundMediaId,
                 name = name,
-                gender = GenderDTO.MALE, // todo даша убрать
-                city = CityDTO.fromDomain(city ?: City("aaa", "aaa")) // todo даша nullable
+                city = city?.let { CityDTO.fromDomain(it) },
             ) // todo даша добавить фандомы
         )
-        if (response.errorResponse != null) {
-            throw Exception("Failed to update user profile: ${response.errorResponse.errorCode}, ${response.errorResponse.errorMessage}")
+        response.errorResponse?.let {
+            it.checkAuth()
+            throw Exception("Failed to update user profile: ${it.errorCode}, ${it.errorMessage}")
         }
     }
 
     override suspend fun changePassword(oldPassword: String, newPassword: String) {
         val response = userApiService.changePassword(
             ChangePasswordRequestDTO(
-                oldPassword = PasswordHasher.sha256(oldPassword), // todo даша hashing
-                newPassword = PasswordHasher.sha256(newPassword) // todo даша hashing
+                oldPassword = PasswordHasher.sha256(oldPassword),
+                newPassword = PasswordHasher.sha256(newPassword)
             )
         )
         if (response.errorResponse != null) {
@@ -272,6 +272,7 @@ class GlobalRepositoryImpl(
 
     override suspend fun deleteUser() {
         // todo даша
+        // todo checkAuth
     }
 
     override suspend fun getFriends(id: String): List<OtherProfileItem> {
@@ -346,6 +347,7 @@ class GlobalRepositoryImpl(
 
     override suspend fun getUserPreferences(): UserPreferences {
         // todo даша
+        // todo checkAuth
         return UserPreferences(
             matchesEnabled = true,
             messagesEnabled = true,
@@ -365,6 +367,14 @@ class GlobalRepositoryImpl(
         // todo даша
     }
 
+    override suspend fun saveDeviceToken(token: String) {
+        userApiService.saveDeviceToken(
+            DeviceTokenRequestDTO(
+                fcmToken = token
+            )
+        )
+    }
+
     override suspend fun getSuggestedProfiles(
         size: Int
     ): List<ProfileCard> {
@@ -373,28 +383,24 @@ class GlobalRepositoryImpl(
                 batchSize = size
             )
         )
-        when (response.status) {
-            ResponseStatusDTO.SUCCESS -> {
-                return response.successResponse!!.candidates.map { candidateDTO ->
-                    ProfileCard(
-                        id = candidateDTO.uuid,
-                        name = candidateDTO.name,
-                        age = candidateDTO.age,
-                        avatar = candidateDTO.avatar?.toDomain(),
-                        fandoms = candidateDTO.fandoms.map { it.toDomain() },
-                        gender = Gender.FEMALE, // todo даша
-                        compatibilityPercentage = candidateDTO.compatibility,
-                        city = candidateDTO.city?.toDomain(),
-                    )
-                }
-            }
-
-            ResponseStatusDTO.ERROR -> {
-                response.errorResponse!!.let { (errorCode, errorMessage) ->
-                    throw Exception("Failed to load match candidates: $errorCode, $errorMessage")
-                }
-            }
+        response.errorResponse?.let {
+            it.checkAuth()
+            throw Exception("Failed to load suggested profiles: ${it.errorCode}, ${it.errorMessage}")
         }
+        return response.successResponse?.let { successResponse ->
+            successResponse.candidates.map { candidateDTO ->
+                ProfileCard(
+                    id = candidateDTO.uuid,
+                    name = candidateDTO.name,
+                    age = candidateDTO.age,
+                    avatar = candidateDTO.avatar?.toDomain(),
+                    fandoms = candidateDTO.fandoms.map { it.toDomain() },
+                    gender = Gender.FEMALE, // todo даша
+                    compatibilityPercentage = candidateDTO.compatibility,
+                    city = candidateDTO.city?.toDomain(),
+                )
+            }
+        } ?: emptyList()
     }
 
     override suspend fun likeOrDislikeProfile(
@@ -428,8 +434,9 @@ class GlobalRepositoryImpl(
             }
 
             ResponseStatusDTO.ERROR -> {
-                response.errorResponse!!.let { (errorCode, errorMessage) ->
-                    throw Exception("Failed to load current filters: $errorCode, $errorMessage")
+                response.errorResponse!!.let {
+                    it.checkAuth()
+                    throw Exception("Failed to load current filters: ${it.errorCode}, ${it.errorMessage}")
                 }
             }
         }
@@ -464,9 +471,14 @@ class GlobalRepositoryImpl(
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<ChatPreview>> {
-        val initial = chatApiService.getChatPreviews(
+        val response = chatApiService.getChatPreviews(
             ChatPreviewsRequestDTO(beforeTimestamp = beforeTimestamp, size = size)
-        ).successResponse?.previews?.map { dto ->
+        )
+        response.errorResponse?.let {
+            it.checkAuth()
+            throw Exception("Failed to load chat previews: ${it.errorCode}, ${it.errorMessage}")
+        }
+        val initial = response.successResponse?.previews?.map { dto ->
             ChatPreview(
                 chatId = dto.chatId,
                 participantName = dto.participantName,
@@ -498,14 +510,19 @@ class GlobalRepositoryImpl(
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<Message>> {
-        val initial = chatApiService.getChatMessages(
+        val response = chatApiService.getChatMessages(
             userId = userId,
             request = ChatMessagesRequestDTO(
                 chatId = chatId,
                 beforeTimestamp = beforeTimestamp,
                 size = size
             )
-        ).successResponse?.messages?.map { dto ->
+        )
+        response.errorResponse?.let {
+            it.checkAuth()
+            throw Exception("Failed to load chat messages: ${it.errorCode}, ${it.errorMessage}")
+        }
+        val initial = response.successResponse?.messages?.map { dto ->
             Message(
                 messageId = dto.messageId,
                 isFromThisUser = dto.isFromThisUser,
@@ -637,8 +654,9 @@ class GlobalRepositoryImpl(
             }
 
             ResponseStatusDTO.ERROR -> {
-                response.errorResponse!!.let { (errorCode, errorMessage) ->
-                    throw Exception("Failed to load feed posts: $errorCode, $errorMessage")
+                response.errorResponse!!.let {
+                    it.checkAuth()
+                    throw Exception("Failed to load feed posts: ${it.errorCode}, ${it.errorMessage}")
                 }
             }
         }
@@ -651,7 +669,7 @@ class GlobalRepositoryImpl(
     ): List<Post> {
         val response = coreApiService.getPosts(
             PostsGetRequestDTO(
-                uuid = userId, // todo даша
+                uuid = userId,
                 pagination = TimestampPaginationRequestDTO(
                     cursorTimestamp = beforeTimestamp,
                     size = size
@@ -695,8 +713,9 @@ class GlobalRepositoryImpl(
             }
 
             ResponseStatusDTO.ERROR -> {
-                response.errorResponse!!.let { (errorCode, errorMessage) ->
-                    throw Exception("Failed to load full post: $errorCode, $errorMessage")
+                response.errorResponse!!.let {
+                    it.checkAuth()
+                    throw Exception("Failed to load full post: ${it.errorCode}, ${it.errorMessage}")
                 }
             }
         }
@@ -727,15 +746,15 @@ class GlobalRepositoryImpl(
                 fandomId = fandomIds.firstOrNull() // todo даша multiple fandoms
             )
         )
-        if (response.errorResponse != null) {
-            throw Exception("Failed to create post: ${response.errorResponse.errorCode}, ${response.errorResponse.errorMessage}")
+        response.errorResponse?.let {
+            it.checkAuth()
+            throw Exception("Failed to create post: ${it.errorCode}, ${it.errorMessage}")
         }
     }
 
     override suspend fun getFandomCategories(): List<FandomCategory> {
         val response = coreApiService.getFandomCategories()
-//        return response.successResponse?.categories?.map { it.toDomain() } ?: emptyList()
-        return emptyList() // todo даша
+        return response.successResponse?.categories?.map { it.toDomain() } ?: emptyList()
     }
 
     override suspend fun getFandomsByQuery(query: String): List<Fandom> {
@@ -757,8 +776,9 @@ class GlobalRepositoryImpl(
                 description = description
             )
         )
-        if (response.errorResponse != null) {
-            throw Exception("Failed to request new fandom: ${response.errorResponse.errorCode}, ${response.errorResponse.errorMessage}")
+        response.errorResponse?.let {
+            it.checkAuth()
+            throw Exception("Failed to request new fandom: ${it.errorCode}, ${it.errorMessage}")
         }
     }
 }

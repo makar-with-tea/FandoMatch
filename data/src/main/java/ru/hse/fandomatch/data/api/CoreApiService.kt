@@ -2,7 +2,6 @@ package ru.hse.fandomatch.data.api
 
 import retrofit2.http.Body
 import retrofit2.http.GET
-import retrofit2.http.HTTP
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -93,7 +92,7 @@ interface CoreApiService {
         @Path("post_id") postId: String
     ): ExtendedPostResponseDTO
 
-    @HTTP(method = "GET", path = "core/posts/{post_id}/comments", hasBody = true)
+    @POST("core/posts/{post_id}/comments")
     suspend fun getPostComments(
         @Path("post_id") postId: String,
         @Body request: CommentsGetRequestDTO
@@ -105,7 +104,7 @@ interface CoreApiService {
     ): PostLikeResponseDTO
 
     // FEED
-    @HTTP(method = "GET", path = "core/feed", hasBody = true)
+    @POST("core/feed")
     suspend fun getFeed(
         @Body request: GetFeedRequestDTO
     ): PostListResponseDTO

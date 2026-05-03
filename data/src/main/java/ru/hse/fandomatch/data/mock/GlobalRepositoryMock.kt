@@ -243,6 +243,10 @@ class GlobalRepositoryMock: GlobalRepository {
         Log.d("GlobalRepositoryMock", "changeEmail: changed email to $newEmail")
     }
 
+    override suspend fun saveDeviceToken(token: String) {
+        Log.d("GlobalRepositoryMock", "saveDeviceToken: saved token $token")
+    }
+
     override suspend fun getSuggestedProfiles(size: Int): List<ProfileCard> {
         return mockProfileCards.shuffled().take(size).also {
             Log.d(

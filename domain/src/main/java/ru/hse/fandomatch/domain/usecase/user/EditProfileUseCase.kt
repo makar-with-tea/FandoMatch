@@ -2,11 +2,12 @@ package ru.hse.fandomatch.domain.usecase.user
 
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
-import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.repos.GlobalRepository
+import ru.hse.fandomatch.domain.usecase.auth.RefreshAuthUseCase
 
 class EditProfileUseCase(
     private val globalRepository: GlobalRepository,
+    private val refreshAuthUseCase: RefreshAuthUseCase,
 ) {
     suspend fun execute(
         name: String,
@@ -17,14 +18,16 @@ class EditProfileUseCase(
         backgroundMediaId: String?,
     ): Result<Unit> {
         return runCatching {
-            globalRepository.updateUser(
-                name = name,
-                bio = bio,
-                city = city,
-                fandoms = fandoms,
-                avatarMediaId = avatarMediaId,
-                backgroundMediaId = backgroundMediaId,
-            )
+            refreshAuthUseCase.execute {
+                globalRepository.updateUser(
+                    name = name,
+                    bio = bio,
+                    city = city,
+                    fandoms = fandoms,
+                    avatarMediaId = avatarMediaId,
+                    backgroundMediaId = backgroundMediaId,
+                )
+            }
         }
     }
 }
