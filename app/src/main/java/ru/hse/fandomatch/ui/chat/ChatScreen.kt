@@ -62,6 +62,7 @@ import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.ImagesScreen
 import ru.hse.fandomatch.ui.composables.Message
 import ru.hse.fandomatch.ui.composables.SkeletonView
+import ru.hse.fandomatch.utils.epochMillisToTimeString
 import java.time.LocalDateTime
 import kotlin.collections.plus
 
@@ -210,9 +211,13 @@ private fun MainState(
     }
     var mediaItemsForScreen by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
     var currentItemIndex by remember { mutableStateOf(0) }
+    var attachmentsSenderName by remember { mutableStateOf("") }
+    var attachmentsSentTime by remember { mutableStateOf("") }
     BackHandler(enabled = mediaItemsForScreen.isNotEmpty()) {
         mediaItemsForScreen = emptyList()
         currentItemIndex = 0
+        attachmentsSenderName = ""
+        attachmentsSentTime = ""
     }
 
     Column(
@@ -259,6 +264,11 @@ private fun MainState(
                     }
 
                     is ChatUiElement.MessageElement -> {
+                        val senderName = if (uiElement.message.isFromThisUser) {
+                            stringResource(R.string.you)
+                        } else {
+                            state.participantName
+                        }
                         Message(
                             message = uiElement.message,
                             modifier = Modifier.padding(vertical = 4.dp),
@@ -266,6 +276,8 @@ private fun MainState(
                             onItemClicked = { itemsList, index ->
                                 mediaItemsForScreen = itemsList
                                 currentItemIndex = index
+                                attachmentsSenderName = senderName
+                                attachmentsSentTime = uiElement.message.timestamp.epochMillisToTimeString()
                             }
                         )
                     }
@@ -340,7 +352,15 @@ private fun MainState(
             items = mediaItemsForScreen,
             initialPage = currentItemIndex,
             titleContent = {
-                // todo: from <user>, <time>
+                Text(
+                    text = stringResource(
+                        R.string.attachments_sender_and_time_description,
+                        attachmentsSenderName,
+                        attachmentsSentTime
+                    ),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                )
             },
             onDownloadItem = { onDownloadMediaItem(it) },
             setTopBarState = setTopBarState,

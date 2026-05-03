@@ -402,7 +402,7 @@ internal var mockUserPosts = listOf(
     )
 )
 
-val mockComments = listOf(
+var mockComments = listOf(
     Comment(
         authorName = "Алиса",
         authorLogin = "alice",

@@ -31,7 +31,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.MediaItem
@@ -45,6 +47,7 @@ import ru.hse.fandomatch.ui.composables.FullPost
 import ru.hse.fandomatch.ui.composables.ImagesScreen
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.PostComment
+import ru.hse.fandomatch.utils.epochMillisToTimeString
 
 @Composable
 fun PostScreen(
@@ -159,7 +162,7 @@ private fun MainState(
                     isLiked = state.fullPost.post.isLikedByCurrentUser,
                     onLikeClick = { onClickLike() },
                     onItemClick = { urls, index ->
-                        itemsForScreen = urls // todo move to view model
+                        itemsForScreen = urls
                         currentItemIndex = index
                     },
                     modifier = Modifier,
@@ -230,7 +233,15 @@ private fun MainState(
             items = itemsForScreen,
             initialPage = currentItemIndex,
             titleContent = {
-                // todo: from <user>, <time>
+                Text(
+                    text = stringResource(
+                        R.string.attachments_sender_and_time_description,
+                        state.fullPost.post.authorName,
+                        state.fullPost.post.timestamp.epochMillisToTimeString(),
+                    ),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                )
             },
             onDownloadItem = onDownloadMediaItem,
             setTopBarState = setTopBarState,

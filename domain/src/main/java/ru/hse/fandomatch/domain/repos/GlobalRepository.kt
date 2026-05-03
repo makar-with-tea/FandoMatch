@@ -119,6 +119,11 @@ interface GlobalRepository {
         mediaIdsWithTypes: List<Pair<String, MediaType>>,
         fandomIds: List<String>,
     )
+    suspend fun sendComment(
+        postId: String,
+        content: String,
+        timestamp: Long,
+    )
 
     // Fandoms
     suspend fun getFandomCategories(): List<FandomCategory>

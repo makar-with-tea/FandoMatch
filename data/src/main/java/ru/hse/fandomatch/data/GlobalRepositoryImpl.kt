@@ -752,6 +752,10 @@ class GlobalRepositoryImpl(
         }
     }
 
+    override suspend fun sendComment(postId: String, content: String, timestamp: Long) {
+        // todo даша
+    }
+
     override suspend fun getFandomCategories(): List<FandomCategory> {
         val response = coreApiService.getFandomCategories()
         return response.successResponse?.categories?.map { it.toDomain() } ?: emptyList()

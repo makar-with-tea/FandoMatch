@@ -7,6 +7,7 @@ import ru.hse.fandomatch.domain.model.AuthInfo
 import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.model.City
+import ru.hse.fandomatch.domain.model.Comment
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Filters
@@ -482,6 +483,23 @@ class GlobalRepositoryMock: GlobalRepository {
         )
         mockUserPosts = listOf(newPost) + mockUserPosts
         Log.d("GlobalRepositoryMock", "createPost: created new post with id ${newPost.id}")
+    }
+
+    override suspend fun sendComment(postId: String, content: String, timestamp: Long) {
+        val newComment = Comment(
+            authorName = mockUser.name,
+            authorLogin = (mockUser.profileType as ProfileType.Own).login,
+            authorAvatar = mockUser.avatar,
+            content = content,
+            timestamp = timestamp,
+        )
+        mockComments = mockComments + newComment
+        mockPosts = mockPosts.map {
+            if (it.id == postId) {
+                it.copy(commentCount = it.commentCount + 1)
+            } else it
+        }
+        Log.d("GlobalRepositoryMock", "sendComment: added new comment to post $postId with content: $content")
     }
 
     override suspend fun getFandomCategories(): List<FandomCategory> {

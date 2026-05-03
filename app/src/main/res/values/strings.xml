@@ -136,6 +136,8 @@
     <string name="attach_file_button_description">Прикрепить вложение</string>
     <string name="detach_file_button_description">Удалить вложение</string>
     <string name="download_media_button_description">Скачать фото или видео</string>
+    <string name="attachments_sender_and_time_description">%1$s, %2$s</string>
+    <string name="you">Вы</string>
 
     <string name="login_hidden">Логин скрыт</string>
     <string name="go_to_chat_button_description">Отправить сообщение</string>
