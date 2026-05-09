@@ -9,6 +9,7 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import ru.hse.fandomatch.data.AuthInterceptor
+import ru.hse.fandomatch.data.GlobalRepositoryImpl
 import ru.hse.fandomatch.data.MediaRepositoryImpl
 import ru.hse.fandomatch.data.SharedPrefRepositoryImpl
 import ru.hse.fandomatch.data.api.ChatApiService
@@ -86,6 +87,7 @@ val appModule = module {
         getVerificationCodeUseCase = get(),
         checkVerificationCodeUseCase = get(),
         uploadMediaUseCase = get(),
+        editProfileUseCase = get(),
         )
     }
     viewModel<IntroViewModel> { IntroViewModel(getPastLoginUseCase = get()) }
@@ -116,7 +118,6 @@ val appModule = module {
 }
 
 val dataModule = module {
-    single<GlobalRepository> { GlobalRepositoryMock() }
     single<SharedPrefRepository> { SharedPrefRepositoryImpl(androidContext()) }
     single<MediaRepository> { MediaRepositoryImpl(androidContext()) }
 
@@ -142,7 +143,7 @@ val dataModule = module {
 
     single(named("apiRetrofit")) {
         Retrofit.Builder()
-            .baseUrl("http://192.168.0.106:8000/") // todo damn
+            .baseUrl("https://xsqs-1dmk-iemo.gw-1a.dockhost.net/")
             .client(get(named("apiClient")))
             .addConverterFactory(GsonConverterFactory.create(get(named("gson"))))
             .build()
@@ -152,7 +153,7 @@ val dataModule = module {
         ChatSocketServiceImpl(
             okHttpClient = get(named("apiClient")),
             gson = get(named("gson")),
-            wsBaseUrl = "ws://192.168.0.106:8000" // todo ws host
+            wsBaseUrl = "wss://xsqs-1dmk-iemo.gw-1a.dockhost.net",
         )
     }
 
@@ -169,8 +170,8 @@ val dataModule = module {
     single<ChatApiService> { get<Retrofit>(named("apiRetrofit")).create(ChatApiService::class.java) }
     single<S3UploadApiService> { get<Retrofit>(named("s3Retrofit")).create(S3UploadApiService::class.java) }
 
-//    single<GlobalRepository> { GlobalRepositoryImpl(get(), get(), get(), get()) }
-    single<GlobalRepository> { GlobalRepositoryMock() }
+    single<GlobalRepository> { GlobalRepositoryImpl(get(), get(), get(), get(), get()) }
+//    single<GlobalRepository> { GlobalRepositoryMock() }
 }
 
 val domainModule = module {

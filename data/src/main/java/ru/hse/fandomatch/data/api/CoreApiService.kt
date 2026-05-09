@@ -5,8 +5,11 @@ import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
+import ru.hse.fandomatch.data.model.CitySearchResponseDTO
 import ru.hse.fandomatch.data.model.CommentListResponseDTO
 import ru.hse.fandomatch.data.model.CommentsGetRequestDTO
+import ru.hse.fandomatch.data.model.CreateCommentRequestDTO
+import ru.hse.fandomatch.data.model.CreateCommentResponseDTO
 import ru.hse.fandomatch.data.model.CreatePostRequestDTO
 import ru.hse.fandomatch.data.model.CreatePostResponseDTO
 import ru.hse.fandomatch.data.model.CurrentFiltersResponseDTO
@@ -31,6 +34,8 @@ import ru.hse.fandomatch.data.model.PendingRequestsResponseDTO
 import ru.hse.fandomatch.data.model.PostLikeResponseDTO
 import ru.hse.fandomatch.data.model.PostListResponseDTO
 import ru.hse.fandomatch.data.model.PostsGetRequestDTO
+import ru.hse.fandomatch.data.model.UpdateUserPreferencesRequestDTO
+import ru.hse.fandomatch.data.model.UserPreferencesResponseDTO
 import ru.hse.fandomatch.data.model.UserProfileRequestDTO
 import ru.hse.fandomatch.data.model.UserProfileResponseDTO
 
@@ -47,12 +52,20 @@ interface CoreApiService {
         @Body request: EditUserProfileRequestDTO
     ): EditUserProfileResponseDTO
 
-    @PATCH("core/user/profile/friends")
+    @GET("core/user/preferences")
+    suspend fun getUserPreferences(): UserPreferencesResponseDTO
+
+    @PATCH("core/user/preferences")
+    suspend fun updateUserPreferences(
+        @Body request: UpdateUserPreferencesRequestDTO
+    ): UserPreferencesResponseDTO
+
+    @POST("core/user/profile/friends")
     suspend fun getFriends(
         @Body request: GetRelatedUsersRequestDTO
     ): FriendsResponseDTO
 
-    @PATCH("core/user/profile/pending_requests")
+    @POST("core/user/profile/pending_requests")
     suspend fun getPendingRequests(
         @Body request: GetRelatedUsersRequestDTO
     ): PendingRequestsResponseDTO
@@ -103,6 +116,12 @@ interface CoreApiService {
         @Path("post_id") postId: String
     ): PostLikeResponseDTO
 
+    @POST("core/posts/{post_id}/comment")
+    suspend fun createComment(
+        @Path("post_id") postId: String,
+        @Body request: CreateCommentRequestDTO
+    ): CreateCommentResponseDTO
+
     // FEED
     @POST("core/feed")
     suspend fun getFeed(
@@ -110,6 +129,16 @@ interface CoreApiService {
     ): PostListResponseDTO
 
     // FANDOMS
+    @GET("core/fandoms/search")
+    suspend fun searchFandoms(
+        @retrofit2.http.Query("query") query: String
+    ): FandomListResponseDTO
+
+    @GET("core/cities/search")
+    suspend fun searchCities(
+        @retrofit2.http.Query("query") query: String
+    ): CitySearchResponseDTO
+
     @POST("core/fandoms/user")
     suspend fun getUserFandoms(
         @Body request: FandomsGetRequestDTO

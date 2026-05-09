@@ -54,13 +54,18 @@ class PostViewModel(
             return
         }
         viewModelScope.launch(dispatcherIO) {
-            val result = getFullPostUseCase.execute(postId = profileId)
-            val fullPost = result.getOrNull() ?: run {
-                Log.e("PostViewModel", "Failed to load post info", result.exceptionOrNull())
-                _state.value = PostState.Error
-                return@launch
-            }
-            _state.value = PostState.Main(fullPost)
+            getFullPostUseCase.execute(postId = profileId)
+                .onFailure { exception ->
+                    Log.e("PostViewModel", "Failed to load post info", exception)
+                    withContext(dispatcherMain) {
+                        _state.value = PostState.Error
+                    }
+                }
+                .onSuccess { fullPost ->
+                    withContext(dispatcherMain) {
+                        _state.value = PostState.Main(fullPost)
+                    }
+                }
         }
     }
 
@@ -70,33 +75,40 @@ class PostViewModel(
         val commentText = currentState.commentDraft.trim()
         if (commentText.isEmpty()) return
         viewModelScope.launch(dispatcherIO) {
-            val result = sendCommentUseCase.execute(
+            sendCommentUseCase.execute(
                 postId = currentState.fullPost.post.id,
                 content = commentText,
                 timestamp = timestamp,
             )
-            if (result.isFailure) {
-                Log.e("PostViewModel", "Failed to send comment", result.exceptionOrNull())
-                return@launch
-            }
-            val currentUser = getUserUseCase.execute(null, true).getOrNull() ?: run {
-                Log.e("PostViewModel", "Failed to load current user info", result.exceptionOrNull())
-                return@launch
-            }
-            withContext(dispatcherMain) {
-                _state.value = currentState.copy(
-                    commentDraft = "",
-                    fullPost = currentState.fullPost.copy(
-                        comments = currentState.fullPost.comments + Comment(
-                            authorName = currentUser.name,
-                            authorLogin = (currentUser.profileType as ProfileType.Own).login,
-                            authorAvatar = currentUser.avatar,
-                            content = commentText,
-                            timestamp = timestamp,
-                        )
-                    )
-                )
-            }
+                .onFailure { exception ->
+                    Log.e("PostViewModel", "Failed to send comment", exception)
+                }
+                .onSuccess {
+                    getUserUseCase.execute(null, true)
+                        .onFailure { e ->
+                            Log.e(
+                                "PostViewModel",
+                                "Failed to load current user info: ${e.message}",
+                                e
+                            )
+                        }
+                        .onSuccess { currentUser ->
+                            withContext(dispatcherMain) {
+                                _state.value = currentState.copy(
+                                    commentDraft = "",
+                                    fullPost = currentState.fullPost.copy(
+                                        comments = currentState.fullPost.comments + Comment(
+                                            authorName = currentUser.name,
+                                            authorLogin = (currentUser.profileType as ProfileType.Own).login,
+                                            authorAvatar = currentUser.avatar,
+                                            content = commentText,
+                                            timestamp = timestamp,
+                                        )
+                                    )
+                                )
+                            }
+                        }
+                }
         }
     }
 
@@ -113,23 +125,26 @@ class PostViewModel(
     private fun onLikeClicked() {
         val currentState = (_state.value as? PostState.Main) ?: return
         viewModelScope.launch(dispatcherIO) {
-            val result = likePostUseCase.execute(postId = currentState.fullPost.post.id)
-            if (result.isFailure) {
-                Log.e("PostViewModel", "Failed to like post", result.exceptionOrNull())
-                return@launch
-            }
-            _state.value = currentState.copy(
-                fullPost = currentState.fullPost.copy(
-                    post = currentState.fullPost.post.copy(
-                        isLikedByCurrentUser = !currentState.fullPost.post.isLikedByCurrentUser,
-                        likeCount = if (currentState.fullPost.post.isLikedByCurrentUser) {
-                            currentState.fullPost.post.likeCount - 1
-                        } else {
-                            currentState.fullPost.post.likeCount + 1
-                        }
-                    )
-                )
-            )
+            likePostUseCase.execute(postId = currentState.fullPost.post.id)
+                .onFailure { exception ->
+                    Log.e("PostViewModel", "Failed to like post", exception)
+                }
+                .onSuccess {
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            fullPost = currentState.fullPost.copy(
+                                post = currentState.fullPost.post.copy(
+                                    isLikedByCurrentUser = !currentState.fullPost.post.isLikedByCurrentUser,
+                                    likeCount = if (currentState.fullPost.post.isLikedByCurrentUser) {
+                                        currentState.fullPost.post.likeCount - 1
+                                    } else {
+                                        currentState.fullPost.post.likeCount + 1
+                                    }
+                                )
+                            )
+                        )
+                    }
+                }
         }
     }
 

@@ -648,3 +648,49 @@ data class FandomRequestCreateResponseDTO(
     val status: ResponseStatusDTO,
     val errorResponse: ErrorDTO? = null
 )
+
+data class UserPreferencesDTO(
+    @SerializedName("match_notifications_enabled")
+    val matchNotificationsEnabled: Boolean,
+    @SerializedName("message_notifications_enabled")
+    val messageNotificationsEnabled: Boolean,
+    @SerializedName("hide_my_posts_from_non_matches")
+    val hideMyPostsFromNonMatches: Boolean
+)
+
+data class UserPreferencesResponseDTO(
+    val status: ResponseStatusDTO,
+    val successResponse: UserPreferencesDTO? = null,
+    val errorResponse: ErrorDTO? = null
+)
+
+data class UpdateUserPreferencesRequestDTO(
+    @SerializedName("match_notifications_enabled")
+    val matchNotificationsEnabled: Boolean,
+    @SerializedName("message_notifications_enabled")
+    val messageNotificationsEnabled: Boolean,
+    @SerializedName("hide_my_posts_from_non_matches")
+    val hideMyPostsFromNonMatches: Boolean
+)
+
+data class CitySearchDataDTO(
+    val cities: List<CityDTO>
+)
+
+data class CitySearchResponseDTO(
+    val status: ResponseStatusDTO,
+    val successResponse: CitySearchDataDTO? = null,
+    val errorResponse: ErrorDTO? = null
+)
+
+data class CreateCommentRequestDTO(
+    val content: String,
+    val timestamp: Long? = null
+)
+
+data class CreateCommentResponseDTO(
+    val status: ResponseStatusDTO,
+    val successResponse: CommentDTO? = null,
+    val errorResponse: ErrorDTO? = null
+)
+

@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.data.socket
 
+import android.util.Log
 import com.google.gson.Gson
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -13,8 +14,6 @@ import ru.hse.fandomatch.data.model.ChatPreviewDTO
 import ru.hse.fandomatch.data.model.MessageDTO
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.model.Message
-import ru.hse.fandomatch.domain.model.MediaItem
-import ru.hse.fandomatch.domain.model.MediaType
 
 class ChatSocketServiceImpl(
     private val okHttpClient: OkHttpClient,
@@ -28,6 +27,9 @@ class ChatSocketServiceImpl(
             .build()
 
         val listener = object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                Log.d("ChatSocket", "WebSocket opened for messages (user=$userId), response=${response.code()}")
+            }
             override fun onMessage(webSocket: WebSocket, text: String) {
                 runCatching {
                     val dto = gson.fromJson(text, MessageDTO::class.java)
@@ -36,6 +38,7 @@ class ChatSocketServiceImpl(
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                Log.e("ChatSocket", "WebSocket failure for messages (user=$userId)", t)
                 close(t)
             }
         }
@@ -50,6 +53,9 @@ class ChatSocketServiceImpl(
             .build()
 
         val listener = object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                Log.d("ChatSocket", "WebSocket opened for previews, response=${response.code()}")
+            }
             override fun onMessage(webSocket: WebSocket, text: String) {
                 runCatching {
                     val dto = gson.fromJson(text, ChatPreviewDTO::class.java)
@@ -58,6 +64,7 @@ class ChatSocketServiceImpl(
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                Log.e("ChatSocket", "WebSocket failure for previews", t)
                 close(t)
             }
         }

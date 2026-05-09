@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.data
 
+import android.util.Log
 import okhttp3.Interceptor
 import okhttp3.Response
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
@@ -10,6 +11,7 @@ class AuthInterceptor(
     override fun intercept(chain: Interceptor.Chain): Response {
         val token = sharedPrefRepository.getToken()
         val request = chain.request().newBuilder()
+        Log.d("AuthInterceptor", "Adding token $token to request: ${chain.request().url()}")
         if (!token.isNullOrEmpty()) {
             request.addHeader("Authorization", "Bearer $token")
         }

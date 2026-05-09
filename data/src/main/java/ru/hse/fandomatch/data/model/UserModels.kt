@@ -116,3 +116,50 @@ data class FcmTokenResponseDTO(
     @SerializedName("fcm_token")
     val fcmToken: String? = null
 )
+
+data class DeleteProfileResponseDTO(
+    val status: ResponseStatusDTO,
+    val errorResponse: ErrorDTO? = null
+)
+
+data class ChangeEmailRequestDTO(
+    @SerializedName("new_email")
+    val newEmail: String
+)
+
+data class ChangeEmailResponseDTO(
+    val status: ResponseStatusDTO,
+    val errorResponse: ErrorDTO? = null
+)
+
+data class SendVerificationCodeRequestDTO(
+    val email: String
+)
+
+data class SendVerificationCodeResponseDTO(
+    val status: ResponseStatusDTO,
+    val errorResponse: ErrorDTO? = null
+)
+
+data class CheckVerificationCodeRequestDTO(
+    val email: String,
+    val code: String
+)
+
+data class CheckVerificationCodeResponseDTO(
+    val status: ResponseStatusDTO,
+    val result: Boolean? = null,
+    val errorResponse: ErrorDTO? = null
+)
+
+data class ResetPasswordRequestDTO(
+    val email: String,
+    val code: String,
+    @SerializedName("new_password")
+    val newPassword: String
+)
+
+data class ResetPasswordResponseDTO(
+    val status: ResponseStatusDTO,
+    val errorResponse: ErrorDTO? = null
+)

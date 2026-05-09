@@ -108,8 +108,7 @@ private fun MainState(
 @Composable
 private fun MatchesState.MatchesError.toText() = when (this) {
     MatchesState.MatchesError.NETWORK -> stringResource(id = R.string.network_error)
-    MatchesState.MatchesError.NO_PROFILES_FOUND -> stringResource(id = R.string.no_profiles_found_error)
-    MatchesState.MatchesError.IDLE -> ""
+    MatchesState.MatchesError.NO_PROFILES_FOUND, MatchesState.MatchesError.IDLE -> ""
 }
 
 @Composable

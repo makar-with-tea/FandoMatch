@@ -29,7 +29,6 @@ interface GlobalRepository {
         login: String,
         dateOfBirthMillis: Long,
         gender: Gender,
-        avatarMediaId: String?,
         password: String
     ): AuthInfo
     suspend fun logout()
@@ -49,7 +48,7 @@ interface GlobalRepository {
     suspend fun getFriendRequests(id: String): List<OtherProfileItem>
     suspend fun getVerificationCode(email: String)
     suspend fun checkVerificationCode(code: String, email: String): Boolean
-    suspend fun resetPassword(code: String, newPassword: String)
+    suspend fun resetPassword(code: String, newPassword: String, email: String)
     suspend fun getCitiesByQuery(query: String): List<City>
     suspend fun getUserPreferences(): UserPreferences
     suspend fun updateUserPreferences(

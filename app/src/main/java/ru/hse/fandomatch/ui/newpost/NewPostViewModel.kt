@@ -112,28 +112,33 @@ class NewPostViewModel(
     private fun post() {
         val currentState = _state.value as? NewPostState.Main ?: return
         viewModelScope.launch(dispatcherIO) {
-            val mediaIdsWithTypes = currentState.attachedFilesWithTypes.mapNotNull { (bytes, type) ->
-                val uploadResult = uploadMediaUseCase.execute(bytes, type)
-                val mediaId = uploadResult.getOrNull()
-                mediaId ?: run {
-                    Log.e("NewPostViewModel", "Failed to upload media: ${uploadResult.exceptionOrNull()}")
-                    return@mapNotNull null
+            val mediaIdsWithTypes =
+                currentState.attachedFilesWithTypes.mapNotNull { (bytes, type) ->
+                    val uploadResult = uploadMediaUseCase.execute(bytes, type)
+                    val mediaId = uploadResult.getOrNull()
+                    mediaId ?: run {
+                        Log.e(
+                            "NewPostViewModel",
+                            "Failed to upload media: ${uploadResult.exceptionOrNull()}"
+                        )
+                        return@mapNotNull null
+                    }
+                    mediaId to type
                 }
-                mediaId to type
-            }
-            val result = createPostUseCase.execute(
+            createPostUseCase.execute(
                 content = currentState.content,
                 mediaIdsWithTypes = mediaIdsWithTypes,
                 fandomIds = currentState.fandoms.map { it.id },
             )
-            if (result.isFailure) {
-                Log.e("NewPostViewModel", "Failed to create post: ${result.exceptionOrNull()}")
-                _action.value = NewPostAction.ShowErrorToast
-                return@launch
-            }
-            withContext(dispatcherMain) {
-                _action.value = NewPostAction.NavigateToPreviousScreen
-            }
+                .onFailure { exception ->
+                    Log.e("NewPostViewModel", "Failed to create post: $exception", exception)
+                    _action.value = NewPostAction.ShowErrorToast
+                }
+                .onSuccess {
+                    withContext(dispatcherMain) {
+                        _action.value = NewPostAction.NavigateToPreviousScreen
+                    }
+                }
         }
     }
 

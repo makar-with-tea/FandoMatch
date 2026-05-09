@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetFriendRequestsUseCase
@@ -71,45 +72,49 @@ class ProfileViewModel(
     }
 
     private fun loadProfile(userId: String?, isCurrentUser: Boolean) {
-        // todo backend
         viewModelScope.launch(dispatcherIO) {
-            val result = getUserUseCase.execute(userId, isCurrentUser)
-            val user = result.getOrNull() ?: run {
-                Log.e("ProfileViewModel", "Failed to load profile info", result.exceptionOrNull())
-                withContext(dispatcherMain) {
-                    _state.value = ProfileState.Error
+            getUserUseCase.execute(userId, isCurrentUser)
+                .onFailure { exception ->
+                    Log.e("ProfileViewModel", "Failed to load profile info", exception)
+                    withContext(dispatcherMain) {
+                        _state.value = ProfileState.Error
+                    }
+                    return@launch
                 }
-                return@launch
-            }
-            val postsResult = getUserPostsUseCase.execute(userId, isCurrentUser)
-            var postsIsError = false
-            val posts = postsResult.getOrNull()
-            if (posts == null) {
-                Log.e("ProfileViewModel", "Failed to load profile posts", postsResult.exceptionOrNull())
-                postsIsError = true
-            }
-            val type = user.profileType
-            Log.i("ProfileViewModel", "Loading profile for userId: $userId")
-            withContext(dispatcherMain) {
-                _state.value = ProfileState.Main(
-                    id = user.id,
-                    login = when (type) {
-                        is ProfileType.Stranger -> null
-                        is ProfileType.Own -> type.login
-                        is ProfileType.Friend -> type.login
-                    },
-                    fandoms = user.fandoms,
-                    description = user.description,
-                    name = user.name,
-                    gender = user.gender,
-                    age = user.age,
-                    avatarUrl = user.avatar?.url,
-                    backgroundUrl = user.background?.url,
-                    city = user.city,
-                    type = type,
-                    bottomSheetState = ProfileState.BottomSheetState.Posts(posts ?: listOf(),  postsIsError),
-                )
-            }
+                .onSuccess { user ->
+                    var postsIsError = false
+                    var posts: List<Post>? = null
+                    getUserPostsUseCase.execute(userId, isCurrentUser)
+                        .onFailure { exception ->
+                            Log.e("ProfileViewModel", "Failed to load profile posts", exception)
+                            postsIsError = true
+                        }
+                        .onSuccess { posts = it }
+                    val type = user.profileType
+                    Log.i("ProfileViewModel", "Loading profile for userId: $userId")
+                    withContext(dispatcherMain) {
+                        _state.value = ProfileState.Main(
+                            id = user.id,
+                            login = when (type) {
+                                is ProfileType.Stranger -> null
+                                is ProfileType.Own -> type.login
+                                is ProfileType.Friend -> type.login
+                            },
+                            fandoms = user.fandoms,
+                            description = user.description,
+                            name = user.name,
+                            gender = user.gender,
+                            age = user.age,
+                            avatarUrl = user.avatar?.url,
+                            backgroundUrl = user.background?.url,
+                            city = user.city,
+                            type = type,
+                            bottomSheetState = ProfileState.BottomSheetState.Posts(
+                                posts ?: listOf(), postsIsError
+                            ),
+                        )
+                    }
+                }
         }
     }
 
@@ -149,18 +154,25 @@ class ProfileViewModel(
         val currentState = _state.value
         if (currentState !is ProfileState.Main) return
         viewModelScope.launch(dispatcherIO) {
-            val result = getFriendsUseCase.execute()
-            var isError = false
-            val friends = result.getOrNull()
-            if (friends == null) {
-                Log.e("ProfileViewModel", "Failed to load friends", result.exceptionOrNull())
-                isError = true
-            }
-            withContext(dispatcherMain) {
-                _state.value = currentState.copy(
-                    bottomSheetState = ProfileState.BottomSheetState.Friends(friends ?: listOf(), isError)
-                )
-            }
+            getFriendsUseCase.execute()
+                .onFailure { exception ->
+                    Log.e("ProfileViewModel", "Failed to load friends", exception)
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            bottomSheetState = ProfileState.BottomSheetState.Friends(
+                                emptyList(),
+                                true
+                            )
+                        )
+                    }
+                }
+                .onSuccess { friends ->
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            bottomSheetState = ProfileState.BottomSheetState.Friends(friends, false)
+                        )
+                    }
+                }
         }
     }
 
@@ -168,48 +180,63 @@ class ProfileViewModel(
         val currentState = _state.value
         if (currentState !is ProfileState.Main) return
         viewModelScope.launch(dispatcherIO) {
-            val result = getFriendRequestsUseCase.execute()
-            var isError = false
-            val requests = result.getOrNull()
-            if (requests == null) {
-                Log.e("ProfileViewModel", "Failed to load friend requests", result.exceptionOrNull())
-                isError = true
-            }
-            withContext(dispatcherMain) {
-                _state.value = currentState.copy(
-                    bottomSheetState = ProfileState.BottomSheetState.Requests(requests ?: listOf(), isError)
-                )
-            }
+            getFriendRequestsUseCase.execute()
+                .onFailure { exception ->
+                    Log.e("ProfileViewModel", "Failed to load friend requests", exception)
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            bottomSheetState = ProfileState.BottomSheetState.Requests(
+                                emptyList(),
+                                true
+                            )
+                        )
+                    }
+                }
+                .onSuccess { requests ->
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            bottomSheetState = ProfileState.BottomSheetState.Requests(
+                                requests,
+                                false
+                            )
+                        )
+                    }
+                }
         }
     }
 
     private fun likePost(postId: String) {
         viewModelScope.launch(dispatcherIO) {
-            val result = likePostUseCase.execute(postId)
-            if (result.isFailure) {
-                Log.e("ProfileViewModel", "Failed to like post", result.exceptionOrNull())
-                return@launch
-            }
-            withContext(dispatcherMain) {
-                val currentState = _state.value as? ProfileState.Main ?: return@withContext
-                val currentPosts = when (val bottomSheetState = currentState.bottomSheetState) {
-                    is ProfileState.BottomSheetState.Posts -> bottomSheetState.posts
-                    else -> return@withContext
+            likePostUseCase.execute(postId)
+                .onFailure { exception ->
+                    Log.e("ProfileViewModel", "Failed to like post", exception)
                 }
-                val updatedPosts = currentPosts.map { post ->
-                    if (post.id == postId) {
-                        post.copy(
-                            likeCount = if (post.isLikedByCurrentUser) post.likeCount - 1 else post.likeCount + 1,
-                            isLikedByCurrentUser = !post.isLikedByCurrentUser,
+                .onSuccess {
+                    withContext(dispatcherMain) {
+                        val currentState = _state.value as? ProfileState.Main ?: return@withContext
+                        val currentPosts =
+                            when (val bottomSheetState = currentState.bottomSheetState) {
+                                is ProfileState.BottomSheetState.Posts -> bottomSheetState.posts
+                                else -> return@withContext
+                            }
+                        val updatedPosts = currentPosts.map { post ->
+                            if (post.id == postId) {
+                                post.copy(
+                                    likeCount = if (post.isLikedByCurrentUser) post.likeCount - 1 else post.likeCount + 1,
+                                    isLikedByCurrentUser = !post.isLikedByCurrentUser,
+                                )
+                            } else {
+                                post
+                            }
+                        }
+                        _state.value = currentState.copy(
+                            bottomSheetState = ProfileState.BottomSheetState.Posts(
+                                updatedPosts,
+                                false
+                            )
                         )
-                    } else {
-                        post
                     }
                 }
-                _state.value = currentState.copy(
-                    bottomSheetState = ProfileState.BottomSheetState.Posts(updatedPosts, false)
-                )
-            }
         }
     }
 

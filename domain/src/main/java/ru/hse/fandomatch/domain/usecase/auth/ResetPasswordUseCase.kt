@@ -7,8 +7,9 @@ class ResetPasswordUseCase(
 ) {
     suspend fun execute(
         code: String,
-        newPassword: String
+        newPassword: String,
+        email: String,
     ): Result<Unit> = runCatching {
-        globalRepository.resetPassword(code, newPassword)
+        globalRepository.resetPassword(code, newPassword, email)
     }
 }

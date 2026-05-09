@@ -130,6 +130,7 @@
     <string name="last_message_time_weeks">нед.</string>
     <string name="last_message_time_days">дн.</string>
     <string name="search_name_input">Введите имя…</string>
+    <string name="no_chats_found">У вас пока нет чатов. Самое время это исправить!</string>
 
     <string name="type_a_message">Введите сообщение…</string>
     <string name="send_message_button_description">Отправить сообщение</string>

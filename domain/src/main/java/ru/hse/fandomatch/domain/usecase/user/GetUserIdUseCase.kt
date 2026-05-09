@@ -5,7 +5,7 @@ import ru.hse.fandomatch.domain.repos.SharedPrefRepository
 class GetUserIdUseCase(
     private val sharedPrefRepository: SharedPrefRepository,
 ) {
-    suspend fun execute(): String? {
+    fun execute(): String? {
         return sharedPrefRepository.getUserId()
     }
 }

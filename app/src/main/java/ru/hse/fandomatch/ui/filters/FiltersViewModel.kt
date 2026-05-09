@@ -55,30 +55,36 @@ class FiltersViewModel(
     private fun loadInitialFilters() {
         viewModelScope.launch {
             _state.value = FiltersState.Loading
-            val result = loadInitialFiltersUseCase.execute()
-            val filters = result.getOrNull() ?: run {
-                Log.e("FiltersViewModel", "Failed to load initial filters: ${result.exceptionOrNull()}")
-                _state.value = FiltersState.Error
-                return@launch
-            }
-            val userResult = getUserUseCase.execute(profileId = null, isCurrentUser = true)
-            val user = userResult.getOrNull() ?: run {
-                Log.e("FiltersViewModel", "Failed to load user data: ${userResult.exceptionOrNull()}")
-                _state.value = FiltersState.Error
-                return@launch
-            }
-            val city = user.city
-            val initialFilters = FiltersState.Main(
-                selectedGenders = filters.genders,
-                ageRange = filters.minAge..filters.maxAge,
-                selectedCategories = filters.categories,
-                selectedFandoms = filters.fandoms,
-                foundFandoms = emptyList(),
-                onlyInUserCity = filters.onlyInUserCity,
-                areFandomsLoading = false,
-                userCity = city,
-            )
-            _state.value = initialFilters
+            loadInitialFiltersUseCase.execute()
+                .onFailure { exception ->
+                    Log.e(
+                        "FiltersViewModel",
+                        "Failed to load initial filters: ${exception.message}",
+                        exception
+                    )
+                    _state.value = FiltersState.Error
+                }
+                .onSuccess { filters ->
+                    getUserUseCase.execute(profileId = null, isCurrentUser = true)
+                        .onFailure { e ->
+                            Log.e("FiltersViewModel", "Failed to load user data: ${e.message}", e)
+                            _state.value = FiltersState.Error
+                        }
+                        .onSuccess { user ->
+                            val city = user.city
+                            val initialFilters = FiltersState.Main(
+                                selectedGenders = filters.genders,
+                                ageRange = filters.minAge..filters.maxAge,
+                                selectedCategories = filters.categories,
+                                selectedFandoms = filters.fandoms,
+                                foundFandoms = emptyList(),
+                                onlyInUserCity = filters.onlyInUserCity,
+                                areFandomsLoading = false,
+                                userCity = city,
+                            )
+                            _state.value = initialFilters
+                        }
+                }
         }
     }
 
@@ -181,7 +187,7 @@ class FiltersViewModel(
     private fun applyFilters() {
         val currentState = _state.value as? FiltersState.Main ?: return
         viewModelScope.launch {
-            val result = applyFiltersUseCase.execute(
+            applyFiltersUseCase.execute(
                 genders = currentState.selectedGenders,
                 minAge = currentState.ageRange.first,
                 maxAge = currentState.ageRange.last,
@@ -189,14 +195,15 @@ class FiltersViewModel(
                 fandoms = currentState.selectedFandoms,
                 onlyInUserCity = currentState.onlyInUserCity,
             )
-            if (result.isFailure) {
-                Log.e("FiltersViewModel", "Failed to apply filters: ${result.exceptionOrNull()}")
-                _action.value = FiltersAction.ShowErrorToast
-                return@launch
-            }
-            withContext(dispatcherMain) {
-                _action.value = FiltersAction.NavigateToMatches
-            }
+                .onFailure { e ->
+                    Log.e("FiltersViewModel", "Failed to apply filters: ${e.message}", e)
+                    _action.value = FiltersAction.ShowErrorToast
+                }
+                .onSuccess {
+                    withContext(dispatcherMain) {
+                        _action.value = FiltersAction.NavigateToMatches
+                    }
+                }
         }
     }
 

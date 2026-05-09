@@ -14,7 +14,6 @@ class RegisterUseCase(
         login: String,
         dateOfBirthMillis: Long,
         gender: Gender,
-        avatarMediaId: String?,
         password: String
     ): Result<Unit> = runCatching {
         // todo use LoginAlreadyInUseException
@@ -24,7 +23,6 @@ class RegisterUseCase(
             login = login,
             dateOfBirthMillis = dateOfBirthMillis,
             gender = gender,
-            avatarMediaId = avatarMediaId,
             password = password
         )
         sharedPrefRepository.saveUserId(res.userId)

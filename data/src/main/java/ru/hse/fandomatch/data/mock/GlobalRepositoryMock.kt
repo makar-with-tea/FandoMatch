@@ -53,7 +53,6 @@ class GlobalRepositoryMock: GlobalRepository {
         login: String,
         dateOfBirthMillis: Long,
         gender: Gender,
-        avatarMediaId: String?,
         password: String
     ): AuthInfo {
         mockUser = mockUser.copy(
@@ -64,7 +63,6 @@ class GlobalRepositoryMock: GlobalRepository {
                 email = email,
                 login = login,
             ),
-            avatar = avatarMediaId?.let { mockUser.avatar?.copy(id = avatarMediaId) }
         )
         mockUserPosts = mockUserPosts.map {
             it.copy(
@@ -185,7 +183,7 @@ class GlobalRepositoryMock: GlobalRepository {
         }
     }
 
-    override suspend fun resetPassword(code: String, newPassword: String) {
+    override suspend fun resetPassword(code: String, newPassword: String, email: String) {
         if (code == mockVerificationCode) {
             mockPassword = newPassword
             Log.d("GlobalRepositoryMock", "resetPassword: password reset successful with code $code")

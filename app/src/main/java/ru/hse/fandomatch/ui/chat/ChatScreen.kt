@@ -47,14 +47,10 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
-import ru.hse.fandomatch.utils.MAX_NUMBER_OF_ATTACHMENTS
 import ru.hse.fandomatch.R
-import ru.hse.fandomatch.utils.currentZoneOffset
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
-import ru.hse.fandomatch.utils.getBytesFromUri
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.ui.composables.AttachmentsRow
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
@@ -62,9 +58,11 @@ import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.ImagesScreen
 import ru.hse.fandomatch.ui.composables.Message
 import ru.hse.fandomatch.ui.composables.SkeletonView
+import ru.hse.fandomatch.utils.MAX_NUMBER_OF_ATTACHMENTS
+import ru.hse.fandomatch.utils.currentZoneOffset
 import ru.hse.fandomatch.utils.epochMillisToTimeString
+import ru.hse.fandomatch.utils.getBytesFromUri
 import java.time.LocalDateTime
-import kotlin.collections.plus
 
 @Composable
 fun ChatScreen(

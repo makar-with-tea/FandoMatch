@@ -73,43 +73,52 @@ class ChatViewModel(
                 return@launch
             }
 
-            val result = loadChatInfoUseCase.execute(userId = profileId)
-            val chat = result.getOrNull() ?: run {
-                Log.e("ChatViewModel", "Failed to load chat info", result.exceptionOrNull())
-                setState { ChatState.Error }
-                return@launch
-            }
-
-            val messagesResult = subscribeToChatMessagesUseCase.execute(
-                userId = profileId,
-                chatId = chat.chatId
-            )
-            val messagesFlow = messagesResult.getOrNull() ?: run {
-                Log.e("ChatViewModel", "Failed to subscribe to chat messages", result.exceptionOrNull())
-                setState { ChatState.Error }
-                return@launch
-            }
-            _messages = messagesFlow
-
-            setState {
-                ChatState.Main(
-                    chatId = chat.chatId,
-                    participantId = chat.participantId,
-                    participantName = chat.participantName,
-                    participantAvatarUrl = chat.participantAvatarUrl,
-                    uiElements = messagesFlow.value.mapMessagesToUiElements().reversed(),
-                )
-            }
-
-            messagesFlow.collect { messages ->
-                setState { current ->
-                    if (current is ChatState.Main) {
-                        current.copy(
-                            uiElements = messages.mapMessagesToUiElements().reversed()
-                        )
-                    } else current
+            loadChatInfoUseCase.execute(userId = profileId)
+                .onFailure { exception ->
+                    Log.e("ChatViewModel", "Failed to load chat info", exception)
+                    setState { ChatState.Error }
+                    return@launch
                 }
-            }
+                .onSuccess { chat ->
+                    subscribeToChatMessagesUseCase.execute(
+                        userId = profileId,
+                        chatId = chat.chatId
+                    )
+                        .onFailure { exception ->
+                            Log.e(
+                                "ChatViewModel",
+                                "Failed to subscribe to chat messages",
+                                exception
+                            )
+                            setState { ChatState.Error }
+                            return@launch
+                        }
+                        .onSuccess { messagesFlow ->
+                            _messages = messagesFlow
+
+                            setState {
+                                ChatState.Main(
+                                    chatId = chat.chatId,
+                                    participantId = chat.participantId,
+                                    participantName = chat.participantName,
+                                    participantAvatarUrl = chat.participantAvatarUrl,
+                                    uiElements = messagesFlow.value.mapMessagesToUiElements()
+                                        .reversed(),
+                                )
+                            }
+
+                            messagesFlow.collect { messages ->
+                                setState { current ->
+                                    if (current is ChatState.Main) {
+                                        current.copy(
+                                            uiElements = messages.mapMessagesToUiElements()
+                                                .reversed()
+                                        )
+                                    } else current
+                                }
+                            }
+                        }
+                }
         }
     }
 
@@ -149,16 +158,16 @@ class ChatViewModel(
                 }
                 mediaId to type
             }
-            val result = sendMessageUseCase.execute(
+            sendMessageUseCase.execute(
                 userId = currentState.participantId,
                 content = message,
                 mediaIdsWithTypes = mediaIds,
                 timestamp = timestamp * 1000,
             )
-            if (result.isFailure) {
-                Log.e("ChatViewModel", "Failed to send message", result.exceptionOrNull())
-                return@launch
+                .onFailure { exception ->
+                Log.e("ChatViewModel", "Failed to send message", exception)
             }
+                .onSuccess {
             setState { current ->
                 (current as? ChatState.Main)?.copy(
                     messageDraft = "",
@@ -167,6 +176,7 @@ class ChatViewModel(
             }
         }
     }
+        }
 
     private fun goToProfile() {
         when (val currentState = _state.value) {

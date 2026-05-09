@@ -251,6 +251,17 @@ private fun MainState(
             )
         }
     }
+
+    if (state.chats.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(stringResource(R.string.no_chats_found))
+        }
+    }
 }
 
 @Composable

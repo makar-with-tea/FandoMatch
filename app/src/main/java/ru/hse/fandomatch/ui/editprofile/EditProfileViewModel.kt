@@ -89,15 +89,20 @@ class EditProfileViewModel(
         }
         viewModelScope.launch(dispatcherIO) {
             _state.value = currentState.copy(foundCities = emptyList(), areCitiesLoading = true)
-            val result = getCitiesByQueryUseCase.execute(query)
-            val foundCities = result.getOrNull() ?: run {
-                Log.e("EditProfileViewModel", "Failed to search cities: ${result.exceptionOrNull()}")
-                withContext(dispatcherMain) {
-                    _state.value = currentState.copy(foundCities = emptyList(), areCitiesLoading = false)
+            getCitiesByQueryUseCase.execute(query)
+                .onFailure { exception ->
+                    Log.e("EditProfileViewModel", "Failed to search cities", exception)
+                    withContext(dispatcherMain) {
+                        _state.value =
+                            currentState.copy(foundCities = emptyList(), areCitiesLoading = false)
+                    }
                 }
-                return@launch
-            }
-            _state.value = currentState.copy(foundCities = foundCities, areCitiesLoading = false)
+                .onSuccess { foundCities ->
+                    withContext(dispatcherMain) {
+                        _state.value =
+                            currentState.copy(foundCities = foundCities, areCitiesLoading = false)
+                    }
+                }
         }
     }
 
@@ -145,22 +150,23 @@ class EditProfileViewModel(
         }
         _state.value = currentState.copy(foundFandoms = emptyList(), areFandomsLoading = true)
         viewModelScope.launch(dispatcherIO) {
-            val result = getFandomsByQueryUseCase.execute(query)
-            val foundFandoms = result.getOrNull() ?: run {
-                Log.e(
-                    "EditProfileViewModel",
-                    "Failed to search fandoms: ${result.exceptionOrNull()}"
-                )
-                withContext(dispatcherMain) {
-                    _state.value =
-                        currentState.copy(foundFandoms = emptyList(), areFandomsLoading = false)
+            getFandomsByQueryUseCase.execute(query)
+                .onFailure { exception ->
+                    Log.e("EditProfileViewModel", "Failed to search fandoms", exception)
+                    withContext(dispatcherMain) {
+                        _state.value =
+                            currentState.copy(foundFandoms = emptyList(), areFandomsLoading = false)
+                    }
                 }
-                return@launch
-            }
-            withContext(dispatcherMain) {
-                _state.value =
-                    currentState.copy(foundFandoms = foundFandoms, areFandomsLoading = false)
-            }
+                .onSuccess { foundFandoms ->
+                    withContext(dispatcherMain) {
+                        _state.value =
+                            currentState.copy(
+                                foundFandoms = foundFandoms,
+                                areFandomsLoading = false
+                            )
+                    }
+                }
         }
     }
 
@@ -183,29 +189,33 @@ class EditProfileViewModel(
     private fun loadProfileData() {
         viewModelScope.launch(dispatcherIO) {
             _state.value = EditProfileState.Loading
-            delay(1000)
-            val result = getUserUseCase.execute(null, true)
-            val user = result.getOrNull() ?: run {
-                Log.e("EditProfileViewModel", "Failed to load user data", result.exceptionOrNull())
-                _state.value = EditProfileState.Error
-                return@launch
-            }
-            _state.value = EditProfileState.Main(
-                id = user.id,
-                name = user.name,
-                login = (user.profileType as ProfileType.Own).login,
-                description = user.description,
-                avatarBytes = null,
-                avatar = user.avatar,
-                backgroundBytes = null,
-                background = user.background,
-                fandoms = user.fandoms,
-                foundFandoms = emptyList(),
-                areFandomsLoading = false,
-                city = user.city,
-                foundCities = emptyList(),
-                areCitiesLoading = false,
-            )
+            getUserUseCase.execute(null, true)
+                .onFailure { exception ->
+                    Log.e("EditProfileViewModel", "Failed to load user data", exception)
+                    withContext(dispatcherMain) {
+                        _state.value = EditProfileState.Error
+                    }
+                }
+                .onSuccess { user ->
+                    withContext(dispatcherMain) {
+                        _state.value = EditProfileState.Main(
+                            id = user.id,
+                            name = user.name,
+                            login = (user.profileType as ProfileType.Own).login,
+                            description = user.description,
+                            avatarBytes = null,
+                            avatar = user.avatar,
+                            backgroundBytes = null,
+                            background = user.background,
+                            fandoms = user.fandoms,
+                            foundFandoms = emptyList(),
+                            areFandomsLoading = false,
+                            city = user.city,
+                            foundCities = emptyList(),
+                            areCitiesLoading = false,
+                        )
+                    }
+                }
         }
     }
 
@@ -219,7 +229,11 @@ class EditProfileViewModel(
                     mediaType = MediaType.IMAGE
                 )
                 val avatarMediaId = avatarResult.getOrNull() ?: run {
-                    Log.e("EditProfileViewModel", "Failed to upload avatar", avatarResult.exceptionOrNull())
+                    Log.e(
+                        "EditProfileViewModel",
+                        "Failed to upload avatar",
+                        avatarResult.exceptionOrNull()
+                    )
                     withContext(dispatcherMain) {
                         _state.value = currentState
                         _action.value = EditProfileAction.ShowErrorToast
@@ -234,7 +248,11 @@ class EditProfileViewModel(
                     mediaType = MediaType.IMAGE
                 )
                 val backgroundMediaId = backgroundResult.getOrNull() ?: run {
-                    Log.e("EditProfileViewModel", "Failed to upload background", backgroundResult.exceptionOrNull())
+                    Log.e(
+                        "EditProfileViewModel",
+                        "Failed to upload background",
+                        backgroundResult.exceptionOrNull()
+                    )
                     withContext(dispatcherMain) {
                         _state.value = currentState
                         _action.value = EditProfileAction.ShowErrorToast
@@ -243,7 +261,7 @@ class EditProfileViewModel(
                 }
                 backgroundMediaId
             } ?: currentState.background?.id
-            val result = editProfileUseCase.execute(
+            editProfileUseCase.execute(
                 name = currentState.name,
                 bio = currentState.description,
                 city = currentState.city,
@@ -251,22 +269,23 @@ class EditProfileViewModel(
                 avatarMediaId = avatarMediaId,
                 backgroundMediaId = backgroundMediaId,
             )
-            if (result.isFailure) {
-                Log.e(
-                    "EditProfileViewModel",
-                    "Failed to save profile data",
-                    result.exceptionOrNull()
-                )
-                withContext(dispatcherMain) {
-                    _state.value = currentState
-                    _action.value = EditProfileAction.ShowErrorToast
+                .onFailure { e ->
+                    Log.e(
+                        "EditProfileViewModel",
+                        "Failed to save profile data",
+                        e
+                    )
+                    withContext(dispatcherMain) {
+                        _state.value = currentState
+                        _action.value = EditProfileAction.ShowErrorToast
+                    }
                 }
-                return@launch
-            }
-            withContext(dispatcherMain) {
-                _state.value = currentState
-                _action.value = EditProfileAction.NavigateToMyProfile
-            }
+                .onSuccess {
+                    withContext(dispatcherMain) {
+                        _state.value = currentState
+                        _action.value = EditProfileAction.NavigateToMyProfile
+                    }
+                }
         }
     }
 

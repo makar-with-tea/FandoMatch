@@ -37,10 +37,10 @@ class SettingsViewModel(
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
     private val _state: MutableStateFlow<SettingsState> = MutableStateFlow(SettingsState.Idle)
-    val state : MutableStateFlow<SettingsState>
+    val state: MutableStateFlow<SettingsState>
         get() = _state
     private val _action = MutableStateFlow<SettingsAction?>(null)
-    val action : MutableStateFlow<SettingsAction?>
+    val action: MutableStateFlow<SettingsAction?>
         get() = _action
 
     fun obtainEvent(event: SettingsEvent) {
@@ -48,6 +48,7 @@ class SettingsViewModel(
             is SettingsEvent.LoadProfileData -> {
                 loadProfileData()
             }
+
             SettingsEvent.Clear -> clear()
             SettingsEvent.Back -> handleBack()
             SettingsEvent.DeleteAccountButtonClicked -> deleteAccount()
@@ -62,6 +63,7 @@ class SettingsViewModel(
                 oldPassword = event.oldPassword,
                 newPasswordRepeat = event.newPasswordRepeat
             )
+
             SettingsEvent.ShowNewPasswordButtonClicked -> showNewPassword()
             SettingsEvent.ShowNewPasswordRepeatButtonClicked -> showNewPasswordRepeat()
             SettingsEvent.ShowOldPasswordButtonClicked -> showOldPassword()
@@ -74,32 +76,37 @@ class SettingsViewModel(
     private fun loadProfileData() {
         _state.value = SettingsState.Loading
         viewModelScope.launch(dispatcherIO) {
-            val result = getUserUseCase.execute(null, true)
-            val userInfo = result.getOrNull() ?: run {
-                withContext(dispatcherMain) {
-                    _state.value = SettingsState.Error(
-                        error = SettingsState.SettingsError.NETWORK_FATAL
-                    )
+            getUserUseCase.execute(null, true)
+                .onFailure { exception ->
+                    Log.e("SettingsViewModel", "Failed to load user info", exception)
+                    withContext(dispatcherMain) {
+                        _state.value = SettingsState.Error(
+                            error = SettingsState.SettingsError.NETWORK_FATAL
+                        )
+                    }
+                    return@launch
                 }
-                return@launch
-            }
-            val preferencesResult = getUserPreferencesUseCase.execute()
-            val userPreferences = preferencesResult.getOrNull() ?: run {
-                withContext(dispatcherMain) {
-                    _state.value = SettingsState.Error(
-                        error = SettingsState.SettingsError.NETWORK_FATAL
-                    )
+                .onSuccess { userInfo ->
+                    getUserPreferencesUseCase.execute()
+                        .onFailure { exception ->
+                            Log.e("SettingsViewModel", "Failed to load user preferences", exception)
+                            withContext(dispatcherMain) {
+                                _state.value = SettingsState.Error(
+                                    error = SettingsState.SettingsError.NETWORK_FATAL
+                                )
+                            }
+                        }
+                        .onSuccess { userPreferences ->
+                            withContext(dispatcherMain) {
+                                _state.value = SettingsState.Main(
+                                    email = (userInfo.profileType as ProfileType.Own).email,
+                                    matchNotificationsEnabled = userPreferences.matchesEnabled,
+                                    messageNotificationsEnabled = userPreferences.messagesEnabled,
+                                    hideMyPostsFromNonMatches = userPreferences.hideMyPostsFromNonMatches
+                                )
+                            }
+                        }
                 }
-                return@launch
-            }
-            withContext(dispatcherMain) {
-                _state.value = SettingsState.Main(
-                    email = (userInfo.profileType as ProfileType.Own).email,
-                    matchNotificationsEnabled = userPreferences.matchesEnabled,
-                    messageNotificationsEnabled = userPreferences.messagesEnabled,
-                    hideMyPostsFromNonMatches = userPreferences.hideMyPostsFromNonMatches
-                )
-            }
         }
     }
 
@@ -110,19 +117,19 @@ class SettingsViewModel(
             matchNotificationsEnabled = newValue
         )
         viewModelScope.launch(dispatcherIO) {
-            val result = updateUserPreferencesUseCase.execute(
+            updateUserPreferencesUseCase.execute(
                 matchNotificationsEnabled = newValue,
                 messageNotificationsEnabled = currentState.messageNotificationsEnabled,
                 hideMyPostsFromNonMatches = currentState.hideMyPostsFromNonMatches
             )
-            if (result.isFailure) {
-                Log.e("SettingsViewModel", "Failed to update user preferences", result.exceptionOrNull())
-                withContext(dispatcherMain) {
-                    _state.value = currentState.copy(
-                        matchNotificationsEnabled = !newValue
-                    )
+                .onFailure {
+                    Log.e("SettingsViewModel", "Failed to update user preferences", it)
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            matchNotificationsEnabled = !newValue
+                        )
+                    }
                 }
-            }
         }
     }
 
@@ -133,19 +140,19 @@ class SettingsViewModel(
             messageNotificationsEnabled = newValue
         )
         viewModelScope.launch(dispatcherIO) {
-            val result = updateUserPreferencesUseCase.execute(
+            updateUserPreferencesUseCase.execute(
                 matchNotificationsEnabled = currentState.matchNotificationsEnabled,
                 messageNotificationsEnabled = newValue,
                 hideMyPostsFromNonMatches = currentState.hideMyPostsFromNonMatches
             )
-            if (result.isFailure) {
-                Log.e("SettingsViewModel", "Failed to update user preferences", result.exceptionOrNull())
-                withContext(dispatcherMain) {
-                    _state.value = currentState.copy(
-                        messageNotificationsEnabled = !newValue
-                    )
+                .onFailure {
+                    Log.e("SettingsViewModel", "Failed to update user preferences", it)
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            messageNotificationsEnabled = !newValue
+                        )
+                    }
                 }
-            }
         }
     }
 
@@ -156,19 +163,19 @@ class SettingsViewModel(
             hideMyPostsFromNonMatches = newValue
         )
         viewModelScope.launch(dispatcherIO) {
-            val result = updateUserPreferencesUseCase.execute(
+            updateUserPreferencesUseCase.execute(
                 matchNotificationsEnabled = currentState.matchNotificationsEnabled,
                 messageNotificationsEnabled = currentState.messageNotificationsEnabled,
                 hideMyPostsFromNonMatches = newValue
             )
-            if (result.isFailure) {
-                Log.e("SettingsViewModel", "Failed to update user preferences", result.exceptionOrNull())
-                withContext(dispatcherMain) {
-                    _state.value = currentState.copy(
-                        hideMyPostsFromNonMatches = !newValue
-                    )
+                .onFailure {
+                    Log.e("SettingsViewModel", "Failed to update user preferences", it)
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            hideMyPostsFromNonMatches = !newValue
+                        )
+                    }
                 }
-            }
         }
     }
 
@@ -205,39 +212,39 @@ class SettingsViewModel(
             isLoading = true
         )
         viewModelScope.launch(dispatcherIO) {
-            val result = changePasswordUseCase.execute(oldPassword, newPassword)
-            if (result.isFailure) {
-                val exception = result.exceptionOrNull()
-                Log.e("SettingsViewModel", "Failed to change password", exception)
-                // todo correct exception
-                if (exception is InvalidCredentialsException) {
-                    withContext(dispatcherMain) {
-                        _state.value = currentState.copy(
-                            isLoading = false,
-                            oldPasswordError = SettingsState.SettingsError.PASSWORD_INCORRECT,
-                        )
+            changePasswordUseCase.execute(oldPassword, newPassword)
+                .onFailure { exception ->
+                    Log.e("SettingsViewModel", "Failed to change password", exception)
+                    // todo correct exception
+                    if (exception is InvalidCredentialsException) {
+                        withContext(dispatcherMain) {
+                            _state.value = currentState.copy(
+                                isLoading = false,
+                                oldPasswordError = SettingsState.SettingsError.PASSWORD_INCORRECT,
+                            )
+                        }
+                    } else {
+                        withContext(dispatcherMain) {
+                            _state.value = currentState.copy(
+                                isLoading = false,
+                                oldPasswordError = SettingsState.SettingsError.NETWORK,
+                                newPasswordError = SettingsState.SettingsError.NETWORK,
+                                newPasswordRepeatError = SettingsState.SettingsError.NETWORK
+                            )
+                        }
                     }
-                } else {
+                    return@launch
+                }
+                .onSuccess {
                     withContext(dispatcherMain) {
-                        _state.value = currentState.copy(
-                            isLoading = false,
-                            oldPasswordError = SettingsState.SettingsError.NETWORK,
-                            newPasswordError = SettingsState.SettingsError.NETWORK,
-                            newPasswordRepeatError = SettingsState.SettingsError.NETWORK
+                        _state.value = SettingsState.Main(
+                            email = currentState.email,
+                            matchNotificationsEnabled = currentState.matchNotificationsEnabled,
+                            messageNotificationsEnabled = currentState.messageNotificationsEnabled,
+                            hideMyPostsFromNonMatches = currentState.hideMyPostsFromNonMatches,
                         )
                     }
                 }
-                return@launch
-            }
-
-            withContext(dispatcherMain) {
-                _state.value = SettingsState.Main(
-                    email = currentState.email,
-                    matchNotificationsEnabled = currentState.matchNotificationsEnabled,
-                    messageNotificationsEnabled = currentState.messageNotificationsEnabled,
-                    hideMyPostsFromNonMatches = currentState.hideMyPostsFromNonMatches,
-                )
-            }
         }
     }
 
@@ -271,23 +278,25 @@ class SettingsViewModel(
 
         _state.value = currentState.copy(isLoading = true)
         viewModelScope.launch(dispatcherIO) {
-            val result = getVerificationCodeUseCase.execute(email)
-            if (result.isFailure) {
-                Log.e("SettingsViewModel", "Failed to get verification code", result.exceptionOrNull())
-                withContext(dispatcherMain) {
+            getVerificationCodeUseCase.execute(email)
+                .onFailure { e ->
+                    Log.e("SettingsViewModel", "Failed to get verification code", e)
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            emailError = SettingsState.SettingsError.NETWORK,
+                            isLoading = false
+                        )
+                    }
+                    return@launch
+                }
+                .onSuccess {
                     _state.value = currentState.copy(
-                        emailError = SettingsState.SettingsError.NETWORK,
+                        isCode = true,
+                        emailError = SettingsState.SettingsError.IDLE,
+                        codeError = SettingsState.SettingsError.IDLE,
                         isLoading = false
                     )
                 }
-                return@launch
-            }
-            _state.value = currentState.copy(
-                isCode = true,
-                emailError = SettingsState.SettingsError.IDLE,
-                codeError = SettingsState.SettingsError.IDLE,
-                isLoading = false
-            )
         }
     }
 
@@ -299,51 +308,54 @@ class SettingsViewModel(
         )
 
         viewModelScope.launch(dispatcherIO) {
-            val result = checkVerificationCodeUseCase.execute(code, currentState.email)
-            val isValid = result.getOrNull() ?: run {
-                withContext(dispatcherMain) {
-                    _state.value = SettingsState.ChangeEmail(
-                        codeError = SettingsState.SettingsError.NETWORK,
-                        isLoading = false,
-                        matchNotificationsEnabled = currentState.matchNotificationsEnabled,
-                        messageNotificationsEnabled = currentState.messageNotificationsEnabled,
-                        hideMyPostsFromNonMatches = currentState.hideMyPostsFromNonMatches,
-                    )
+            checkVerificationCodeUseCase.execute(code, currentState.email)
+                .onFailure {
+                    withContext(dispatcherMain) {
+                        _state.value = SettingsState.ChangeEmail(
+                            codeError = SettingsState.SettingsError.NETWORK,
+                            isLoading = false,
+                            matchNotificationsEnabled = currentState.matchNotificationsEnabled,
+                            messageNotificationsEnabled = currentState.messageNotificationsEnabled,
+                            hideMyPostsFromNonMatches = currentState.hideMyPostsFromNonMatches,
+                        )
+                    }
                 }
-                return@launch
-            }
-            if (!isValid) {
-                withContext(dispatcherMain) {
-                    _state.value = currentState.copy(
-                        codeError = SettingsState.SettingsError.INVALID_CODE,
-                        isLoading = false
-                    )
+                .onSuccess { isValid ->
+                    if (!isValid) {
+                        withContext(dispatcherMain) {
+                            _state.value = currentState.copy(
+                                codeError = SettingsState.SettingsError.INVALID_CODE,
+                                isLoading = false
+                            )
+                        }
+                        return@launch
+                    }
+                    changeEmailUseCase.execute(currentState.email)
+                        .onFailure { e ->
+                            Log.e(
+                                "SettingsViewModel",
+                                "Failed to change email",
+                                e
+                            )
+                            withContext(dispatcherMain) {
+                                _state.value = currentState.copy(
+                                    codeError = SettingsState.SettingsError.NETWORK,
+                                    isLoading = false,
+                                )
+                            }
+                            return@launch
+                        }
+                        .onSuccess {
+                            withContext(dispatcherMain) {
+                                _state.value = SettingsState.Main(
+                                    email = currentState.email,
+                                    matchNotificationsEnabled = currentState.matchNotificationsEnabled,
+                                    messageNotificationsEnabled = currentState.messageNotificationsEnabled,
+                                    hideMyPostsFromNonMatches = currentState.hideMyPostsFromNonMatches,
+                                )
+                            }
+                        }
                 }
-                return@launch
-            }
-            val changeEmailResult = changeEmailUseCase.execute(currentState.email)
-            if (changeEmailResult.isFailure) {
-                Log.e(
-                    "SettingsViewModel",
-                    "Failed to change email",
-                    changeEmailResult.exceptionOrNull()
-                )
-                withContext(dispatcherMain) {
-                    _state.value = currentState.copy(
-                        codeError = SettingsState.SettingsError.NETWORK,
-                        isLoading = false,
-                    )
-                }
-                return@launch
-            }
-            withContext(dispatcherMain) {
-                _state.value = SettingsState.Main(
-                    email = currentState.email,
-                    matchNotificationsEnabled = currentState.matchNotificationsEnabled,
-                    messageNotificationsEnabled = currentState.messageNotificationsEnabled,
-                    hideMyPostsFromNonMatches = currentState.hideMyPostsFromNonMatches,
-                )
-            }
         }
     }
 
