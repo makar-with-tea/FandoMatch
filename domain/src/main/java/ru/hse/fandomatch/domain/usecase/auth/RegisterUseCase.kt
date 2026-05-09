@@ -16,7 +16,6 @@ class RegisterUseCase(
         gender: Gender,
         password: String
     ): Result<Unit> = runCatching {
-        // todo use LoginAlreadyInUseException
         val res = globalRepository.register(
             name = name,
             email = email,

@@ -3,12 +3,10 @@ package ru.hse.fandomatch.ui.feed
 import ru.hse.fandomatch.domain.model.Post
 
 sealed class FeedState {
-    enum class FeedError {
-        NETWORK,
-        IDLE
-    }
     data class Main(
         val posts: List<Post>,
+        val hasMore: Boolean = true,
+        val isLoadingMore: Boolean = false,
     ) : FeedState()
     data object Loading : FeedState()
     data object Error : FeedState()
@@ -23,6 +21,7 @@ sealed class FeedEvent {
         val postId: String,
     ): FeedEvent()
     data object LoadPosts: FeedEvent()
+    data object LoadMorePosts: FeedEvent()
     data object NewPostClicked: FeedEvent()
     data object Clear: FeedEvent()
 }
