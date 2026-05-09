@@ -33,6 +33,14 @@ class ProfileViewModel(
     private val _action = MutableStateFlow<ProfileAction?>(null)
     val action: StateFlow<ProfileAction?> get() = _action
 
+    private var currentPosts: List<Post> = emptyList()
+    private var hasMorePosts: Boolean = true
+    private var isLoadingMorePosts: Boolean = false
+
+    private companion object {
+        const val PROFILE_POSTS_PAGE_SIZE = 30
+    }
+
     fun obtainEvent(event: ProfileEvent) {
         Log.i("ProfileViewModel", "Obtained event: $event")
         when (event) {
@@ -67,6 +75,7 @@ class ProfileViewModel(
                 _action.value = ProfileAction.GoToPost(event.postId)
             }
             is ProfileEvent.PostLiked -> likePost(event.postId)
+            ProfileEvent.LoadMorePosts -> loadMorePosts()
             ProfileEvent.Clear -> clear()
         }
     }
@@ -84,12 +93,22 @@ class ProfileViewModel(
                 .onSuccess { user ->
                     var postsIsError = false
                     var posts: List<Post>? = null
-                    getUserPostsUseCase.execute(userId, isCurrentUser)
+                    getUserPostsUseCase.execute(
+                        profileId = user.id,
+                        isCurrentUser = isCurrentUser,
+                        beforeTimestamp = null,
+                        size = PROFILE_POSTS_PAGE_SIZE,
+                    )
                         .onFailure { exception ->
                             Log.e("ProfileViewModel", "Failed to load profile posts", exception)
                             postsIsError = true
                         }
-                        .onSuccess { posts = it }
+                        .onSuccess {
+                            posts = it
+                            currentPosts = it
+                            hasMorePosts = it.size >= PROFILE_POSTS_PAGE_SIZE
+                            isLoadingMorePosts = false
+                        }
                     val type = user.profileType
                     Log.i("ProfileViewModel", "Loading profile for userId: $userId")
                     withContext(dispatcherMain) {
@@ -110,7 +129,10 @@ class ProfileViewModel(
                             city = user.city,
                             type = type,
                             bottomSheetState = ProfileState.BottomSheetState.Posts(
-                                posts ?: listOf(), postsIsError
+                                posts = posts ?: emptyList(),
+                                isError = postsIsError,
+                                hasMore = hasMorePosts,
+                                isLoadingMore = false,
                             ),
                         )
                     }
@@ -135,18 +157,97 @@ class ProfileViewModel(
             val currentState = (_state.value as? ProfileState.Main) ?: return@launch
             val userId = currentState.id
             val isCurrentUser = currentState.type is ProfileType.Own
-            val result = getUserPostsUseCase.execute(userId, isCurrentUser)
-            var isError = false
-            val posts = result.getOrNull()
-            if (posts == null) {
-                Log.e("ProfileViewModel", "Failed to load profile posts", result.exceptionOrNull())
-                isError = true
-            }
-            withContext(dispatcherMain) {
-                _state.value = currentState.copy(
-                    bottomSheetState = ProfileState.BottomSheetState.Posts(posts ?: listOf(), isError)
-                )
-            }
+            getUserPostsUseCase.execute(
+                profileId = userId,
+                isCurrentUser = isCurrentUser,
+                beforeTimestamp = null,
+                size = PROFILE_POSTS_PAGE_SIZE,
+            )
+                .onFailure {
+                    Log.e("ProfileViewModel", "Failed to load profile posts", it)
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            bottomSheetState = ProfileState.BottomSheetState.Posts(
+                                posts = emptyList(),
+                                isError = true,
+                                hasMore = false,
+                                isLoadingMore = false,
+                            )
+                        )
+                    }
+                }
+                .onSuccess { posts ->
+                    currentPosts = posts
+                    hasMorePosts = posts.size >= PROFILE_POSTS_PAGE_SIZE
+                    isLoadingMorePosts = false
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            bottomSheetState = ProfileState.BottomSheetState.Posts(
+                                posts = posts,
+                                isError = false,
+                                hasMore = hasMorePosts,
+                                isLoadingMore = false,
+                            )
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun loadMorePosts() {
+        if (isLoadingMorePosts || !hasMorePosts) return
+        val currentState = _state.value as? ProfileState.Main ?: return
+        val postsState =
+            currentState.bottomSheetState as? ProfileState.BottomSheetState.Posts ?: return
+        val oldestTimestamp = currentPosts.minOfOrNull { it.timestamp } ?: return
+
+        isLoadingMorePosts = true
+        _state.value = currentState.copy(
+            bottomSheetState = postsState.copy(isLoadingMore = true)
+        )
+
+        viewModelScope.launch(dispatcherIO) {
+            getUserPostsUseCase.execute(
+                profileId = currentState.id,
+                isCurrentUser = currentState.type is ProfileType.Own,
+                beforeTimestamp = oldestTimestamp,
+                size = PROFILE_POSTS_PAGE_SIZE,
+            )
+                .onFailure { exception ->
+                    Log.e("ProfileViewModel", "Failed to load more profile posts", exception)
+                    isLoadingMorePosts = false
+                    withContext(dispatcherMain) {
+                        val latestState = _state.value as? ProfileState.Main ?: return@withContext
+                        val latestPostsState =
+                            latestState.bottomSheetState as? ProfileState.BottomSheetState.Posts
+                                ?: return@withContext
+                        _state.value = latestState.copy(
+                            bottomSheetState = latestPostsState.copy(isLoadingMore = false)
+                        )
+                    }
+                    return@launch
+                }
+                .onSuccess { olderPosts ->
+                    currentPosts = (currentPosts + olderPosts)
+                        .distinctBy { it.id }
+                        .sortedByDescending { it.timestamp }
+                    hasMorePosts = olderPosts.size >= PROFILE_POSTS_PAGE_SIZE
+                    isLoadingMorePosts = false
+                    withContext(dispatcherMain) {
+                        val latestState = _state.value as? ProfileState.Main ?: return@withContext
+                        val latestPostsState =
+                            latestState.bottomSheetState as? ProfileState.BottomSheetState.Posts
+                                ?: return@withContext
+                        _state.value = latestState.copy(
+                            bottomSheetState = latestPostsState.copy(
+                                posts = currentPosts,
+                                isError = false,
+                                hasMore = hasMorePosts,
+                                isLoadingMore = false,
+                            )
+                        )
+                    }
+                }
         }
     }
 
@@ -214,12 +315,8 @@ class ProfileViewModel(
                 .onSuccess {
                     withContext(dispatcherMain) {
                         val currentState = _state.value as? ProfileState.Main ?: return@withContext
-                        val currentPosts =
-                            when (val bottomSheetState = currentState.bottomSheetState) {
-                                is ProfileState.BottomSheetState.Posts -> bottomSheetState.posts
-                                else -> return@withContext
-                            }
-                        val updatedPosts = currentPosts.map { post ->
+                        val postsState = currentState.bottomSheetState as? ProfileState.BottomSheetState.Posts ?: return@withContext
+                        val updatedPosts = postsState.posts.map { post ->
                             if (post.id == postId) {
                                 post.copy(
                                     likeCount = if (post.isLikedByCurrentUser) post.likeCount - 1 else post.likeCount + 1,
@@ -230,9 +327,9 @@ class ProfileViewModel(
                             }
                         }
                         _state.value = currentState.copy(
-                            bottomSheetState = ProfileState.BottomSheetState.Posts(
-                                updatedPosts,
-                                false
+                            bottomSheetState = postsState.copy(
+                                posts = updatedPosts,
+                                isError = false,
                             )
                         )
                     }

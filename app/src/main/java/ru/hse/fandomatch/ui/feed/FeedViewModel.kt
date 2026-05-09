@@ -31,6 +31,10 @@ class FeedViewModel(
     private var hasMore: Boolean = true
     private var isLoadingMore: Boolean = false
 
+    private companion object {
+        const val PAGE_SIZE = 30
+    }
+
     fun obtainEvent(event: FeedEvent) {
         Log.d("FeedViewModel", "Obtained event: $event")
         when (event) {
@@ -148,5 +152,3 @@ class FeedViewModel(
         _action.value = null
     }
 }
-
-private const val PAGE_SIZE = 30

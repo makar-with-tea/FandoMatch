@@ -17,7 +17,9 @@ sealed class ProfileState {
         val isError: Boolean
         data class Posts(
             val posts: List<Post>,
-            override val isError: Boolean
+            override val isError: Boolean,
+            val hasMore: Boolean = true,
+            val isLoadingMore: Boolean = false,
         ) : BottomSheetState
         data class Friends(
             val friends: List<OtherProfileItem>,
@@ -64,6 +66,7 @@ sealed class ProfileEvent {
     data class ProfileClicked(val profileId: String) : ProfileEvent()
     data class PostClicked(val postId: String) : ProfileEvent()
     data class PostLiked(val postId: String) : ProfileEvent()
+    data object LoadMorePosts : ProfileEvent()
     data object Clear : ProfileEvent()
 }
 

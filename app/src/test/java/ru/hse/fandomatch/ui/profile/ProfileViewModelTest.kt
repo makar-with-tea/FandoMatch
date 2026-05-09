@@ -74,7 +74,7 @@ class ProfileViewModelTest {
     @Test
     fun `load profile success sets main state`() = runTest {
         `when`(getUserUseCase.execute("1", true)).thenReturn(Result.success(user()))
-        `when`(getUserPostsUseCase.execute("1", true)).thenReturn(Result.success(listOf(post("p1"))))
+        `when`(getUserPostsUseCase.execute("1", false, null, 30)).thenReturn(Result.success(listOf(post("p1"))))
 
         viewModel.obtainEvent(ProfileEvent.LoadProfile("1", true))
         advanceUntilIdle()
@@ -129,7 +129,7 @@ class ProfileViewModelTest {
 
         `when`(getFriendsUseCase.execute()).thenReturn(Result.success(listOf(otherProfile("friend-1"))))
         `when`(getFriendRequestsUseCase.execute()).thenReturn(Result.success(listOf(otherProfile("req-1"))))
-        `when`(getUserPostsUseCase.execute("1", true)).thenReturn(Result.success(listOf(post("p1"))))
+        `when`(getUserPostsUseCase.execute("1", true, null, 30)).thenReturn(Result.success(listOf(post("p1"))))
 
         viewModel.obtainEvent(ProfileEvent.FriendsButtonClicked)
         advanceUntilIdle()
@@ -165,7 +165,7 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         `when`(likePostUseCase.execute("post-1")).thenReturn(Result.success(Unit))
-        `when`(getUserPostsUseCase.execute("1", true)).thenReturn(Result.success(listOf(post("post-1", liked = false, likeCount = 3))))
+        `when`(getUserPostsUseCase.execute("1", true, null, 30)).thenReturn(Result.success(listOf(post("post-1", liked = false, likeCount = 3))))
 
         viewModel.obtainEvent(ProfileEvent.PostsButtonClicked)
         advanceUntilIdle()
@@ -196,7 +196,7 @@ class ProfileViewModelTest {
 
     private suspend fun loadMainState() {
         `when`(getUserUseCase.execute("1", true)).thenReturn(Result.success(user()))
-        `when`(getUserPostsUseCase.execute("1", true)).thenReturn(Result.success(listOf(post("p1"))))
+        `when`(getUserPostsUseCase.execute("1", false, null, 30)).thenReturn(Result.success(listOf(post("p1"))))
         viewModel.obtainEvent(ProfileEvent.LoadProfile("1", true))
     }
 

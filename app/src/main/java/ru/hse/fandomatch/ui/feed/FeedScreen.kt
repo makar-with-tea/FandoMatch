@@ -41,7 +41,7 @@ fun FeedScreen(
             val lastVisibleIndex = listState.layoutInfo.visibleItemsInfo.maxOfOrNull { it.index } ?: 0
             totalCount to lastVisibleIndex
         }.collect { (totalCount, lastVisibleIndex) ->
-            val isNearEnd = totalCount > 0 && lastVisibleIndex >= totalCount - 4
+            val isNearEnd = totalCount > 0 && lastVisibleIndex >= totalCount - LOAD_MORE_THRESHOLD_ITEMS
             val current = state.value
             if (isNearEnd && current is FeedState.Main && current.hasMore && !current.isLoadingMore) {
                 viewModel.obtainEvent(FeedEvent.LoadMorePosts)
@@ -148,3 +148,5 @@ private fun ErrorState(
 ) {
     BasicErrorState(onRetry)
 }
+
+private const val LOAD_MORE_THRESHOLD_ITEMS = 4
