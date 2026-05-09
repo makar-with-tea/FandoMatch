@@ -219,7 +219,7 @@ class RegistrationViewModelTest {
                 name = "John Doe",
                 email = "john@mail.com",
                 login = "john_doe",
-                dateOfBirthMillis = dateMillis(LocalDate.now().minusYears(20)),
+                dateOfBirthEpochSeconds = dateMillis(LocalDate.now().minusYears(20)),
                 gender = Gender.MALE,
                 avatarMediaId = "avatar-id",
                 password = "Password123!"
@@ -244,7 +244,7 @@ class RegistrationViewModelTest {
                 name = "John Doe",
                 email = "john@mail.com",
                 login = "john_doe",
-                dateOfBirthMillis = dateMillis(LocalDate.now().minusYears(20)),
+                dateOfBirthEpochSeconds = dateMillis(LocalDate.now().minusYears(20)),
                 gender = Gender.MALE,
                 avatarMediaId = null,
                 password = "Password123!"

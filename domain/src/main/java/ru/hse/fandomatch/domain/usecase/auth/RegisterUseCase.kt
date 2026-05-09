@@ -12,7 +12,7 @@ class RegisterUseCase(
         name: String,
         email: String,
         login: String,
-        dateOfBirthMillis: Long,
+        dateOfBirthEpochSeconds: Long,
         gender: Gender,
         password: String
     ): Result<Unit> = runCatching {
@@ -20,7 +20,7 @@ class RegisterUseCase(
             name = name,
             email = email,
             login = login,
-            dateOfBirthMillis = dateOfBirthMillis,
+            dateOfBirthEpochSeconds = dateOfBirthEpochSeconds,
             gender = gender,
             password = password
         )

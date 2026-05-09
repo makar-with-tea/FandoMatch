@@ -59,9 +59,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import ru.hse.fandomatch.utils.BitmapHelper
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.navigation.EndIconState
+import ru.hse.fandomatch.utils.toBitmap
 
 @Composable
 fun MyTitle(
@@ -190,8 +190,7 @@ fun AvatarWithBackground(
             contentAlignment = Alignment.BottomCenter
         ) {
             Box {
-                val backgroundBitmap =
-                    BitmapHelper.byteArrayToBitmap(backgroundBytes)?.asImageBitmap()
+                val backgroundBitmap = backgroundBytes.toBitmap()?.asImageBitmap()
                 backgroundBitmap?.let { imageBitmap ->
                     Box(
                         contentAlignment = Alignment.TopEnd,
@@ -239,8 +238,7 @@ fun AvatarWithBackground(
                     .padding(4.dp),
             ) {
                 val placeholderIcon = ImageVector.vectorResource(id = R.drawable.ic_account_placeholder)
-                val avatarBitmap =
-                    BitmapHelper.byteArrayToBitmap(avatarBytes)?.asImageBitmap()
+                val avatarBitmap = avatarBytes.toBitmap()?.asImageBitmap()
                 avatarBitmap?.let { imageBitmap ->
                     Image(
                         bitmap = imageBitmap,

@@ -38,16 +38,13 @@ import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.ui.chat.ChatAction
-import ru.hse.fandomatch.ui.chat.ChatEvent
-import ru.hse.fandomatch.utils.epochMillisToDateString
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.FullPost
 import ru.hse.fandomatch.ui.composables.ImagesScreen
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.PostComment
-import ru.hse.fandomatch.utils.epochMillisToTimeString
+import ru.hse.fandomatch.utils.epochSecondsToDateTimeString
 
 @Composable
 fun PostScreen(
@@ -152,7 +149,7 @@ private fun MainState(
         ) {
             item {
                 FullPost(
-                    postDate = state.fullPost.post.timestamp.epochMillisToDateString(),
+                    postDate = state.fullPost.post.timestamp.epochSecondsToDateTimeString(),
                     postText = state.fullPost.post.content,
                     mediaItems = state.fullPost.post.mediaItems,
                     areReactionsAvailable = true,
@@ -237,7 +234,7 @@ private fun MainState(
                     text = stringResource(
                         R.string.attachments_sender_and_time_description,
                         state.fullPost.post.authorName,
-                        state.fullPost.post.timestamp.epochMillisToTimeString(),
+                        state.fullPost.post.timestamp.epochSecondsToDateTimeString(),
                     ),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,

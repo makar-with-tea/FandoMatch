@@ -37,7 +37,7 @@ sealed interface RegistrationState {
     ) : RegistrationState
 
     data class DateOfBirth(
-        val dateOfBirthMillis: Long? = null,
+        val dateOfBirthEpochSeconds: Long? = null,
         val error: RegistrationError = RegistrationError.IDLE
     ) : RegistrationState
 
@@ -93,7 +93,7 @@ sealed class RegistrationEvent {
     data class LoginChanged(val login: String) : RegistrationEvent()
     data object NameSubmitted : RegistrationEvent()
     data class CodeSubmitted(val code: String) : RegistrationEvent()
-    data class DateSelected(val dateOfBirthMillis: Long?) : RegistrationEvent()
+    data class DateSelected(val dateOfBirthEpochSeconds: Long?) : RegistrationEvent()
     data class GenderSelected(val gender: Gender) : RegistrationEvent()
     data class AvatarSelected(val avatarByteArray: ByteArray?) : RegistrationEvent() { // todo разделить выбор и клик на "далее"
         override fun equals(other: Any?): Boolean {

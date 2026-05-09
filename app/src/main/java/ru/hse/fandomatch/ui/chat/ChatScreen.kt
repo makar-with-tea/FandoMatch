@@ -60,7 +60,7 @@ import ru.hse.fandomatch.ui.composables.Message
 import ru.hse.fandomatch.ui.composables.SkeletonView
 import ru.hse.fandomatch.utils.MAX_NUMBER_OF_ATTACHMENTS
 import ru.hse.fandomatch.utils.currentZoneOffset
-import ru.hse.fandomatch.utils.epochMillisToTimeString
+import ru.hse.fandomatch.utils.epochSecondsToDateTimeString
 import ru.hse.fandomatch.utils.getBytesFromUri
 import java.time.LocalDateTime
 
@@ -275,7 +275,8 @@ private fun MainState(
                                 mediaItemsForScreen = itemsList
                                 currentItemIndex = index
                                 attachmentsSenderName = senderName
-                                attachmentsSentTime = uiElement.message.timestamp.epochMillisToTimeString()
+                                attachmentsSentTime =
+                                    uiElement.message.timestamp.epochSecondsToDateTimeString()
                             }
                         )
                     }

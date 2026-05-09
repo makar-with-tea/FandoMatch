@@ -34,7 +34,7 @@ internal fun DateStep(
     BackHandler {
         onBackPressed()
     }
-    val datePickerState = rememberDatePickerState(state.dateOfBirthMillis)
+    val datePickerState = rememberDatePickerState(state.dateOfBirthEpochSeconds)
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -52,7 +52,6 @@ internal fun DateStep(
         )
 
         if (state.error.isFieldError()) {
-            // todo обновление при смене даты а не нажатии на "Далее"
             Text(
                 text = state.error.getText(),
                 color = MaterialTheme.colorScheme.error,
@@ -61,7 +60,7 @@ internal fun DateStep(
         }
         Button(
             modifier = Modifier.fillMaxWidth(),
-            onClick = { onNext(datePickerState.selectedDateMillis) }
+            onClick = { onNext(datePickerState.selectedDateMillis?.let { it / 1000 } ) }
         ) { Text(stringResource(R.string.next_step)) }
     }
 }

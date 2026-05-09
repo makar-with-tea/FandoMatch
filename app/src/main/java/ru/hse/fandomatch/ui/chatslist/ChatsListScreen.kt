@@ -57,7 +57,7 @@ import ru.hse.fandomatch.ui.composables.NewMessagesIndicator
 import ru.hse.fandomatch.ui.composables.SkeletonView
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.utils.epochMillisToTimeAgo
+import ru.hse.fandomatch.utils.epochSecondsToTimeAgo
 import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.ImageOrPlaceholder
 
@@ -218,7 +218,7 @@ private fun MainState(
                                 overflow = TextOverflow.Ellipsis,
                             )
                             Text(
-                                text = epochMillisToTimeAgo(
+                                text = epochSecondsToTimeAgo(
                                     timestamp = chat.lastMessageTimestamp,
                                     context = LocalContext.current
                                 ),

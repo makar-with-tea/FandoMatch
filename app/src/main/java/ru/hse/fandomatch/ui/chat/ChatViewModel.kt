@@ -20,7 +20,7 @@ import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.media.DownloadMediaToGalleryUseCase
-import ru.hse.fandomatch.utils.epochMillisToDateString
+import ru.hse.fandomatch.utils.epochSecondsToDateString
 
 class ChatViewModel(
     private val sendMessageUseCase: SendMessageUseCase,
@@ -162,7 +162,7 @@ class ChatViewModel(
                 userId = currentState.participantId,
                 content = message,
                 mediaIdsWithTypes = mediaIds,
-                timestamp = timestamp * 1000,
+                timestamp = timestamp,
             )
                 .onFailure { exception ->
                 Log.e("ChatViewModel", "Failed to send message", exception)
@@ -221,7 +221,7 @@ class ChatViewModel(
         val result = mutableListOf<ChatUiElement>()
         var lastDate: String? = null
         for ((index, message) in withIndex()) {
-            val dateString = message.timestamp.epochMillisToDateString()
+            val dateString = message.timestamp.epochSecondsToDateString()
             if (dateString != lastDate) {
                 result.add(ChatUiElement.DayElement(dateString))
                 lastDate = dateString

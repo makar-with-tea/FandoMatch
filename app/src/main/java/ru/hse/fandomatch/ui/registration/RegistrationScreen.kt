@@ -113,10 +113,10 @@ fun RegistrationScreen(
 
             is RegistrationState.DateOfBirth -> DateStep(
                 state = state,
-                onNext = { dobMillis ->
+                onNext = { dobEpochSeconds ->
                     viewModel.obtainEvent(
                         RegistrationEvent.DateSelected(
-                            dobMillis
+                            dobEpochSeconds
                         )
                     )
                 },

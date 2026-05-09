@@ -42,7 +42,7 @@ class RegistrationViewModel(
         var name: String = "",
         var email: String = "",
         var login: String = "",
-        var dateOfBirthMillis: Long? = null,
+        var dateOfBirthEpochSeconds: Long? = null,
         var gender: Gender = Gender.NOT_SPECIFIED,
         var avatarByteArray: ByteArray? = null,
         var password: String = "",
@@ -55,7 +55,7 @@ class RegistrationViewModel(
 
             other as Form
 
-            if (dateOfBirthMillis != other.dateOfBirthMillis) return false
+            if (dateOfBirthEpochSeconds != other.dateOfBirthEpochSeconds) return false
             if (agreed != other.agreed) return false
             if (name != other.name) return false
             if (email != other.email) return false
@@ -69,7 +69,7 @@ class RegistrationViewModel(
         }
 
         override fun hashCode(): Int {
-            var result = dateOfBirthMillis?.hashCode() ?: 0
+            var result = dateOfBirthEpochSeconds?.hashCode() ?: 0
             result = 31 * result + agreed.hashCode()
             result = 31 * result + name.hashCode()
             result = 31 * result + email.hashCode()
@@ -97,7 +97,7 @@ class RegistrationViewModel(
             is RegistrationEvent.LoginChanged -> onLoginChanged(event.login)
             RegistrationEvent.NameSubmitted -> handlePersonal()
             is RegistrationEvent.CodeSubmitted -> handleCode(event.code)
-            is RegistrationEvent.DateSelected -> handleDate(event.dateOfBirthMillis)
+            is RegistrationEvent.DateSelected -> handleDate(event.dateOfBirthEpochSeconds)
             is RegistrationEvent.GenderSelected -> handleGender(event.gender)
             is RegistrationEvent.AvatarSelected -> handleAvatar(event.avatarByteArray)
             is RegistrationEvent.PasswordChanged -> onPasswordChanged(event.password)
@@ -219,7 +219,7 @@ class RegistrationViewModel(
                     Log.d("RegistrationViewModel", "Verification code check result: $isValid")
                     withContext(dispatcherMain) {
                         if (isValid) {
-                            _state.value = RegistrationState.DateOfBirth(form.dateOfBirthMillis)
+                            _state.value = RegistrationState.DateOfBirth(form.dateOfBirthEpochSeconds)
                         } else {
                             _state.value = RegistrationState.Code(
                                 codeError = RegistrationState.RegistrationError.INVALID_CODE,
@@ -231,23 +231,23 @@ class RegistrationViewModel(
         }
     }
 
-    private fun handleDate(dateOfBirthMillis: Long?) {
-        if (dateOfBirthMillis == null) {
+    private fun handleDate(dateOfBirthEpochSeconds: Long?) {
+        if (dateOfBirthEpochSeconds == null) {
             _state.value = RegistrationState.DateOfBirth(
-                dateOfBirthMillis = null,
+                dateOfBirthEpochSeconds = null,
                 error = RegistrationState.RegistrationError.DOB_EMPTY
             )
             return
         }
-        val date = Instant.ofEpochMilli(dateOfBirthMillis).atZone(ZoneId.systemDefault()).toLocalDate()
+        val date = Instant.ofEpochSecond(dateOfBirthEpochSeconds).atZone(ZoneId.systemDefault()).toLocalDate()
         if (date.isAfter(LocalDate.now().minusYears(MIN_AGE_IN_YEARS))) {
             _state.value = RegistrationState.DateOfBirth(
-                dateOfBirthMillis = dateOfBirthMillis,
+                dateOfBirthEpochSeconds = dateOfBirthEpochSeconds,
                 error = RegistrationState.RegistrationError.DOB_TOO_YOUNG
             )
             return
         }
-        form.dateOfBirthMillis = dateOfBirthMillis
+        form.dateOfBirthEpochSeconds = dateOfBirthEpochSeconds
         _state.value = RegistrationState.GenderChoice(form.gender)
     }
 
@@ -330,7 +330,7 @@ class RegistrationViewModel(
             isLoading = true
         )
 
-        if (form.dateOfBirthMillis == null) {
+        if (form.dateOfBirthEpochSeconds == null) {
             // This should never happen
             _state.value = RegistrationState.Password(
                 password = currentState.password,
@@ -346,7 +346,7 @@ class RegistrationViewModel(
                 form.name,
                 form.email,
                 form.login,
-                form.dateOfBirthMillis!!,
+                form.dateOfBirthEpochSeconds!!,
                 form.gender,
                 form.password
             )
@@ -427,7 +427,7 @@ class RegistrationViewModel(
             )
             is RegistrationState.DateOfBirth -> RegistrationState.Code()
             is RegistrationState.GenderChoice -> RegistrationState.DateOfBirth(
-                dateOfBirthMillis = form.dateOfBirthMillis
+                dateOfBirthEpochSeconds = form.dateOfBirthEpochSeconds
             )
             is RegistrationState.Avatar -> RegistrationState.GenderChoice(
                 gender = form.gender
@@ -447,7 +447,7 @@ class RegistrationViewModel(
             name = ""
             email = ""
             login = ""
-            dateOfBirthMillis = null
+            dateOfBirthEpochSeconds = null
             gender = Gender.NOT_SPECIFIED
             avatarByteArray = null
             password = ""

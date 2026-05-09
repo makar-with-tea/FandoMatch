@@ -183,7 +183,7 @@ class GlobalRepositoryImpl(
         name: String,
         email: String,
         login: String,
-        dateOfBirthMillis: Long,
+        dateOfBirthEpochSeconds: Long,
         gender: Gender,
         password: String
     ): AuthInfo {
@@ -192,7 +192,7 @@ class GlobalRepositoryImpl(
                 name = name,
                 email = email,
                 username = login,
-                birthDate = dateOfBirthMillis,
+                birthDate = dateOfBirthEpochSeconds,
                 hashedPassword = password
             )
         )
@@ -555,24 +555,7 @@ class GlobalRepositoryImpl(
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<ChatPreview>> {
-        val response = chatApiService.getChatPreviews(
-            ChatPreviewsRequestDTO(beforeTimestamp = beforeTimestamp, size = size)
-        )
-        response.errorResponse?.let {
-            it.checkAuth()
-            throw Exception("Failed to load chat previews: ${it.errorCode}, ${it.errorMessage}")
-        }
-        val initial = response.successResponse?.previews?.map { dto ->
-            ChatPreview(
-                chatId = dto.chatId,
-                participantName = dto.participantName,
-                participantAvatarUrl = dto.participantAvatarUrl,
-                lastMessage = dto.lastMessage,
-                isLastMessageFromThisUser = dto.isLastMessageFromThisUser,
-                lastMessageTimestamp = dto.lastMessageTimestamp,
-                newMessagesCount = dto.newMessagesCount,
-            )
-        } ?: emptyList()
+        val initial = getChatPreviewsPage(beforeTimestamp, size)
 
         val state = MutableStateFlow(initial)
 
@@ -586,6 +569,30 @@ class GlobalRepositoryImpl(
             .launchIn(repositoryScope)
 
         return state
+    }
+
+    override suspend fun getChatPreviewsPage(
+        beforeTimestamp: Long?,
+        size: Int
+    ): List<ChatPreview> {
+        val response = chatApiService.getChatPreviews(
+            ChatPreviewsRequestDTO(beforeTimestamp = beforeTimestamp, size = size)
+        )
+        response.errorResponse?.let {
+            it.checkAuth()
+            throw Exception("Failed to load chat previews: ${it.errorCode}, ${it.errorMessage}")
+        }
+        return response.successResponse?.previews?.map { dto ->
+            ChatPreview(
+                chatId = dto.chatId,
+                participantName = dto.participantName,
+                participantAvatarUrl = dto.participantAvatarUrl,
+                lastMessage = dto.lastMessage,
+                isLastMessageFromThisUser = dto.isLastMessageFromThisUser,
+                lastMessageTimestamp = dto.lastMessageTimestamp,
+                newMessagesCount = dto.newMessagesCount,
+            )
+        } ?: emptyList()
     }
 
     override suspend fun subscribeToChatMessages(

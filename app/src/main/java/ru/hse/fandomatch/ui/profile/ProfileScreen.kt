@@ -41,7 +41,6 @@ import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.utils.epochMillisToDateString
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.AvatarWithBackground
 import ru.hse.fandomatch.ui.composables.BasicErrorState
@@ -52,6 +51,7 @@ import ru.hse.fandomatch.ui.composables.FeedPost
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyFloatingButton
 import ru.hse.fandomatch.ui.composables.MyTitle
+import ru.hse.fandomatch.utils.epochSecondsToDateTimeString
 
 @Composable
 fun ProfileScreen(
@@ -408,7 +408,7 @@ private fun MainState(
                                     userName = post.authorName,
                                     userLogin = post.authorLogin,
                                     userAvatarUrl = post.authorAvatar?.url,
-                                    postDate = post.timestamp.epochMillisToDateString(),
+                                    postDateTime = post.timestamp.epochSecondsToDateTimeString(),
                                     postText = post.content,
                                     mediaItems = post.mediaItems,
                                     areReactionsAvailable = state.type is ProfileType.Own

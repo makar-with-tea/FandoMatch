@@ -48,14 +48,14 @@ import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.Comment
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.MediaItem
-import ru.hse.fandomatch.utils.epochMillisToTimeString
+import ru.hse.fandomatch.utils.epochSecondsToDateTimeString
 
 @Composable
 fun FeedPost(
     userName: String,
     userLogin: String?,
     userAvatarUrl: String?,
-    postDate: String,
+    postDateTime: String,
     postText: String?,
     mediaItems: List<MediaItem>,
     areReactionsAvailable: Boolean,
@@ -123,7 +123,7 @@ fun FeedPost(
             verticalAlignment = Alignment.Bottom
         ) {
             Text(
-                text = postDate,
+                text = postDateTime,
                 style = MaterialTheme.typography.bodySmall
             )
             Box(modifier = Modifier.weight(1f))
@@ -330,7 +330,7 @@ fun PostComment(
                     modifier = Modifier.padding(horizontal = 4.dp)
                 )
                 Text(
-                    text = comment.timestamp.epochMillisToTimeString(),
+                    text = comment.timestamp.epochSecondsToDateTimeString(),
                     fontSize = 10.sp,
                     lineHeight = 10.sp,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),

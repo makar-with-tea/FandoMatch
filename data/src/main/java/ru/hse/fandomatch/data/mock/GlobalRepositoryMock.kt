@@ -51,13 +51,13 @@ class GlobalRepositoryMock: GlobalRepository {
         name: String,
         email: String,
         login: String,
-        dateOfBirthMillis: Long,
+        dateOfBirthEpochSeconds: Long,
         gender: Gender,
         password: String
     ): AuthInfo {
         mockUser = mockUser.copy(
             name = name,
-            age = ((System.currentTimeMillis() - dateOfBirthMillis) / (1000L * 60 * 60 * 24 * 365)).toInt(),
+            age = ((System.currentTimeMillis() / 1000 - dateOfBirthEpochSeconds) / (60 * 60 * 24 * 365)).toInt(),
             gender = gender,
             profileType = ProfileType.Own(
                 email = email,
@@ -287,10 +287,26 @@ class GlobalRepositoryMock: GlobalRepository {
         )
     }
 
+    override suspend fun getChatPreviewsPage(
+        beforeTimestamp: Long?,
+        size: Int
+    ): List<ChatPreview> {
+        val result = mockChatPreviews.value
+            .filter { beforeTimestamp == null || it.lastMessageTimestamp < beforeTimestamp }
+            .sortedByDescending { it.lastMessageTimestamp }
+            .take(size)
+        Log.d(
+            "GlobalRepositoryMock",
+            "getChatPreviewsPage: returned ${result.size} previews before $beforeTimestamp size=$size"
+        )
+        return result
+    }
+
     override suspend fun subscribeToChatPreviews(
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<ChatPreview>> {
+        mockChatPreviews.value = getChatPreviewsPage(beforeTimestamp, size)
         return mockChatPreviews.also {
             Log.d("GlobalRepositoryMock", "subscribeToChatPreviews: subscribed with size $size")
         }
@@ -357,7 +373,7 @@ class GlobalRepositoryMock: GlobalRepository {
         return UploadMedia(
             url = url,
             mediaId = "mock_media_id_${System.currentTimeMillis()}",
-            expiresAt = LocalDateTime.now().plusHours(1).toEpochSecond(ZoneOffset.UTC) * 1000,
+            expiresAt = LocalDateTime.now().plusHours(1).toEpochSecond(ZoneOffset.UTC),
         )
     }
 
@@ -476,7 +492,7 @@ class GlobalRepositoryMock: GlobalRepository {
             fandoms = fandomIds.mapNotNull { id -> mockFandoms.find { it.id == id } },
             likeCount = 0,
             isLikedByCurrentUser = false,
-            timestamp = System.currentTimeMillis(),
+            timestamp = System.currentTimeMillis() / 1000,
             commentCount = 0,
         )
         mockUserPosts = listOf(newPost) + mockUserPosts

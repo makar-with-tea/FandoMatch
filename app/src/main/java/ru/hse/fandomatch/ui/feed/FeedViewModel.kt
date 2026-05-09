@@ -84,7 +84,7 @@ class FeedViewModel(
         if (isLoadingMore || !hasMore) return
         isLoadingMore = true
         val oldestTimestamp =
-            currentPosts.minOfOrNull { it.timestamp } ?: System.currentTimeMillis()
+            currentPosts.minOfOrNull { it.timestamp }
         viewModelScope.launch(dispatcherIO) {
             withContext(dispatcherMain) {
                 val current = _state.value as? FeedState.Main
