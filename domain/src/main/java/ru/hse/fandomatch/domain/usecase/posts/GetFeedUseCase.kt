@@ -10,15 +10,18 @@ class GetFeedUseCase(
     private val sharedPrefRepository: SharedPrefRepository,
     private val refreshAuthUseCase: RefreshAuthUseCase,
 ) {
-    suspend fun execute(): Result<List<Post>> {
+    suspend fun execute(
+        beforeTimestamp: Long?,
+        size: Int,
+    ): Result<List<Post>> {
         return runCatching {
             val userId = sharedPrefRepository.getUserId()
                 ?: throw IllegalStateException("User ID not found in shared preferences")
             refreshAuthUseCase.execute {
                 globalRepository.getFeedPosts(
                     id = userId,
-                    beforeTimestamp = null,
-                    size = 100500, // todo
+                    beforeTimestamp = beforeTimestamp,
+                    size = size,
                 )
             }
         }

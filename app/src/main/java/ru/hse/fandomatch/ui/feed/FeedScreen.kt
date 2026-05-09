@@ -4,10 +4,14 @@ import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -15,11 +19,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.FeedPost
 import ru.hse.fandomatch.ui.composables.LoadingPosts
-import ru.hse.fandomatch.utils.epochMillisToDateString
-import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.MyFloatingButton
+import ru.hse.fandomatch.utils.epochMillisToDateString
 
 @Composable
 fun FeedScreen(
@@ -29,6 +33,21 @@ fun FeedScreen(
 ) {
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(listState, state.value) {
+        snapshotFlow {
+            val totalCount = listState.layoutInfo.totalItemsCount
+            val lastVisibleIndex = listState.layoutInfo.visibleItemsInfo.maxOfOrNull { it.index } ?: 0
+            totalCount to lastVisibleIndex
+        }.collect { (totalCount, lastVisibleIndex) ->
+            val isNearEnd = totalCount > 0 && lastVisibleIndex >= totalCount - 1 //todo return - 4
+            val current = state.value
+            if (isNearEnd && current is FeedState.Main && current.hasMore && !current.isLoadingMore) {
+                viewModel.obtainEvent(FeedEvent.LoadMorePosts)
+            }
+        }
+    }
 
     Log.d("FeedScreen", "State: $state")
     when (val action = action.value) {
@@ -52,6 +71,7 @@ fun FeedScreen(
                 onPostClicked = { id -> viewModel.obtainEvent(FeedEvent.PostClicked(id)) },
                 onNewPostClicked = { viewModel.obtainEvent(FeedEvent.NewPostClicked) },
                 onPostLiked = { id -> viewModel.obtainEvent(FeedEvent.PostLiked(id)) },
+                listState = listState,
             )
         }
         is FeedState.Idle -> {
@@ -75,6 +95,7 @@ private fun MainState(
     onPostClicked: (String) -> Unit,
     onNewPostClicked: () -> Unit,
     onPostLiked: (String) -> Unit = {},
+    listState: LazyListState,
 ) {
     Box(
         modifier = Modifier
@@ -82,7 +103,8 @@ private fun MainState(
     ) {
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxSize(),
+            state = listState
         ) {
             items(state.posts) { post ->
                 FeedPost(
