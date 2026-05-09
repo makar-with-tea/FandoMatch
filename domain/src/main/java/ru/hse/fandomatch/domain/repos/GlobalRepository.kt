@@ -75,10 +75,6 @@ interface GlobalRepository {
     )
 
     // Chats
-    suspend fun getChatPreviewsPage(
-        beforeTimestamp: Long?,
-        size: Int,
-    ): List<ChatPreview>
     suspend fun subscribeToChatPreviews(
         beforeTimestamp: Long?,
         size: Int,

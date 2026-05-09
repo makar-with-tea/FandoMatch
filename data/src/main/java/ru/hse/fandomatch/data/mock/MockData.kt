@@ -284,7 +284,7 @@ internal val mockMessages: MutableStateFlow<List<Message>> = MutableStateFlow(li
 )
 )
 
-internal var mockChatPreviews = MutableStateFlow(
+internal var mockChatPreviews =
     listOf(
         ChatPreview(
             chatId = "5",
@@ -336,7 +336,7 @@ internal var mockChatPreviews = MutableStateFlow(
             newMessagesCount = 0,
         ),
     )
-)
+internal var mockChatPreviewsFlow = MutableStateFlow(mockChatPreviews)
 
 internal var mockUser = User(
     id = "1",

@@ -555,7 +555,24 @@ class GlobalRepositoryImpl(
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<ChatPreview>> {
-        val initial = getChatPreviewsPage(beforeTimestamp, size)
+        val response = chatApiService.getChatPreviews(
+            ChatPreviewsRequestDTO(beforeTimestamp = beforeTimestamp, size = size)
+        )
+        response.errorResponse?.let {
+            it.checkAuth()
+            throw Exception("Failed to load chat previews: ${it.errorCode}, ${it.errorMessage}")
+        }
+        val initial = response.successResponse?.previews?.map { dto ->
+            ChatPreview(
+                chatId = dto.chatId,
+                participantName = dto.participantName,
+                participantAvatarUrl = dto.participantAvatarUrl,
+                lastMessage = dto.lastMessage,
+                isLastMessageFromThisUser = dto.isLastMessageFromThisUser,
+                lastMessageTimestamp = dto.lastMessageTimestamp,
+                newMessagesCount = dto.newMessagesCount,
+            )
+        } ?: emptyList()
 
         val state = MutableStateFlow(initial)
 
@@ -569,30 +586,6 @@ class GlobalRepositoryImpl(
             .launchIn(repositoryScope)
 
         return state
-    }
-
-    override suspend fun getChatPreviewsPage(
-        beforeTimestamp: Long?,
-        size: Int
-    ): List<ChatPreview> {
-        val response = chatApiService.getChatPreviews(
-            ChatPreviewsRequestDTO(beforeTimestamp = beforeTimestamp, size = size)
-        )
-        response.errorResponse?.let {
-            it.checkAuth()
-            throw Exception("Failed to load chat previews: ${it.errorCode}, ${it.errorMessage}")
-        }
-        return response.successResponse?.previews?.map { dto ->
-            ChatPreview(
-                chatId = dto.chatId,
-                participantName = dto.participantName,
-                participantAvatarUrl = dto.participantAvatarUrl,
-                lastMessage = dto.lastMessage,
-                isLastMessageFromThisUser = dto.isLastMessageFromThisUser,
-                lastMessageTimestamp = dto.lastMessageTimestamp,
-                newMessagesCount = dto.newMessagesCount,
-            )
-        } ?: emptyList()
     }
 
     override suspend fun subscribeToChatMessages(

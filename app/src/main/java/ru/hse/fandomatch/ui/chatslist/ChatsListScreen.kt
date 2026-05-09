@@ -18,10 +18,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,14 +56,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.navigation.EndIconState
+import ru.hse.fandomatch.navigation.TopBarState
+import ru.hse.fandomatch.ui.composables.BasicErrorState
+import ru.hse.fandomatch.ui.composables.ImageOrPlaceholder
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.composables.NewMessagesIndicator
 import ru.hse.fandomatch.ui.composables.SkeletonView
-import ru.hse.fandomatch.navigation.EndIconState
-import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.utils.epochSecondsToTimeAgo
-import ru.hse.fandomatch.ui.composables.BasicErrorState
-import ru.hse.fandomatch.ui.composables.ImageOrPlaceholder
 
 @Composable
 fun ChatsListScreen(
@@ -69,6 +73,7 @@ fun ChatsListScreen(
 ) {
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
+    val listState = rememberLazyListState()
 
     Log.d("ChatsListScreen", "State: $state")
     when (val action = action.value) {
@@ -86,7 +91,9 @@ fun ChatsListScreen(
                 state = state.value as ChatsListState.Main,
                 onChatClicked = { id -> viewModel.obtainEvent(ChatsListEvent.ChatClicked(id)) },
                 setTopBarState = setTopBarState,
-                onSearch = { query -> viewModel.obtainEvent(ChatsListEvent.SearchChats(query)) }
+                onSearch = { query -> viewModel.obtainEvent(ChatsListEvent.SearchChats(query)) },
+                listState = listState,
+                loadMoreChats = { viewModel.obtainEvent(ChatsListEvent.LoadChats) },
             )
         }
         is ChatsListState.Idle -> {
@@ -110,7 +117,22 @@ private fun MainState(
     onChatClicked: (String) -> Unit,
     setTopBarState: (TopBarState?) -> Unit,
     onSearch: (String?) -> Unit,
+    listState: LazyListState,
+    loadMoreChats: () -> Unit,
 ) {
+    LaunchedEffect(listState, state) {
+        snapshotFlow {
+            val totalCount = listState.layoutInfo.totalItemsCount
+            val lastVisibleIndex = listState.layoutInfo.visibleItemsInfo.maxOfOrNull { it.index } ?: 0
+            totalCount to lastVisibleIndex
+        }.collect { (totalCount, lastVisibleIndex) ->
+            val isNearEnd = totalCount > 0 && lastVisibleIndex >= totalCount - LOAD_MORE_THRESHOLD_ITEMS
+            if (isNearEnd && state.hasMore && !state.isLoadingMore) {
+                loadMoreChats()
+            }
+        }
+    }
+
     var isSearchActive by remember { mutableStateOf(false) }
     var searchInput by remember { mutableStateOf("") }
 
@@ -178,7 +200,8 @@ private fun MainState(
 
     LazyColumn(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxSize(),
+        state = listState,
     ) {
         items(state.chats) { chat ->
             Box(
@@ -250,6 +273,19 @@ private fun MainState(
                     .background(MaterialTheme.colorScheme.secondaryContainer)
             )
         }
+
+        if (state.isLoadingMore) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
     }
 
     if (state.chats.isEmpty()) {
@@ -263,6 +299,8 @@ private fun MainState(
         }
     }
 }
+
+private const val LOAD_MORE_THRESHOLD_ITEMS = 4
 
 @Composable
 private fun LoadingState() {

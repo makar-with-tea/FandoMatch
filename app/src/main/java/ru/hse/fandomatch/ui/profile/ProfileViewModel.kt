@@ -106,7 +106,7 @@ class ProfileViewModel(
                         .onSuccess {
                             posts = it
                             currentPosts = it
-                            hasMorePosts = it.size >= PROFILE_POSTS_PAGE_SIZE
+                            hasMorePosts = it.size == PROFILE_POSTS_PAGE_SIZE
                             isLoadingMorePosts = false
                         }
                     val type = user.profileType
@@ -178,7 +178,7 @@ class ProfileViewModel(
                 }
                 .onSuccess { posts ->
                     currentPosts = posts
-                    hasMorePosts = posts.size >= PROFILE_POSTS_PAGE_SIZE
+                    hasMorePosts = posts.size == PROFILE_POSTS_PAGE_SIZE
                     isLoadingMorePosts = false
                     withContext(dispatcherMain) {
                         _state.value = currentState.copy(
@@ -231,7 +231,7 @@ class ProfileViewModel(
                     currentPosts = (currentPosts + olderPosts)
                         .distinctBy { it.id }
                         .sortedByDescending { it.timestamp }
-                    hasMorePosts = olderPosts.size >= PROFILE_POSTS_PAGE_SIZE
+                    hasMorePosts = olderPosts.size == PROFILE_POSTS_PAGE_SIZE
                     isLoadingMorePosts = false
                     withContext(dispatcherMain) {
                         val latestState = _state.value as? ProfileState.Main ?: return@withContext
