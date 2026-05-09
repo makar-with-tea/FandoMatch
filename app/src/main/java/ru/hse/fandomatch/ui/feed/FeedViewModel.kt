@@ -68,7 +68,7 @@ class FeedViewModel(
                 .onSuccess { posts ->
                     Log.d("FeedViewModel", "Successfully loaded feed posts: $posts")
                     currentPosts = posts
-                    hasMore = posts.size >= PAGE_SIZE
+                    hasMore = posts.size == PAGE_SIZE
                     withContext(dispatcherMain) {
                         _state.value = FeedState.Main(
                             posts = currentPosts,
@@ -108,7 +108,7 @@ class FeedViewModel(
             result.onSuccess { older ->
                 currentPosts =
                     (currentPosts + older).distinctBy { it.id }.sortedByDescending { it.timestamp }
-                hasMore = older.size >= PAGE_SIZE
+                hasMore = older.size == PAGE_SIZE
                 withContext(dispatcherMain) {
                     _state.value = FeedState.Main(
                         posts = currentPosts,

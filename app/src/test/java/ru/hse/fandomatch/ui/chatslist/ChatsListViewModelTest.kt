@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.chatslist
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +13,6 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
@@ -23,9 +21,6 @@ import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChatsListViewModelTest {
-
-    @get:Rule
-    val instantExecutorRule = InstantTaskExecutorRule()
 
     private lateinit var viewModel: ChatsListViewModel
     private lateinit var subscribeToChatPreviewsUseCase: SubscribeToChatPreviewsUseCase
@@ -57,7 +52,7 @@ class ChatsListViewModelTest {
         subscribeToChatPreviewsUseCase = mock(SubscribeToChatPreviewsUseCase::class.java)
         chatsFlow = MutableStateFlow(emptyList())
         runBlocking {
-            `when`(subscribeToChatPreviewsUseCase.execute()).thenReturn(Result.success(chatsFlow))
+            `when`(subscribeToChatPreviewsUseCase.execute(30)).thenReturn(Result.success(chatsFlow))
         }
         viewModel = ChatsListViewModel(
             subscribeToChatPreviewsUseCase = subscribeToChatPreviewsUseCase,
@@ -75,13 +70,14 @@ class ChatsListViewModelTest {
         val state = viewModel.state.value
         assertTrue(state is ChatsListState.Main)
         state as ChatsListState.Main
-        assertEquals(listOf(chat1, chat2), state.chats)
+        assertEquals(listOf(chat2, chat1), state.chats)
         assertEquals(null, state.filteredByQuery)
+        assertTrue(state.hasMore)
     }
 
     @Test
     fun `load chats failure updates error state`() = runTest {
-        `when`(subscribeToChatPreviewsUseCase.execute()).thenReturn(Result.failure(RuntimeException()))
+        `when`(subscribeToChatPreviewsUseCase.execute(30)).thenReturn(Result.failure(RuntimeException()))
         viewModel = ChatsListViewModel(
             subscribeToChatPreviewsUseCase = subscribeToChatPreviewsUseCase,
             dispatcherIO = testDispatcher,
@@ -116,7 +112,7 @@ class ChatsListViewModelTest {
         viewModel.obtainEvent(ChatsListEvent.SearchChats(""))
 
         val state = viewModel.state.value as ChatsListState.Main
-        assertEquals(listOf(chat1, chat2), state.chats)
+        assertEquals(listOf(chat2, chat1), state.chats)
         assertEquals(null, state.filteredByQuery)
     }
 

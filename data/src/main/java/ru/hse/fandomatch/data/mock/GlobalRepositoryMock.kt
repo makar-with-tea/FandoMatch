@@ -287,31 +287,18 @@ class GlobalRepositoryMock: GlobalRepository {
         )
     }
 
-    override suspend fun getChatPreviewsPage(
-        beforeTimestamp: Long?,
-        size: Int
-    ): List<ChatPreview> {
-        val result = mockChatPreviews.value
-            .filter { beforeTimestamp == null || it.lastMessageTimestamp < beforeTimestamp }
-            .sortedByDescending { it.lastMessageTimestamp }
-            .take(size)
-        Log.d(
-            "GlobalRepositoryMock",
-            "getChatPreviewsPage: returned ${result.size} previews before $beforeTimestamp size=$size"
-        )
-        return result
-    }
-
     override suspend fun subscribeToChatPreviews(
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<ChatPreview>> {
-        mockChatPreviews.value = getChatPreviewsPage(beforeTimestamp, size)
-        return mockChatPreviews.also {
+        mockChatPreviewsFlow.value = mockChatPreviews
+            .filter { beforeTimestamp == null || it.lastMessageTimestamp < beforeTimestamp }
+            .sortedByDescending { it.lastMessageTimestamp }
+            .take(size)
+        return mockChatPreviewsFlow.also {
             Log.d("GlobalRepositoryMock", "subscribeToChatPreviews: subscribed with size $size")
         }
     }
-
 
     override suspend fun subscribeToChatMessages(
         chatId: String,
@@ -350,7 +337,7 @@ class GlobalRepositoryMock: GlobalRepository {
             timestamp = timestamp,
         )
 
-        mockChatPreviews.value = mockChatPreviews.value.map {
+        mockChatPreviews = mockChatPreviews.map {
             if (it.participantName == mockChat.participantName) {
                 it.copy(
                     lastMessage = content,
@@ -362,6 +349,11 @@ class GlobalRepositoryMock: GlobalRepository {
             .sortedBy {
                 -it.lastMessageTimestamp
             }
+        mockChatPreviewsFlow.value = mockChatPreviews
+        Log.d(
+            "GlobalRepositoryMock",
+            "sendMessage: sent message to $receiverId with content: $content and media: $mediaIdsWithTypes"
+        )
     }
 
     override suspend fun getUploadMediaUrl(mediaType: MediaType): UploadMedia {

@@ -9,11 +9,13 @@ class SubscribeToChatPreviewsUseCase(
     private val globalRepository: GlobalRepository,
     private val refreshAuthUseCase: RefreshAuthUseCase,
 ) {
-    suspend fun execute(): Result<StateFlow<List<ChatPreview>>> = runCatching {
+    suspend fun execute(
+        size: Int,
+    ): Result<StateFlow<List<ChatPreview>>> = runCatching {
         refreshAuthUseCase.execute {
             globalRepository.subscribeToChatPreviews(
                 beforeTimestamp = null,
-                size = 100500, // todo
+                size = size,
             )
         }
     }
