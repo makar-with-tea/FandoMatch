@@ -16,10 +16,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import ru.hse.fandomatch.domain.usecase.chat.GetChatMessagesPageUseCase
 import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
@@ -40,6 +43,7 @@ class ChatViewModelTest {
     private lateinit var sendMessageUseCase: SendMessageUseCase
     private lateinit var loadChatInfoUseCase: LoadChatInfoUseCase
     private lateinit var subscribeToChatMessagesUseCase: SubscribeToChatMessagesUseCase
+    private lateinit var getChatMessagesPageUseCase: GetChatMessagesPageUseCase
     private lateinit var uploadMediaUseCase: UploadMediaUseCase
     private lateinit var downloadMediaToGalleryUseCase: DownloadMediaToGalleryUseCase
     private lateinit var messagesFlow: MutableStateFlow<List<Message>>
@@ -51,6 +55,7 @@ class ChatViewModelTest {
         sendMessageUseCase = mock(SendMessageUseCase::class.java)
         loadChatInfoUseCase = mock(LoadChatInfoUseCase::class.java)
         subscribeToChatMessagesUseCase = mock(SubscribeToChatMessagesUseCase::class.java)
+        getChatMessagesPageUseCase = mock(GetChatMessagesPageUseCase::class.java)
         uploadMediaUseCase = mock(UploadMediaUseCase::class.java)
         downloadMediaToGalleryUseCase = mock(DownloadMediaToGalleryUseCase::class.java)
         messagesFlow = MutableStateFlow(emptyList())
@@ -58,6 +63,7 @@ class ChatViewModelTest {
             sendMessageUseCase = sendMessageUseCase,
             loadChatInfoUseCase = loadChatInfoUseCase,
             subscribeToChatMessagesUseCase = subscribeToChatMessagesUseCase,
+            getChatMessagesPageUseCase = getChatMessagesPageUseCase,
             uploadMediaUseCase = uploadMediaUseCase,
             downloadMediaToGalleryUseCase = downloadMediaToGalleryUseCase,
             dispatcherIO = testDispatcher,
@@ -77,7 +83,7 @@ class ChatViewModelTest {
     @Test
     fun `load chat success sets main state`() = runTest {
         `when`(loadChatInfoUseCase.execute("10")).thenReturn(Result.success(chat()))
-        `when`(subscribeToChatMessagesUseCase.execute("10", "chat-1")).thenReturn(Result.success(messagesFlow))
+        `when`(subscribeToChatMessagesUseCase.execute("10", "chat-1", 30)).thenReturn(Result.success(messagesFlow))
         messagesFlow.value = listOf(message("1", false, "hello", 1000L))
 
         viewModel.obtainEvent(ChatEvent.LoadChat("10"))
@@ -191,6 +197,29 @@ class ChatViewModelTest {
         assertEquals(null, viewModel.action.first())
     }
 
+    @Test
+    fun `load older messages appends to current chat state`() = runTest {
+        prepareMainState()
+        advanceUntilIdle()
+
+        `when`(
+            getChatMessagesPageUseCase.execute(
+                chatId = eq("chat-1"),
+                userId = eq("participant-1"),
+                beforeTimestamp = anyLong(),
+                size = eq(30),
+            )
+        ).thenReturn(Result.success(listOf(message("0", false, "older", 900L))))
+
+        viewModel.obtainEvent(ChatEvent.LoadOlderMessages)
+        advanceUntilIdle()
+
+        val state = viewModel.state.first() as ChatState.Main
+        assertTrue(state.uiElements.any { element ->
+            element is ChatUiElement.MessageElement && element.message.messageId == "0"
+        })
+    }
+
     @After
     fun tearDown() {
         Dispatchers.resetMain()
@@ -198,7 +227,7 @@ class ChatViewModelTest {
 
     private suspend fun prepareMainState() {
         `when`(loadChatInfoUseCase.execute("10")).thenReturn(Result.success(chat()))
-        `when`(subscribeToChatMessagesUseCase.execute("10", "chat-1")).thenReturn(Result.success(messagesFlow))
+        `when`(subscribeToChatMessagesUseCase.execute("10", "chat-1", 30)).thenReturn(Result.success(messagesFlow))
         messagesFlow.value = listOf(message("1", false, "hello", 1000L))
         viewModel.obtainEvent(ChatEvent.LoadChat("10"))
     }

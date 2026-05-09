@@ -26,6 +26,19 @@ import ru.hse.fandomatch.domain.repos.MediaRepository
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
 import ru.hse.fandomatch.domain.usecase.auth.ChangeEmailUseCase
 import ru.hse.fandomatch.domain.usecase.auth.ChangePasswordUseCase
+import ru.hse.fandomatch.domain.usecase.auth.CheckVerificationCodeUseCase
+import ru.hse.fandomatch.domain.usecase.auth.DeleteAccountUseCase
+import ru.hse.fandomatch.domain.usecase.auth.GetPastLoginUseCase
+import ru.hse.fandomatch.domain.usecase.auth.GetPermissionShownUseCase
+import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
+import ru.hse.fandomatch.domain.usecase.auth.LoginUseCase
+import ru.hse.fandomatch.domain.usecase.auth.LogoutUseCase
+import ru.hse.fandomatch.domain.usecase.auth.RefreshAuthUseCase
+import ru.hse.fandomatch.domain.usecase.auth.RegisterUseCase
+import ru.hse.fandomatch.domain.usecase.auth.ResetPasswordUseCase
+import ru.hse.fandomatch.domain.usecase.auth.SaveDeviceTokenUseCase
+import ru.hse.fandomatch.domain.usecase.auth.SetPermissionShownUseCase
+import ru.hse.fandomatch.domain.usecase.chat.GetChatMessagesPageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
@@ -44,25 +57,13 @@ import ru.hse.fandomatch.domain.usecase.posts.GetFullPostUseCase
 import ru.hse.fandomatch.domain.usecase.posts.GetUserPostsUseCase
 import ru.hse.fandomatch.domain.usecase.posts.LikePostUseCase
 import ru.hse.fandomatch.domain.usecase.posts.SendCommentUseCase
-import ru.hse.fandomatch.domain.usecase.auth.CheckVerificationCodeUseCase
-import ru.hse.fandomatch.domain.usecase.auth.DeleteAccountUseCase
 import ru.hse.fandomatch.domain.usecase.user.EditProfileUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetCitiesByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetFriendRequestsUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetFriendsUseCase
-import ru.hse.fandomatch.domain.usecase.auth.GetPastLoginUseCase
-import ru.hse.fandomatch.domain.usecase.auth.GetPermissionShownUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserIdUseCase
-import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
-import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
-import ru.hse.fandomatch.domain.usecase.auth.LoginUseCase
-import ru.hse.fandomatch.domain.usecase.auth.LogoutUseCase
-import ru.hse.fandomatch.domain.usecase.auth.RefreshAuthUseCase
-import ru.hse.fandomatch.domain.usecase.auth.RegisterUseCase
-import ru.hse.fandomatch.domain.usecase.auth.ResetPasswordUseCase
-import ru.hse.fandomatch.domain.usecase.auth.SaveDeviceTokenUseCase
-import ru.hse.fandomatch.domain.usecase.auth.SetPermissionShownUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserPreferencesUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 import ru.hse.fandomatch.domain.usecase.user.UpdateUserPreferencesUseCase
 import ru.hse.fandomatch.ui.addfandom.AddFandomViewModel
 import ru.hse.fandomatch.ui.authorization.AuthorizationViewModel
@@ -106,7 +107,7 @@ val appModule = module {
         likePostUseCase = get(),
     ) }
     viewModel<ChatsListViewModel> { ChatsListViewModel(get()) }
-    viewModel<ChatViewModel> { ChatViewModel(get(), get(), get(), get(), get()) }
+    viewModel<ChatViewModel> { ChatViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel<FiltersViewModel> { FiltersViewModel(get(), get(), get(), get()) }
     viewModel<FeedViewModel> { FeedViewModel(get(), get()) }
     viewModel<EditProfileViewModel> { EditProfileViewModel(get(), get(), get(), get(), get()) }
@@ -191,6 +192,7 @@ val domainModule = module {
     factory<SetPermissionShownUseCase> { SetPermissionShownUseCase(get()) }
 
     factory<LoadChatInfoUseCase> { LoadChatInfoUseCase(get()) }
+    factory<GetChatMessagesPageUseCase> { GetChatMessagesPageUseCase(get(), get()) }
     factory<SendMessageUseCase> { SendMessageUseCase(get()) }
     factory<SubscribeToChatMessagesUseCase> { SubscribeToChatMessagesUseCase(get(), get()) }
     factory<SubscribeToChatPreviewsUseCase> { SubscribeToChatPreviewsUseCase(get(), get()) }

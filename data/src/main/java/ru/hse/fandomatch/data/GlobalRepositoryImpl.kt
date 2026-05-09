@@ -594,28 +594,12 @@ class GlobalRepositoryImpl(
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<Message>> {
-        val response = chatApiService.getChatMessages(
+        val initial = getChatMessagesPage(
+            chatId = chatId,
             userId = userId,
-            request = ChatMessagesRequestDTO(
-                chatId = chatId,
-                beforeTimestamp = beforeTimestamp,
-                size = size
-            )
+            beforeTimestamp = beforeTimestamp,
+            size = size
         )
-        response.errorResponse?.let {
-            it.checkAuth()
-            throw Exception("Failed to load chat messages: ${it.errorCode}, ${it.errorMessage}")
-        }
-        val initial = response.successResponse?.messages?.map { dto ->
-            Message(
-                messageId = dto.messageId,
-                isFromThisUser = dto.isFromThisUser,
-                content = dto.content,
-                timestamp = dto.timestamp,
-                mediaItems = dto.mediaItems?.map { it.toDomain() } ?: emptyList(),
-            )
-        } ?: emptyList()
-
         val state = MutableStateFlow(initial)
 
         chatMessagesJobs[userId]?.cancel()
@@ -628,6 +612,35 @@ class GlobalRepositoryImpl(
             .launchIn(repositoryScope)
 
         return state
+    }
+
+    override suspend fun getChatMessagesPage(
+        chatId: String,
+        userId: String,
+        beforeTimestamp: Long?,
+        size: Int
+    ): List<Message> {
+        val response = chatApiService.getChatMessages(
+            userId = userId,
+            request = ChatMessagesRequestDTO(
+                chatId = chatId,
+                beforeTimestamp = beforeTimestamp,
+                size = size
+            )
+        )
+        response.errorResponse?.let {
+            it.checkAuth()
+            throw Exception("Failed to load chat messages: ${it.errorCode}, ${it.errorMessage}")
+        }
+        return response.successResponse?.messages?.map { dto ->
+            Message(
+                messageId = dto.messageId,
+                isFromThisUser = dto.isFromThisUser,
+                content = dto.content,
+                timestamp = dto.timestamp,
+                mediaItems = dto.mediaItems?.map { it.toDomain() } ?: emptyList(),
+            )
+        } ?: emptyList()
     }
 
     override suspend fun loadChatInfo(userId: String): Chat {

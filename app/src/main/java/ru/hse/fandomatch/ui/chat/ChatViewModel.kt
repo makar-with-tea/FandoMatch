@@ -15,6 +15,8 @@ import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.Message
+import ru.hse.fandomatch.domain.model.Chat
+import ru.hse.fandomatch.domain.usecase.chat.GetChatMessagesPageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
@@ -26,6 +28,7 @@ class ChatViewModel(
     private val sendMessageUseCase: SendMessageUseCase,
     private val loadChatInfoUseCase: LoadChatInfoUseCase,
     private val subscribeToChatMessagesUseCase: SubscribeToChatMessagesUseCase,
+    private val getChatMessagesPageUseCase: GetChatMessagesPageUseCase,
     private val uploadMediaUseCase: UploadMediaUseCase,
     private val downloadMediaToGalleryUseCase: DownloadMediaToGalleryUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
@@ -36,10 +39,18 @@ class ChatViewModel(
     private val _action = MutableStateFlow<ChatAction?>(null)
     val action: StateFlow<ChatAction?> get() = _action
 
-    private var _messages: StateFlow<List<Message>> = MutableStateFlow(emptyList())
+    private var liveMessages: List<Message> = emptyList()
+    private var olderMessages: List<Message> = emptyList()
+    private var hasMoreOlderMessages: Boolean = true
+    private var isLoadingMoreMessages: Boolean = false
+    private var activeChat: Chat? = null
 
     private val stateMutex = Mutex()
     private var loadChatJob: Job? = null
+
+    private companion object {
+        const val MESSAGES_BLOCK_SIZE = 30
+    }
 
     private suspend fun setState(reducer: (ChatState) -> ChatState) {
         withContext(dispatcherMain) {
@@ -59,6 +70,7 @@ class ChatViewModel(
             is ChatEvent.AttachmentsChanged -> attachmentsChanged(event.filesWithTypes)
             is ChatEvent.ProfileClicked -> goToProfile()
             is ChatEvent.DownloadMediaItem -> downloadMediaItem(event.mediaItem)
+            ChatEvent.LoadOlderMessages -> loadOlderMessages()
             ChatEvent.ToastShown -> toastShown()
         }
     }
@@ -73,6 +85,12 @@ class ChatViewModel(
                 return@launch
             }
 
+            liveMessages = emptyList()
+            olderMessages = emptyList()
+            hasMoreOlderMessages = true
+            isLoadingMoreMessages = false
+            activeChat = null
+
             loadChatInfoUseCase.execute(userId = profileId)
                 .onFailure { exception ->
                     Log.e("ChatViewModel", "Failed to load chat info", exception)
@@ -82,7 +100,8 @@ class ChatViewModel(
                 .onSuccess { chat ->
                     subscribeToChatMessagesUseCase.execute(
                         userId = profileId,
-                        chatId = chat.chatId
+                        chatId = chat.chatId,
+                        size = MESSAGES_BLOCK_SIZE,
                     )
                         .onFailure { exception ->
                             Log.e(
@@ -94,30 +113,51 @@ class ChatViewModel(
                             return@launch
                         }
                         .onSuccess { messagesFlow ->
-                            _messages = messagesFlow
-
-                            setState {
-                                ChatState.Main(
-                                    chatId = chat.chatId,
-                                    participantId = chat.participantId,
-                                    participantName = chat.participantName,
-                                    participantAvatarUrl = chat.participantAvatarUrl,
-                                    uiElements = messagesFlow.value.mapMessagesToUiElements()
-                                        .reversed(),
-                                )
-                            }
+                            activeChat = chat
+                            liveMessages = messagesFlow.value.sortedBy { it.timestamp }
+                            hasMoreOlderMessages =
+                                messagesFlow.value.size >= MESSAGES_BLOCK_SIZE
+                            renderMainState(chat)
 
                             messagesFlow.collect { messages ->
-                                setState { current ->
-                                    if (current is ChatState.Main) {
-                                        current.copy(
-                                            uiElements = messages.mapMessagesToUiElements()
-                                                .reversed()
-                                        )
-                                    } else current
-                                }
+                                liveMessages = messages.sortedBy { it.timestamp }
+                                renderMainState(chat)
                             }
                         }
+                }
+        }
+    }
+
+    private fun loadOlderMessages() {
+        val current = _state.value as? ChatState.Main ?: return
+        if (isLoadingMoreMessages || !hasMoreOlderMessages) return
+
+        val timestamp = mergedMessages().minOfOrNull { it.timestamp } ?: return
+        isLoadingMoreMessages = true
+        _state.value = current.copy(isLoadingMore = true)
+
+        viewModelScope.launch(dispatcherIO) {
+            getChatMessagesPageUseCase.execute(
+                chatId = current.chatId,
+                userId = current.participantId,
+                beforeTimestamp = timestamp,
+                size = MESSAGES_BLOCK_SIZE,
+            )
+                .onFailure { exception ->
+                    Log.e("ChatViewModel", "Failed to load older messages", exception)
+                    isLoadingMoreMessages = false
+                    withContext(dispatcherMain) {
+                        val state = _state.value as? ChatState.Main ?: return@withContext
+                        _state.value = state.copy(isLoadingMore = false)
+                    }
+                }
+                .onSuccess { older ->
+                    olderMessages = (olderMessages + older)
+                        .distinctBy { it.messageId }
+                        .sortedBy { it.timestamp }
+                    hasMoreOlderMessages = older.size == MESSAGES_BLOCK_SIZE
+                    isLoadingMoreMessages = false
+                    activeChat?.let { renderMainState(it) }
                 }
         }
     }
@@ -209,11 +249,40 @@ class ChatViewModel(
 
     private fun clear() {
         loadChatJob?.cancel()
+        liveMessages = emptyList()
+        olderMessages = emptyList()
+        hasMoreOlderMessages = true
+        isLoadingMoreMessages = false
+        activeChat = null
         viewModelScope.launch(dispatcherMain) {
             setState { ChatState.Idle }
             _action.value = null
         }
     }
+
+    private suspend fun renderMainState(chat: Chat) {
+        val messages = mergedMessages()
+        setState { current ->
+            val currentMain = current as? ChatState.Main
+            ChatState.Main(
+                chatId = chat.chatId,
+                participantId = chat.participantId,
+                participantName = chat.participantName,
+                participantAvatarUrl = chat.participantAvatarUrl,
+                uiElements = messages.mapMessagesToUiElements().reversed(),
+                hasMoreOlder = hasMoreOlderMessages,
+                isLoadingMore = isLoadingMoreMessages,
+                attachedFilesWithTypes = currentMain?.attachedFilesWithTypes ?: emptyList(),
+                messageDraft = currentMain?.messageDraft ?: "",
+                error = currentMain?.error ?: ChatState.ChatError.IDLE,
+            )
+        }
+    }
+
+    private fun mergedMessages(): List<Message> =
+        (olderMessages + liveMessages)
+            .distinctBy { it.messageId }
+            .sortedBy { it.timestamp }
 
     private fun List<Message>.mapMessagesToUiElements(): List<ChatUiElement> {
         if (isEmpty()) return emptyList()

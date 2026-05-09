@@ -1,6 +1,7 @@
 package ru.hse.fandomatch.data.mock
 
 import android.util.Log
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
 import ru.hse.fandomatch.domain.model.AuthInfo
@@ -291,13 +292,18 @@ class GlobalRepositoryMock: GlobalRepository {
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<ChatPreview>> {
-        mockChatPreviewsFlow.value = mockChatPreviews
+        return mockChatPreviews
             .filter { beforeTimestamp == null || it.lastMessageTimestamp < beforeTimestamp }
             .sortedByDescending { it.lastMessageTimestamp }
             .take(size)
-        return mockChatPreviewsFlow.also {
-            Log.d("GlobalRepositoryMock", "subscribeToChatPreviews: subscribed with size $size")
-        }
+            .let { previews ->
+                MutableStateFlow(previews).also {
+                    Log.d(
+                        "GlobalRepositoryMock",
+                        "subscribeToChatPreviews: returned ${previews.size} chat previews before $beforeTimestamp"
+                    )
+                }
+            }
     }
 
     override suspend fun subscribeToChatMessages(
@@ -306,11 +312,30 @@ class GlobalRepositoryMock: GlobalRepository {
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<Message>> {
-        Log.d(
-            "GlobalRepositoryMock",
-            "subscribeToChatMessages: subscribed to chat $chatId for user $userId with size $size"
-        )
+        mockMessagesFlow.value = mockMessages
+            .filter { beforeTimestamp == null || it.timestamp < beforeTimestamp }
+            .sortedByDescending { it.timestamp }
+            .take(size)
+            .sortedBy { it.timestamp }
+        return mockMessagesFlow.also {
+            Log.d(
+                "GlobalRepositoryMock",
+                "subscribeToChatMessages: returned ${it.value.size} messages for chatId $chatId before $beforeTimestamp"
+            )
+        }
+    }
+
+    override suspend fun getChatMessagesPage(
+        chatId: String,
+        userId: String,
+        beforeTimestamp: Long?,
+        size: Int,
+    ): List<Message> {
         return mockMessages
+            .filter { beforeTimestamp == null || it.timestamp <= beforeTimestamp }
+            .sortedByDescending { it.timestamp }
+            .take(size)
+            .sortedBy { it.timestamp }
     }
 
     override suspend fun loadChatInfo(userId: String): Chat {
@@ -324,8 +349,8 @@ class GlobalRepositoryMock: GlobalRepository {
         mediaIdsWithTypes: List<Pair<String, MediaType>>,
         timestamp: Long
     ) {
-        mockMessages.value += Message(
-            messageId = (mockMessages.value.size + 1).toString(),
+        mockMessages += Message(
+            messageId = (mockMessages.size + 1).toString(),
             isFromThisUser = true,
             content = content,
             mediaItems = mediaIdsWithTypes.map { (mediaId, type) ->
@@ -336,6 +361,7 @@ class GlobalRepositoryMock: GlobalRepository {
             },
             timestamp = timestamp,
         )
+        mockMessagesFlow.value = mockMessages
 
         mockChatPreviews = mockChatPreviews.map {
             if (it.participantName == mockChat.participantName) {

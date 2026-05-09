@@ -189,7 +189,7 @@ internal var mockChat = Chat(
     participantName = mockProfileCards[0].name,
     participantAvatarUrl = mockProfileCards[0].avatar?.url,
 )
-internal val mockMessages: MutableStateFlow<List<Message>> = MutableStateFlow(listOf(
+internal var mockMessages: List<Message> = listOf(
     Message(
         messageId = "1",
         isFromThisUser = false,
@@ -278,11 +278,11 @@ internal val mockMessages: MutableStateFlow<List<Message>> = MutableStateFlow(li
         messageId = "13",
         isFromThisUser = true,
         content = "А может, как-нибудь посмотрим ван пис с начала вместе?",
-        timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
+        timestamp = LocalDateTime.now().minusDays(2).plusMinutes(36)
             .toEpochSecond(ZoneOffset.UTC),
     )
 )
-)
+internal var mockMessagesFlow = MutableStateFlow(mockMessages)
 
 internal var mockChatPreviews =
     listOf(
@@ -320,9 +320,9 @@ internal var mockChatPreviews =
             chatId = "1",
             participantName = mockProfileCards[0].name,
             participantAvatarUrl = mockProfileCards[0].avatar?.url,
-            lastMessage = mockMessages.value[mockMessages.value.size - 1].content,
-            isLastMessageFromThisUser = mockMessages.value[mockMessages.value.size - 1].isFromThisUser,
-            lastMessageTimestamp = mockMessages.value[mockMessages.value.size - 1].timestamp,
+            lastMessage = mockMessages[mockMessages.size - 1].content,
+            isLastMessageFromThisUser = mockMessages[mockMessages.size - 1].isFromThisUser,
+            lastMessageTimestamp = mockMessages[mockMessages.size - 1].timestamp,
             newMessagesCount = 0,
         ),
         ChatPreview(

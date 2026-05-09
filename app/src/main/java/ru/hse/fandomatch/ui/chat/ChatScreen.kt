@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,6 +37,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -125,6 +128,9 @@ fun ChatScreen(
             },
             onDownloadMediaItem = { mediaItem ->
                 viewModel.obtainEvent(ChatEvent.DownloadMediaItem(mediaItem))
+            },
+            onLoadOlderMessages = {
+                viewModel.obtainEvent(ChatEvent.LoadOlderMessages)
             }
         )
 
@@ -152,6 +158,7 @@ private fun MainState(
     onSendMessage: () -> Unit,
     onClickProfile: () -> Unit,
     onDownloadMediaItem: (MediaItem) -> Unit,
+    onLoadOlderMessages: () -> Unit,
 ) {
     setTopBarState(
         TopBarState(
@@ -211,6 +218,22 @@ private fun MainState(
     var currentItemIndex by remember { mutableStateOf(0) }
     var attachmentsSenderName by remember { mutableStateOf("") }
     var attachmentsSentTime by remember { mutableStateOf("") }
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(listState, state.hasMoreOlder, state.isLoadingMore, state.uiElements.size) {
+        snapshotFlow {
+            val totalCount = listState.layoutInfo.totalItemsCount
+            val lastVisibleIndex = listState.layoutInfo.visibleItemsInfo.maxOfOrNull { it.index } ?: 0
+            totalCount to lastVisibleIndex
+        }.collect { (totalCount, lastVisibleIndex) ->
+            val isNearTop =
+                totalCount > 0 && lastVisibleIndex >= totalCount - LOAD_OLDER_THRESHOLD_ITEMS
+            if (isNearTop && state.hasMoreOlder && !state.isLoadingMore) {
+                onLoadOlderMessages()
+            }
+        }
+    }
+
     BackHandler(enabled = mediaItemsForScreen.isNotEmpty()) {
         mediaItemsForScreen = emptyList()
         currentItemIndex = 0
@@ -233,6 +256,7 @@ private fun MainState(
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 16.dp),
+            state = listState,
             reverseLayout = true,
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
@@ -279,6 +303,19 @@ private fun MainState(
                                     uiElement.message.timestamp.epochSecondsToDateTimeString()
                             }
                         )
+                    }
+                }
+            }
+
+            if (state.isLoadingMore) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator()
                     }
                 }
             }
@@ -430,3 +467,6 @@ private fun ErrorState(
 ) {
     BasicErrorState(onRetry)
 }
+
+private const val LOAD_OLDER_THRESHOLD_ITEMS = 4
+

@@ -15,6 +15,8 @@ sealed class ChatState {
         val participantName: String,
         val participantAvatarUrl: String?,
         val uiElements: List<ChatUiElement>,
+        val hasMoreOlder: Boolean = true,
+        val isLoadingMore: Boolean = false,
         val error: ChatError = ChatError.IDLE,
         val attachedFilesWithTypes: List<Pair<ByteArray, MediaType>> = emptyList(),
         val messageDraft: String = "",
@@ -36,6 +38,7 @@ sealed class ChatEvent {
     data class MessageDraftChanged(val draft: String) : ChatEvent()
     data class AttachmentsChanged(val filesWithTypes: List<Pair<ByteArray, MediaType>>) : ChatEvent()
     data class DownloadMediaItem(val mediaItem: MediaItem) : ChatEvent()
+    data object LoadOlderMessages : ChatEvent()
     data object ToastShown : ChatEvent()
     data object Clear : ChatEvent()
 }

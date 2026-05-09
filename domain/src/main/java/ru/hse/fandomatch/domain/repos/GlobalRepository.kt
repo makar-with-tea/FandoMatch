@@ -85,6 +85,12 @@ interface GlobalRepository {
         beforeTimestamp: Long?,
         size: Int,
     ): StateFlow<List<Message>>
+    suspend fun getChatMessagesPage(
+        chatId: String,
+        userId: String,
+        beforeTimestamp: Long?,
+        size: Int,
+    ): List<Message>
     suspend fun loadChatInfo(userId: String): Chat
     suspend fun sendMessage(
         receiverId: String,

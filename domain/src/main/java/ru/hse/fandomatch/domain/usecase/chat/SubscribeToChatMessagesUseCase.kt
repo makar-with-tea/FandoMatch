@@ -9,14 +9,18 @@ class SubscribeToChatMessagesUseCase(
     private val globalRepository: GlobalRepository,
     private val refreshAuthUseCase: RefreshAuthUseCase,
 ) {
-    suspend fun execute(userId: String, chatId: String): Result<StateFlow<List<Message>>> {
+    suspend fun execute(
+        userId: String,
+        chatId: String,
+        size: Int,
+    ): Result<StateFlow<List<Message>>> {
         return runCatching {
             refreshAuthUseCase.execute {
                 globalRepository.subscribeToChatMessages(
                     userId = userId,
                     chatId = chatId,
                     beforeTimestamp = null,
-                    size = 100500, // todo
+                    size = size,
                 )
             }
         }

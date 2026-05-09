@@ -114,6 +114,7 @@ class ChatsListViewModel(
     private fun clear() {
         _state.value = ChatsListState.Idle
         _action.value = null
+        currentBatchSize = 0
         job?.cancel()
     }
 }
