@@ -95,7 +95,7 @@ sealed class RegistrationEvent {
     data class CodeSubmitted(val code: String) : RegistrationEvent()
     data class DateSelected(val dateOfBirthEpochSeconds: Long?) : RegistrationEvent()
     data class GenderSelected(val gender: Gender) : RegistrationEvent()
-    data class AvatarSelected(val avatarByteArray: ByteArray?) : RegistrationEvent() { // todo разделить выбор и клик на "далее"
+    data class AvatarSelected(val avatarByteArray: ByteArray?) : RegistrationEvent() {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false

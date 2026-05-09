@@ -215,7 +215,6 @@ class SettingsViewModel(
             changePasswordUseCase.execute(oldPassword, newPassword)
                 .onFailure { exception ->
                     Log.e("SettingsViewModel", "Failed to change password", exception)
-                    // todo correct exception
                     if (exception is InvalidCredentialsException) {
                         withContext(dispatcherMain) {
                             _state.value = currentState.copy(

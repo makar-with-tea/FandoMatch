@@ -152,5 +152,3 @@ class FeedViewModel(
         _action.value = null
     }
 }
-
-private const val PAGE_SIZE = 2 // todo 50

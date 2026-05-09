@@ -91,7 +91,6 @@ class AuthorizationViewModel(
                 .onFailure { e ->
                     withContext(dispatcherMain) {
                         Log.e("AuthorizationViewModel", "Login failed", e)
-                        // todo корректная ошибка (даша?)
                         if (e is InvalidCredentialsException) {
                             _state.value = currentState.copy(
                                 loginError = AuthorizationState.AuthorizationError.IDLE,

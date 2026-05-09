@@ -53,6 +53,7 @@ import ru.hse.fandomatch.data.model.UserLoginRequestDTO
 import ru.hse.fandomatch.data.model.UserProfileRequestDTO
 import ru.hse.fandomatch.data.model.UserRegistrationRequestDTO
 import ru.hse.fandomatch.data.socket.ChatSocketService
+import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
 import ru.hse.fandomatch.domain.exception.LoginAlreadyInUseException
 import ru.hse.fandomatch.domain.model.AuthInfo
 import ru.hse.fandomatch.domain.model.Chat
@@ -174,7 +175,11 @@ class GlobalRepositoryImpl(
             }
 
             ResponseStatusDTO.ERROR -> {
-                throw Exception("Login failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}") // todo error handling
+                // todo handle different error codes
+                if (response.errorResponse?.errorCode == "// todo") {
+                    throw InvalidCredentialsException()
+                }
+                throw Exception("Login failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}")
             }
         }
     }
@@ -209,7 +214,7 @@ class GlobalRepositoryImpl(
                 if (response.errorResponse?.errorCode == "USERNAME_ALREADY_EXISTS") {
                     throw LoginAlreadyInUseException()
                 }
-                throw Exception("Registration failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}") // todo error handling
+                throw Exception("Registration failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}")
             }
         }
     }
@@ -239,7 +244,7 @@ class GlobalRepositoryImpl(
             }
 
             ResponseStatusDTO.ERROR -> {
-                throw Exception("Token refresh failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}") // todo error handling
+                throw Exception("Token refresh failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}")
             }
         }
     }
@@ -275,6 +280,10 @@ class GlobalRepositoryImpl(
             )
         )
         if (response.errorResponse != null) {
+            // todo handle invalid credentials
+            if (response.errorResponse.errorCode == "// todo") {
+                throw InvalidCredentialsException()
+            }
             throw Exception("Failed to change password: ${response.errorResponse.errorCode}, ${response.errorResponse.errorMessage}")
         }
     }
