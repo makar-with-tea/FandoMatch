@@ -23,7 +23,7 @@ import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.usecase.auth.CheckVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.auth.RegisterUseCase
-import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
+import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
 import java.time.LocalDate
 import java.time.ZoneId
 

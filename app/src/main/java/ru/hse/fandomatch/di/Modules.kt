@@ -43,7 +43,7 @@ import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
-import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
+import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.fandoms.RequestNewFandomUseCase
 import ru.hse.fandomatch.domain.usecase.matches.ApplyFiltersUseCase

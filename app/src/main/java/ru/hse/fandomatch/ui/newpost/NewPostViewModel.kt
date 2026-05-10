@@ -13,7 +13,7 @@ import ru.hse.fandomatch.utils.MAX_NUMBER_OF_ATTACHMENTS
 import ru.hse.fandomatch.utils.checkPostContentLength
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.MediaType
-import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
+import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.posts.CreatePostUseCase
 
