@@ -90,7 +90,7 @@ interface UserApiService {
 
     @POST("auth/verification-code")
     suspend fun sendVerificationCode(
-        @Body request: SendVerificationCodeRequestDTO
+        @Body request: SendVerificationCodeRequestDTO,
     ): SendVerificationCodeResponseDTO
 
     @POST("auth/check-verification-code")

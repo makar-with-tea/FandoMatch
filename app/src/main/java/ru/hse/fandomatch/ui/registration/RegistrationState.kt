@@ -12,6 +12,7 @@ sealed interface RegistrationState {
         PASSWORD_CONTENT,
         PASSWORD_MISMATCH,
         EMAIL_CONTENT,
+        EMAIL_TAKEN,
         LOGIN_TAKEN,
         NETWORK,
         IDLE,

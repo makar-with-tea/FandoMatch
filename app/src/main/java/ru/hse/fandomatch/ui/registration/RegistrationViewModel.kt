@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.exception.EmailAlreadyInUseException
 import ru.hse.fandomatch.domain.exception.LoginAlreadyInUseException
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.MediaType
@@ -176,6 +177,9 @@ class RegistrationViewModel(
             )
             return
         }
+        _state.value = currentState.copy(
+            isLoading = true
+        )
 
         viewModelScope.launch(dispatcherIO) {
             getVerificationCodeUseCase.execute(currentState.email)
@@ -352,8 +356,18 @@ class RegistrationViewModel(
             )
                 .onFailure { e ->
                     Log.e("RegistrationViewModel", "Registration failed", e)
-                    val loginErr = if (e is LoginAlreadyInUseException)
-                        RegistrationState.RegistrationError.LOGIN_TAKEN
+                    val loginErr = when (e) {
+                        is LoginAlreadyInUseException -> RegistrationState.RegistrationError.LOGIN_TAKEN
+                        is EmailAlreadyInUseException -> RegistrationState.RegistrationError.IDLE
+                        else -> RegistrationState.RegistrationError.NETWORK
+                    }
+                    val emailErr = when (e) {
+                        is EmailAlreadyInUseException -> RegistrationState.RegistrationError.EMAIL_TAKEN
+                        is LoginAlreadyInUseException -> RegistrationState.RegistrationError.IDLE
+                        else -> RegistrationState.RegistrationError.NETWORK
+                    }
+                    val nameErr = if (e is LoginAlreadyInUseException || e is EmailAlreadyInUseException)
+                        RegistrationState.RegistrationError.IDLE
                     else RegistrationState.RegistrationError.NETWORK
                     withContext(dispatcherMain) {
                         _state.value = RegistrationState.Name(
@@ -361,8 +375,8 @@ class RegistrationViewModel(
                             email = form.email,
                             login = form.login,
                             loginError = loginErr,
-                            nameError = RegistrationState.RegistrationError.NETWORK,
-                            emailError = RegistrationState.RegistrationError.NETWORK,
+                            nameError = nameErr,
+                            emailError = emailErr,
                             isLoading = false
                         )
                     }

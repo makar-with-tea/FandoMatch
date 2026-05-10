@@ -54,6 +54,7 @@
     <string name="password_length_error">Пароль должен быть длиной не менее 8 символов</string>
     <string name="password_content_error">Пароль должен содержать латинские буквы, цифры и спец. символы из списка !@#$%^*()-_</string>
     <string name="password_mismatch_error">Пароли не совпадают</string>
+    <string name="email_taken_error">Данная почта уже используется в другом аккаунте</string>
     <string name="login_taken_error">Данный логин уже занят</string>
     <string name="registration_failed_error">Ошибка регистрации</string>
     <string name="email_content_error">Неверный формат почты</string>

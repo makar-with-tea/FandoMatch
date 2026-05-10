@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.data.model
 
+import com.google.gson.JsonParseException
 import com.google.gson.annotations.SerializedName
 import ru.hse.fandomatch.domain.exception.NotAuthorizedException
 import ru.hse.fandomatch.domain.model.City
@@ -32,8 +33,6 @@ data class ErrorDTO(
         }
     }
 }
-
-class EmptySuccessDTO
 
 data class TimestampPaginationRequestDTO(
     @SerializedName("cursor_timestamp")
@@ -75,17 +74,6 @@ data class MediaItemDTO(
         },
         url = url
     )
-
-    companion object {
-        fun fromDomain(mediaItem: MediaItem) = MediaItemDTO(
-            mediaId = mediaItem.id,
-            mediaType = when (mediaItem.mediaType) {
-                MediaType.IMAGE -> MediaTypeDTO.IMAGE
-                MediaType.VIDEO -> MediaTypeDTO.VIDEO
-            },
-            url = mediaItem.url
-        )
-    }
 }
 
 enum class GenderDTO {
@@ -240,7 +228,16 @@ enum class ProfileTypeDTO {
     FRIEND,
 
     @SerializedName("OTHER")
-    OTHER
+    OTHER;
+
+    companion object {
+        fun fromString(type: String) = when (type) {
+            "OWN" -> OWN
+            "FRIEND" -> FRIEND
+            "OTHER" -> OTHER
+            else -> throw JsonParseException("Unknown profile_type: $type")
+        }
+    }
 }
 
 sealed interface BaseUserProfileDTO {
@@ -307,8 +304,9 @@ data class EditUserProfileRequestDTO(
     @SerializedName("background_media_id")
     val backgroundMediaId: String? = null,
     val name: String? = null,
-    val gender: GenderDTO? = null,
-    val city: CityDTO? = null
+    val city: CityDTO? = null,
+    @SerializedName("fandom_ids")
+    val fandomIds: List<String>? = null
 )
 
 data class EditUserProfileResponseDTO(
@@ -361,6 +359,7 @@ data class MatchCandidateResponseDTO(
     val username: String,
     val name: String,
     val age: Int,
+    val gender: GenderDTO,
     val city: CityDTO? = null,
     val avatar: MediaItemDTO? = null,
     val fandoms: List<FandomDTO>,
@@ -433,7 +432,7 @@ data class CurrentFiltersResponseDTO(
 
 data class PostsGetRequestDTO(
     val uuid: String,
-    val pagination: TimestampPaginationRequestDTO? = null
+    val pagination: TimestampPaginationRequestDTO
 )
 
 data class PostMediaInputDTO(
@@ -444,10 +443,9 @@ data class PostMediaInputDTO(
 )
 
 data class CreatePostRequestDTO(
-    val title: String,
     val content: String,
-    @SerializedName("fandom_id")
-    val fandomId: String? = null,
+    @SerializedName("fandom_ids")
+    val fandomIds: List<String>? = null,
     @SerializedName("media_items")
     val mediaItems: List<PostMediaInputDTO>? = null
 )
@@ -461,12 +459,13 @@ data class PostAuthorDTO(
 
 data class PostDTO(
     val id: String,
-    val title: String,
     val content: String,
     @SerializedName("like_count")
-    val likeCount: Int? = null,
+    val likeCount: Int,
     @SerializedName("comment_count")
-    val commentCount: Int? = null,
+    val commentCount: Int,
+    @SerializedName("is_liked_by_current_user")
+    val isLikedByCurrentUser: Boolean,
     val author: PostAuthorDTO,
     val fandoms: List<FandomDTO>? = null,
     @SerializedName("created_at")
@@ -477,12 +476,13 @@ data class PostDTO(
 
 data class ExtendedPostDTO(
     val id: String,
-    val title: String,
     val content: String,
     @SerializedName("like_count")
-    val likeCount: Int? = null,
+    val likeCount: Int,
     @SerializedName("comment_count")
-    val commentCount: Int? = null,
+    val commentCount: Int,
+    @SerializedName("is_liked_by_current_user")
+    val isLikedByCurrentUser: Boolean,
     val author: PostAuthorDTO,
     val fandoms: List<FandomDTO>? = null,
     @SerializedName("created_at")
@@ -501,9 +501,9 @@ data class ExtendedPostDTO(
             timestamp = createdAt,
             content = content,
             mediaItems = mediaItems?.map { it.toDomain() } ?: listOf(),
-            likeCount = likeCount ?: 0,
-            commentCount = commentCount ?: 0,
-            isLikedByCurrentUser = false, // todo даша
+            likeCount = likeCount,
+            commentCount = commentCount,
+            isLikedByCurrentUser = isLikedByCurrentUser,
             fandoms = fandoms?.map { it.toDomain() } ?: listOf()
         ),
         comments = comments?.map { it.toDomain() } ?: listOf()

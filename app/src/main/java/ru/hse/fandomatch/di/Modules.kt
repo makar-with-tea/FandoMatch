@@ -188,7 +188,7 @@ val domainModule = module {
     factory<RefreshAuthUseCase> { RefreshAuthUseCase(get(), get()) }
     factory<RegisterUseCase> { RegisterUseCase(get(), get()) }
     factory<ResetPasswordUseCase> { ResetPasswordUseCase(get()) }
-    factory<SaveDeviceTokenUseCase> { SaveDeviceTokenUseCase(get()) }
+    factory<SaveDeviceTokenUseCase> { SaveDeviceTokenUseCase(get(), get()) }
     factory<SetPermissionShownUseCase> { SetPermissionShownUseCase(get()) }
 
     factory<LoadChatInfoUseCase> { LoadChatInfoUseCase(get()) }

@@ -54,7 +54,6 @@ class MatchesViewModel(
         _state.value = MatchesState.Main(
             profileStack = buffer.toList(),
             isLoading = true,
-            error = MatchesState.MatchesError.IDLE
         )
         Log.i("MatchesViewModel", "Starting initial load of suggested profiles")
         viewModelScope.launch(dispatcherIO) {
@@ -62,11 +61,7 @@ class MatchesViewModel(
                 .onFailure {
                     Log.e("MatchesViewModel", "Failed to load suggested profiles: $it")
                     withContext(dispatcherMain) {
-                        _state.value = MatchesState.Main(
-                            profileStack = buffer.toList(),
-                            isLoading = false,
-                            error = MatchesState.MatchesError.NETWORK
-                        )
+                        _state.value = MatchesState.Error
                     }
                 }
                 .onSuccess { profiles ->
@@ -76,7 +71,6 @@ class MatchesViewModel(
                         _state.value = MatchesState.Main(
                             profileStack = buffer.toList(),
                             isLoading = false,
-                            error = if (buffer.isEmpty()) MatchesState.MatchesError.NO_PROFILES_FOUND else MatchesState.MatchesError.IDLE
                         )
                     }
                 }
@@ -114,7 +108,6 @@ class MatchesViewModel(
         _state.value = MatchesState.Main(
             profileStack = buffer.toList(),
             isLoading = false,
-            error = if (buffer.isEmpty()) MatchesState.MatchesError.NO_PROFILES_FOUND else MatchesState.MatchesError.IDLE
         )
 
         if (buffer.size <= prefetchThreshold) prefetchNextBatch()
@@ -131,11 +124,13 @@ class MatchesViewModel(
                         "Failed to prefetch suggested profiles: $it"
                     )
                     withContext(dispatcherMain) {
-                        _state.value = MatchesState.Main(
-                            profileStack = buffer.toList(),
-                            isLoading = false,
-                            error = if (buffer.isEmpty()) MatchesState.MatchesError.NETWORK else MatchesState.MatchesError.IDLE
-                        )
+                        if (buffer.isEmpty()) _state.value = MatchesState.Error
+                        else {
+                            _state.value = MatchesState.Main(
+                                profileStack = buffer.toList(),
+                                isLoading = false,
+                            )
+                        }
                     }
                 }
                 .onSuccess { next ->
@@ -144,7 +139,6 @@ class MatchesViewModel(
                         _state.value = MatchesState.Main(
                             profileStack = buffer.toList(),
                             isLoading = false,
-                            error = MatchesState.MatchesError.IDLE
                         )
                     }
                     isLoadingNext = false

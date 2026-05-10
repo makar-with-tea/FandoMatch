@@ -243,7 +243,7 @@ class GlobalRepositoryMock: GlobalRepository {
         Log.d("GlobalRepositoryMock", "changeEmail: changed email to $newEmail")
     }
 
-    override suspend fun saveDeviceToken(token: String) {
+    override suspend fun saveDeviceToken(token: String, userId: String?) {
         Log.d("GlobalRepositoryMock", "saveDeviceToken: saved token $token")
     }
 

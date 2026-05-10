@@ -9,8 +9,13 @@ data class UserRegistrationRequestDTO(
     val birthDate: Long,
     val name: String,
     @SerializedName("hashed_password")
-    val hashedPassword: String
-) // todo даша: гендер, аватар
+    val hashedPassword: String,
+    @SerializedName("gender")
+    val gender: String,
+    @SerializedName("avatar_media_id")
+    val avatarMediaId: String? = null,
+)
+
 
 data class UserRegistrationResponseDTO(
     val status: ResponseStatusDTO,
@@ -104,7 +109,9 @@ data class RefreshAndAccessTokensDTO(
 
 data class DeviceTokenRequestDTO(
     @SerializedName("fcm_token")
-    val fcmToken: String
+    val fcmToken: String,
+    @SerializedName("user_id")
+    val userId: String? = null
 )
 
 data class GetFcmTokenRequestDTO(

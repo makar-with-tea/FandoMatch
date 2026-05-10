@@ -57,7 +57,7 @@ interface GlobalRepository {
         hideMyPostsFromNonMatches: Boolean
     )
     suspend fun changeEmail(newEmail: String)
-    suspend fun saveDeviceToken(token: String)
+    suspend fun saveDeviceToken(token: String, userId: String?)
 
     // Matches
 

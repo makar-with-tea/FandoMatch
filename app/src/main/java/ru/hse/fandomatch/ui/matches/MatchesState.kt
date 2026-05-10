@@ -3,18 +3,12 @@ package ru.hse.fandomatch.ui.matches
 import ru.hse.fandomatch.domain.model.ProfileCard
 
 sealed class MatchesState {
-    enum class MatchesError {
-        IDLE,
-        NETWORK,
-        NO_PROFILES_FOUND,
-    }
     data class Main(
         val profileStack: List<ProfileCard> = emptyList(),
         val isLoading: Boolean = false,
-        val error: MatchesError = MatchesError.IDLE,
     ) : MatchesState()
     data object Loading : MatchesState()
-
+    data object Error : MatchesState()
     data object Idle : MatchesState()
 }
 

@@ -53,6 +53,7 @@ import ru.hse.fandomatch.data.model.UserLoginRequestDTO
 import ru.hse.fandomatch.data.model.UserProfileRequestDTO
 import ru.hse.fandomatch.data.model.UserRegistrationRequestDTO
 import ru.hse.fandomatch.data.socket.ChatSocketService
+import ru.hse.fandomatch.domain.exception.EmailAlreadyInUseException
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
 import ru.hse.fandomatch.domain.exception.LoginAlreadyInUseException
 import ru.hse.fandomatch.domain.model.AuthInfo
@@ -175,8 +176,7 @@ class GlobalRepositoryImpl(
             }
 
             ResponseStatusDTO.ERROR -> {
-                // todo handle different error codes
-                if (response.errorResponse?.errorCode == "// todo") {
+                if (response.errorResponse?.errorCode == "CREDENTIALS_MISMATCH") {
                     throw InvalidCredentialsException()
                 }
                 throw Exception("Login failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}")
@@ -198,7 +198,9 @@ class GlobalRepositoryImpl(
                 email = email,
                 username = login,
                 birthDate = dateOfBirthEpochSeconds,
-                hashedPassword = password
+                hashedPassword = password,
+                gender = GenderDTO.fromDomain(gender).name,
+                avatarMediaId = null,
             )
         )
         when (response.status) {
@@ -213,6 +215,9 @@ class GlobalRepositoryImpl(
             ResponseStatusDTO.ERROR -> {
                 if (response.errorResponse?.errorCode == "USERNAME_ALREADY_EXISTS") {
                     throw LoginAlreadyInUseException()
+                }
+                if (response.errorResponse?.errorCode == "EMAIL_ALREADY_EXISTS") {
+                    throw EmailAlreadyInUseException()
                 }
                 throw Exception("Registration failed: ${response.errorResponse?.errorCode}, ${response.errorResponse?.errorMessage}")
             }
@@ -264,7 +269,8 @@ class GlobalRepositoryImpl(
                 backgroundMediaId = backgroundMediaId,
                 name = name,
                 city = city?.let { CityDTO.fromDomain(it) },
-            ) // todo даша добавить фандомы
+                fandomIds = fandoms.map { FandomDTO.fromDomain(it).id },
+            )
         )
         response.errorResponse?.let {
             it.checkAuth()
@@ -280,8 +286,7 @@ class GlobalRepositoryImpl(
             )
         )
         if (response.errorResponse != null) {
-            // todo handle invalid credentials
-            if (response.errorResponse.errorCode == "// todo") {
+            if (response.errorResponse.errorCode == "CREDENTIALS_MISMATCH") {
                 throw InvalidCredentialsException()
             }
             throw Exception("Failed to change password: ${response.errorResponse.errorCode}, ${response.errorResponse.errorMessage}")
@@ -460,10 +465,11 @@ class GlobalRepositoryImpl(
         }
     }
 
-    override suspend fun saveDeviceToken(token: String) {
+    override suspend fun saveDeviceToken(token: String, userId: String?) {
         userApiService.saveDeviceToken(
             DeviceTokenRequestDTO(
-                fcmToken = token
+                fcmToken = token,
+                userId = userId,
             )
         )
     }
@@ -488,7 +494,7 @@ class GlobalRepositoryImpl(
                     age = candidateDTO.age,
                     avatar = candidateDTO.avatar?.toDomain(),
                     fandoms = candidateDTO.fandoms.map { it.toDomain() },
-                    gender = Gender.FEMALE, // todo даша
+                    gender = candidateDTO.gender.toDomain(),
                     compatibilityPercentage = candidateDTO.compatibility,
                     city = candidateDTO.city?.toDomain(),
                 )
@@ -745,15 +751,15 @@ class GlobalRepositoryImpl(
                     Post(
                         id = postDTO.id,
                         authorId = postDTO.author.uuid,
-                        authorName = postDTO.author.name!!, // todo даша
+                        authorName = postDTO.author.name.orEmpty(),
                         authorLogin = postDTO.author.username,
                         authorAvatar = postDTO.author.avatar?.toDomain(),
                         timestamp = postDTO.createdAt,
                         content = postDTO.content,
                         mediaItems = postDTO.mediaItems?.map { it.toDomain() } ?: emptyList(),
-                        likeCount = postDTO.likeCount ?: 0, // todo даша
-                        commentCount = postDTO.commentCount ?: 0, // todo даша
-                        isLikedByCurrentUser = false, // todo даша
+                        likeCount = postDTO.likeCount,
+                        commentCount = postDTO.commentCount,
+                        isLikedByCurrentUser = postDTO.isLikedByCurrentUser,
                         fandoms = postDTO.fandoms?.map { it.toDomain() } ?: emptyList()
                     )
                 }
@@ -788,15 +794,15 @@ class GlobalRepositoryImpl(
                     Post(
                         id = postDTO.id,
                         authorId = postDTO.author.uuid,
-                        authorName = postDTO.author.name!!, // todo даша
+                        authorName = postDTO.author.name!!,
                         authorLogin = postDTO.author.username,
                         authorAvatar = postDTO.author.avatar?.toDomain(),
                         timestamp = postDTO.createdAt,
                         content = postDTO.content,
                         mediaItems = postDTO.mediaItems?.map { it.toDomain() } ?: emptyList(),
-                        likeCount = postDTO.likeCount ?: 0, // todo даша
-                        commentCount = postDTO.commentCount ?: 0, // todo даша
-                        isLikedByCurrentUser = false, // todo даша
+                        likeCount = postDTO.likeCount,
+                        commentCount = postDTO.commentCount,
+                        isLikedByCurrentUser = postDTO.isLikedByCurrentUser,
                         fandoms = postDTO.fandoms?.map { it.toDomain() } ?: emptyList()
                     )
                 }
@@ -841,7 +847,6 @@ class GlobalRepositoryImpl(
     ) {
         val response = coreApiService.createPost(
             CreatePostRequestDTO(
-                title = "", // todo даша убрать
                 content = content,
                 mediaItems = mediaIdsWithTypes.map { (mediaId, mediaType) ->
                     PostMediaInputDTO(
@@ -849,7 +854,7 @@ class GlobalRepositoryImpl(
                         mediaType = MediaTypeDTO.fromDomain(mediaType)
                     )
                 },
-                fandomId = fandomIds.firstOrNull() // todo даша multiple fandoms
+                fandomIds = fandomIds
             )
         )
         response.errorResponse?.let {
