@@ -3,6 +3,7 @@ package ru.hse.fandomatch.domain.repos
 interface SharedPrefRepository {
     fun saveUserId(id: String)
     fun getUserId(): String?
+    fun clearUserId()
     fun clearInfo()
     fun saveToken(token: String)
     fun getToken(): String?

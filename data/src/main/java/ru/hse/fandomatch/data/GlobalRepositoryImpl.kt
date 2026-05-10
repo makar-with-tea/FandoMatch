@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.data
 
+import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -56,6 +57,7 @@ import ru.hse.fandomatch.data.socket.ChatSocketService
 import ru.hse.fandomatch.domain.exception.EmailAlreadyInUseException
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
 import ru.hse.fandomatch.domain.exception.LoginAlreadyInUseException
+import ru.hse.fandomatch.domain.exception.NotAuthorizedException
 import ru.hse.fandomatch.domain.model.AuthInfo
 import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.ChatPreview
@@ -92,11 +94,13 @@ class GlobalRepositoryImpl(
     private var chatPreviewsJob: Job? = null
 
     override suspend fun getUser(profileId: String): User {
-        val response = coreApiService.getUserProfile(
-            UserProfileRequestDTO(
-                profileId
+        val response = withCheckAuth {
+            coreApiService.getUserProfile(
+                UserProfileRequestDTO(
+                    profileId
+                )
             )
-        )
+        }
         when (response.status) {
             ResponseStatusDTO.SUCCESS -> {
                 val user = response.successResponse!!.let { userDTO ->
@@ -149,7 +153,6 @@ class GlobalRepositoryImpl(
 
             ResponseStatusDTO.ERROR -> {
                 response.errorResponse!!.let {
-                    it.checkAuth()
                     throw Exception("Failed to load user profile: ${it.errorCode}, ${it.errorMessage}")
                 }
             }
@@ -239,6 +242,7 @@ class GlobalRepositoryImpl(
                 refreshToken = refreshToken
             )
         )
+        Log.i("GlobalRepositoryImpl", "refreshed token: $response")
         when (response.status) {
             ResponseStatusDTO.SUCCESS -> {
                 return AuthInfo(
@@ -262,18 +266,19 @@ class GlobalRepositoryImpl(
         avatarMediaId: String?,
         backgroundMediaId: String?,
     ) {
-        val response = coreApiService.editUserProfile(
-            EditUserProfileRequestDTO(
-                bio = bio,
-                avatarMediaId = avatarMediaId,
-                backgroundMediaId = backgroundMediaId,
-                name = name,
-                city = city?.let { CityDTO.fromDomain(it) },
-                fandomIds = fandoms.map { FandomDTO.fromDomain(it).id },
+        val response = withCheckAuth {
+            coreApiService.editUserProfile(
+                EditUserProfileRequestDTO(
+                    bio = bio,
+                    avatarMediaId = avatarMediaId,
+                    backgroundMediaId = backgroundMediaId,
+                    name = name,
+                    city = city?.let { CityDTO.fromDomain(it) },
+                    fandomIds = fandoms.map { FandomDTO.fromDomain(it).id },
+                )
             )
-        )
+        }
         response.errorResponse?.let {
-            it.checkAuth()
             throw Exception("Failed to update user profile: ${it.errorCode}, ${it.errorMessage}")
         }
     }
@@ -294,9 +299,10 @@ class GlobalRepositoryImpl(
     }
 
     override suspend fun deleteUser() {
-        val response = userApiService.deleteProfile()
+        val response = withCheckAuth {
+            userApiService.deleteProfile()
+        }
         response.errorResponse?.let {
-            it.checkAuth()
             throw Exception("Failed to delete user profile: ${it.errorCode}, ${it.errorMessage}")
         }
     }
@@ -417,7 +423,9 @@ class GlobalRepositoryImpl(
     }
 
     override suspend fun getUserPreferences(): UserPreferences {
-        val response = coreApiService.getUserPreferences()
+        val response = withCheckAuth {
+            coreApiService.getUserPreferences()
+        }
         when (response.status) {
             ResponseStatusDTO.SUCCESS -> {
                 val preferencesDTO = response.successResponse!!
@@ -430,7 +438,6 @@ class GlobalRepositoryImpl(
 
             ResponseStatusDTO.ERROR -> {
                 response.errorResponse!!.let {
-                    it.checkAuth()
                     throw Exception("Failed to load user preferences: ${it.errorCode}, ${it.errorMessage}")
                 }
             }
@@ -477,13 +484,14 @@ class GlobalRepositoryImpl(
     override suspend fun getSuggestedProfiles(
         size: Int
     ): List<ProfileCard> {
-        val response = coreApiService.getMatchCandidates(
-            MatchBatchRequestDTO(
-                batchSize = size
+        val response = withCheckAuth {
+            coreApiService.getMatchCandidates(
+                MatchBatchRequestDTO(
+                    batchSize = size
+                )
             )
-        )
+        }
         response.errorResponse?.let {
-            it.checkAuth()
             throw Exception("Failed to load suggested profiles: ${it.errorCode}, ${it.errorMessage}")
         }
         return response.successResponse?.let { successResponse ->
@@ -518,7 +526,9 @@ class GlobalRepositoryImpl(
     }
 
     override suspend fun getCurrentFilters(): Filters {
-        val response = coreApiService.getCurrentFilters()
+        val response = withCheckAuth {
+            coreApiService.getCurrentFilters()
+        }
         when (response.status) {
             ResponseStatusDTO.SUCCESS -> {
                 val filtersDTO = response.successResponse!!
@@ -534,7 +544,6 @@ class GlobalRepositoryImpl(
 
             ResponseStatusDTO.ERROR -> {
                 response.errorResponse!!.let {
-                    it.checkAuth()
                     throw Exception("Failed to load current filters: ${it.errorCode}, ${it.errorMessage}")
                 }
             }
@@ -570,11 +579,12 @@ class GlobalRepositoryImpl(
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<ChatPreview>> {
-        val response = chatApiService.getChatPreviews(
-            ChatPreviewsRequestDTO(beforeTimestamp = beforeTimestamp, size = size)
-        )
+        val response = withCheckAuth {
+            chatApiService.getChatPreviews(
+                ChatPreviewsRequestDTO(beforeTimestamp = beforeTimestamp, size = size)
+            )
+        }
         response.errorResponse?.let {
-            it.checkAuth()
             throw Exception("Failed to load chat previews: ${it.errorCode}, ${it.errorMessage}")
         }
         val initial = response.successResponse?.previews?.map { dto ->
@@ -635,16 +645,17 @@ class GlobalRepositoryImpl(
         beforeTimestamp: Long?,
         size: Int
     ): List<Message> {
-        val response = chatApiService.getChatMessages(
-            userId = userId,
-            request = ChatMessagesRequestDTO(
-                chatId = chatId,
-                beforeTimestamp = beforeTimestamp,
-                size = size
+        val response = withCheckAuth {
+            chatApiService.getChatMessages(
+                userId = userId,
+                request = ChatMessagesRequestDTO(
+                    chatId = chatId,
+                    beforeTimestamp = beforeTimestamp,
+                    size = size
+                )
             )
-        )
+        }
         response.errorResponse?.let {
-            it.checkAuth()
             throw Exception("Failed to load chat messages: ${it.errorCode}, ${it.errorMessage}")
         }
         return response.successResponse?.messages?.map { dto ->
@@ -736,15 +747,17 @@ class GlobalRepositoryImpl(
         beforeTimestamp: Long?,
         size: Int
     ): List<Post> {
-        val response = coreApiService.getFeed(
-            GetFeedRequestDTO(
-                uuid = id,
-                pagination = TimestampPaginationRequestDTO(
-                    cursorTimestamp = beforeTimestamp,
-                    size = size
+        val response = withCheckAuth {
+            coreApiService.getFeed(
+                GetFeedRequestDTO(
+                    uuid = id,
+                    pagination = TimestampPaginationRequestDTO(
+                        cursorTimestamp = beforeTimestamp,
+                        size = size
+                    )
                 )
             )
-        )
+        }
         when (response.status) {
             ResponseStatusDTO.SUCCESS -> {
                 return response.successResponse!!.posts.map { postDTO ->
@@ -767,7 +780,6 @@ class GlobalRepositoryImpl(
 
             ResponseStatusDTO.ERROR -> {
                 response.errorResponse!!.let {
-                    it.checkAuth()
                     throw Exception("Failed to load feed posts: ${it.errorCode}, ${it.errorMessage}")
                 }
             }
@@ -817,7 +829,9 @@ class GlobalRepositoryImpl(
     }
 
     override suspend fun getFullPost(postId: String): FullPost {
-        val response = coreApiService.getPost(postId)
+        val response = withCheckAuth {
+            coreApiService.getPost(postId)
+        }
         when (response.status) {
             ResponseStatusDTO.SUCCESS -> {
                 val fullPostDTO = response.successResponse!!
@@ -826,7 +840,6 @@ class GlobalRepositoryImpl(
 
             ResponseStatusDTO.ERROR -> {
                 response.errorResponse!!.let {
-                    it.checkAuth()
                     throw Exception("Failed to load full post: ${it.errorCode}, ${it.errorMessage}")
                 }
             }
@@ -845,20 +858,21 @@ class GlobalRepositoryImpl(
         mediaIdsWithTypes: List<Pair<String, MediaType>>,
         fandomIds: List<String>
     ) {
-        val response = coreApiService.createPost(
-            CreatePostRequestDTO(
-                content = content,
-                mediaItems = mediaIdsWithTypes.map { (mediaId, mediaType) ->
-                    PostMediaInputDTO(
-                        mediaId = mediaId,
-                        mediaType = MediaTypeDTO.fromDomain(mediaType)
-                    )
-                },
-                fandomIds = fandomIds
+        val response = withCheckAuth {
+            coreApiService.createPost(
+                CreatePostRequestDTO(
+                    content = content,
+                    mediaItems = mediaIdsWithTypes.map { (mediaId, mediaType) ->
+                        PostMediaInputDTO(
+                            mediaId = mediaId,
+                            mediaType = MediaTypeDTO.fromDomain(mediaType)
+                        )
+                    },
+                    fandomIds = fandomIds
+                )
             )
-        )
+        }
         response.errorResponse?.let {
-            it.checkAuth()
             throw Exception("Failed to create post: ${it.errorCode}, ${it.errorMessage}")
         }
     }
@@ -902,17 +916,27 @@ class GlobalRepositoryImpl(
         category: FandomCategory,
         description: String
     ) {
-        val response = coreApiService.requestNewFandom(
-            FandomRequestCreateDTO(
-                authorUuid = userId,
-                name = name,
-                category = FandomCategoryDTO.fromDomain(category),
-                description = description
+        val response = withCheckAuth {
+            coreApiService.requestNewFandom(
+                FandomRequestCreateDTO(
+                    authorUuid = userId,
+                    name = name,
+                    category = FandomCategoryDTO.fromDomain(category),
+                    description = description
+                )
             )
-        )
+        }
         response.errorResponse?.let {
-            it.checkAuth()
             throw Exception("Failed to request new fandom: ${it.errorCode}, ${it.errorMessage}")
+        }
+    }
+    
+    private suspend fun <T> withCheckAuth(block: suspend () -> T): T {
+        try {
+            return block()
+        } catch (e: HttpException) {
+            if (e.code() == 401 || e.code() == 403) throw NotAuthorizedException()
+            throw e
         }
     }
 }

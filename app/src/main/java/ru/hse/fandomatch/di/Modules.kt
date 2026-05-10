@@ -21,6 +21,8 @@ import ru.hse.fandomatch.data.model.BaseUserProfileDTO
 import ru.hse.fandomatch.data.serialization.BaseUserProfileDeserializer
 import ru.hse.fandomatch.data.socket.ChatSocketService
 import ru.hse.fandomatch.data.socket.ChatSocketServiceImpl
+import ru.hse.fandomatch.utils.AndroidLogger
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import ru.hse.fandomatch.domain.repos.MediaRepository
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
@@ -158,6 +160,9 @@ val dataModule = module {
         )
     }
 
+    // Provide a platform-specific Logger implementation for domain module
+    single<Logger> { AndroidLogger() }
+
     single(named("s3Retrofit")) {
         Retrofit.Builder()
             .baseUrl("https://s3.amazonaws.com/")
@@ -185,7 +190,7 @@ val domainModule = module {
     factory<GetVerificationCodeUseCase> { GetVerificationCodeUseCase(get()) }
     factory<LoginUseCase> { LoginUseCase(get(), get()) }
     factory<LogoutUseCase> { LogoutUseCase(get(), get()) }
-    factory<RefreshAuthUseCase> { RefreshAuthUseCase(get(), get()) }
+    factory<RefreshAuthUseCase> { RefreshAuthUseCase(get(), get(), get()) }
     factory<RegisterUseCase> { RegisterUseCase(get(), get()) }
     factory<ResetPasswordUseCase> { ResetPasswordUseCase(get()) }
     factory<SaveDeviceTokenUseCase> { SaveDeviceTokenUseCase(get(), get()) }

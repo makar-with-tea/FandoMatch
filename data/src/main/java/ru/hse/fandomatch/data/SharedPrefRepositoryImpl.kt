@@ -27,6 +27,11 @@ class SharedPrefRepositoryImpl(
         }
     }
 
+    override fun clearUserId() {
+        Log.d("SharedPrefRepository", "clearUserId")
+        preferences.edit { remove("user_id") }
+    }
+
     override fun clearInfo() {
         Log.d("SharedPrefRepository", "clearInfo")
         preferences.edit { clear() }

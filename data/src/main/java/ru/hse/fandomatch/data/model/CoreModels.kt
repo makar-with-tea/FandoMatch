@@ -2,7 +2,6 @@ package ru.hse.fandomatch.data.model
 
 import com.google.gson.JsonParseException
 import com.google.gson.annotations.SerializedName
-import ru.hse.fandomatch.domain.exception.NotAuthorizedException
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Comment
 import ru.hse.fandomatch.domain.model.Fandom
@@ -26,13 +25,7 @@ data class ErrorDTO(
     val errorCode: String,
     @SerializedName("error_message")
     val errorMessage: String? = null
-) {
-    fun checkAuth() {
-        if (errorCode == "401") {
-            throw NotAuthorizedException()
-        }
-    }
-}
+)
 
 data class TimestampPaginationRequestDTO(
     @SerializedName("cursor_timestamp")
