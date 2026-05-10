@@ -129,8 +129,11 @@ fun MainState(
                         color = MaterialTheme.colorScheme.secondaryContainer,
                         modifier = Modifier
                             .clip(RoundedCornerShape(30.dp))
-                            .background(MaterialTheme.colorScheme.onSecondaryContainer)
-                            .clickable { onPostClick() }
+                            .background(
+                                if (state.canPost()) MaterialTheme.colorScheme.onSecondaryContainer
+                                else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f)
+                            )
+                            .clickable(enabled = state.canPost()) { onPostClick() }
                             .padding(8.dp)
                     )
                 }
@@ -266,6 +269,11 @@ fun MainState(
     if (state.isLoading) {
         LoadingBlock()
     }
+}
+
+private fun NewPostState.Main.canPost() : Boolean {
+    return contentError == NewPostState.NewPostError.IDLE
+            && (content.isNotBlank() || attachedFilesWithTypes.isNotEmpty())
 }
 
 @Composable
