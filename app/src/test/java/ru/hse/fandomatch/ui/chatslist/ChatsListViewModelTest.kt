@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.ui.chatslist
 
+import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,14 +14,19 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChatsListViewModelTest {
+
+    @get:Rule
+    val instantExecutorRule = InstantTaskExecutorRule()
 
     private lateinit var viewModel: ChatsListViewModel
     private lateinit var subscribeToChatPreviewsUseCase: SubscribeToChatPreviewsUseCase
@@ -56,6 +62,7 @@ class ChatsListViewModelTest {
         }
         viewModel = ChatsListViewModel(
             subscribeToChatPreviewsUseCase = subscribeToChatPreviewsUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )
@@ -80,6 +87,7 @@ class ChatsListViewModelTest {
         `when`(subscribeToChatPreviewsUseCase.execute(30)).thenReturn(Result.failure(RuntimeException()))
         viewModel = ChatsListViewModel(
             subscribeToChatPreviewsUseCase = subscribeToChatPreviewsUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )

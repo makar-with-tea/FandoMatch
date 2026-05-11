@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.passwordrecovery
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -9,16 +8,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.logging.Logger
+import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
+import ru.hse.fandomatch.domain.usecase.auth.ResetPasswordUseCase
 import ru.hse.fandomatch.utils.checkEmailContent
 import ru.hse.fandomatch.utils.checkPasswordContent
 import ru.hse.fandomatch.utils.checkPasswordLength
-import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
-import ru.hse.fandomatch.domain.usecase.auth.ResetPasswordUseCase
-import java.lang.IllegalArgumentException
 
 class PasswordRecoveryViewModel(
     private val getVerificationCodeUseCase: GetVerificationCodeUseCase,
     private val resetPasswordUseCase: ResetPasswordUseCase,
+    private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -31,7 +31,7 @@ class PasswordRecoveryViewModel(
         get() = _action
 
     fun obtainEvent(event: PasswordRecoveryEvent) {
-        Log.d("PasswordRecoveryViewModel", "Event: $event")
+        logger.d("PasswordRecoveryViewModel", "Event: $event")
         when (event) {
             is PasswordRecoveryEvent.EmailChanged -> emailChanged(event.email)
             PasswordRecoveryEvent.SendCodeClicked -> sendCode()
@@ -66,7 +66,7 @@ class PasswordRecoveryViewModel(
         viewModelScope.launch(dispatcherIO) {
             getVerificationCodeUseCase.execute(currentState.email)
                 .onFailure { exception ->
-                    Log.e(
+                    logger.e(
                         "PasswordRecoveryViewModel",
                         "Failed to send verification code",
                         exception
@@ -165,7 +165,7 @@ class PasswordRecoveryViewModel(
         viewModelScope.launch(dispatcherIO) {
             resetPasswordUseCase.execute(code, resetState.newPassword, resetState.email)
                 .onFailure { exception ->
-                    Log.e("PasswordRecoveryViewModel", "Failed to reset password", exception)
+                    logger.e("PasswordRecoveryViewModel", "Failed to reset password", exception)
                     if (exception is IllegalArgumentException) {
                         withContext(dispatcherMain) {
                             val latestState =

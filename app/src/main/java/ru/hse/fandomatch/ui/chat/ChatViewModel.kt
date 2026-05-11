@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.chat
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -12,16 +11,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.logging.Logger
+import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.Message
-import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.usecase.chat.GetChatMessagesPageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
-import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.media.DownloadMediaToGalleryUseCase
+import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
 import ru.hse.fandomatch.utils.epochSecondsToDateString
 
 class ChatViewModel(
@@ -31,6 +31,7 @@ class ChatViewModel(
     private val getChatMessagesPageUseCase: GetChatMessagesPageUseCase,
     private val uploadMediaUseCase: UploadMediaUseCase,
     private val downloadMediaToGalleryUseCase: DownloadMediaToGalleryUseCase,
+    private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -61,7 +62,7 @@ class ChatViewModel(
     }
 
     fun obtainEvent(event: ChatEvent) {
-        Log.i("ChatViewModel", "Obtained event: $event")
+        logger.i("ChatViewModel", "Obtained event: $event")
         when (event) {
             ChatEvent.Clear -> clear()
             is ChatEvent.LoadChat -> loadChat(event.profileId)
@@ -93,7 +94,7 @@ class ChatViewModel(
 
             loadChatInfoUseCase.execute(userId = profileId)
                 .onFailure { exception ->
-                    Log.e("ChatViewModel", "Failed to load chat info", exception)
+                    logger.e("ChatViewModel", "Failed to load chat info", exception)
                     setState { ChatState.Error }
                     return@launch
                 }
@@ -104,7 +105,7 @@ class ChatViewModel(
                         size = MESSAGES_BLOCK_SIZE,
                     )
                         .onFailure { exception ->
-                            Log.e(
+                            logger.e(
                                 "ChatViewModel",
                                 "Failed to subscribe to chat messages",
                                 exception
@@ -144,7 +145,7 @@ class ChatViewModel(
                 size = MESSAGES_BLOCK_SIZE,
             )
                 .onFailure { exception ->
-                    Log.e("ChatViewModel", "Failed to load older messages", exception)
+                    logger.e("ChatViewModel", "Failed to load older messages", exception)
                     isLoadingMoreMessages = false
                     withContext(dispatcherMain) {
                         val state = _state.value as? ChatState.Main ?: return@withContext
@@ -183,13 +184,13 @@ class ChatViewModel(
         val message = currentState.messageDraft
         val filesWithTypes = currentState.attachedFilesWithTypes
         if (message.isBlank() && filesWithTypes.isEmpty()) return
-        Log.i("ChatViewModel", "Sending message: $message at $timestamp")
+        logger.i("ChatViewModel", "Sending message: $message at $timestamp")
         viewModelScope.launch(dispatcherIO) {
             val mediaIds = filesWithTypes.mapNotNull { (bytes, type) ->
                 val uploadInfoResult = uploadMediaUseCase.execute(bytes, type)
                 val mediaId = uploadInfoResult.getOrNull()
                 mediaId ?: run {
-                    Log.e(
+                    logger.e(
                         "ChatViewModel",
                         "Failed to get upload media url",
                         uploadInfoResult.exceptionOrNull()
@@ -205,7 +206,7 @@ class ChatViewModel(
                 timestamp = timestamp,
             )
                 .onFailure { exception ->
-                Log.e("ChatViewModel", "Failed to send message", exception)
+                logger.e("ChatViewModel", "Failed to send message", exception)
             }
                 .onSuccess {
             setState { current ->
@@ -234,7 +235,7 @@ class ChatViewModel(
                 mediaType = mediaItem.mediaType
             )
                 .onFailure {
-                    Log.e("ChatViewModel", "Failed to download media item", it)
+                    logger.e("ChatViewModel", "Failed to download media item", it)
                     _action.value = ChatAction.ShowErrorDownloadToast
                 }
                 .onSuccess {

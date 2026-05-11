@@ -18,12 +18,14 @@ import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import ru.hse.fandomatch.domain.exception.LoginAlreadyInUseException
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.usecase.auth.CheckVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.auth.RegisterUseCase
 import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
+import ru.hse.fandomatch.domain.usecase.user.EditProfileUseCase
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -38,6 +40,7 @@ class RegistrationViewModelTest {
     private lateinit var getVerificationCodeUseCase: GetVerificationCodeUseCase
     private lateinit var checkVerificationCodeUseCase: CheckVerificationCodeUseCase
     private lateinit var uploadMediaUseCase: UploadMediaUseCase
+    private lateinit var editProfileUseCase: EditProfileUseCase
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
@@ -47,11 +50,14 @@ class RegistrationViewModelTest {
         getVerificationCodeUseCase = mock(GetVerificationCodeUseCase::class.java)
         checkVerificationCodeUseCase = mock(CheckVerificationCodeUseCase::class.java)
         uploadMediaUseCase = mock(UploadMediaUseCase::class.java)
+        editProfileUseCase = mock(EditProfileUseCase::class.java)
         viewModel = RegistrationViewModel(
             registerUseCase = registerUseCase,
             getVerificationCodeUseCase = getVerificationCodeUseCase,
             checkVerificationCodeUseCase = checkVerificationCodeUseCase,
             uploadMediaUseCase = uploadMediaUseCase,
+            editProfileUseCase = editProfileUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )
@@ -221,7 +227,6 @@ class RegistrationViewModelTest {
                 login = "john_doe",
                 dateOfBirthEpochSeconds = dateMillis(LocalDate.now().minusYears(20)),
                 gender = Gender.MALE,
-                avatarMediaId = "avatar-id",
                 password = "Password123!"
             )
         ).thenReturn(Result.success(Unit))
@@ -246,7 +251,6 @@ class RegistrationViewModelTest {
                 login = "john_doe",
                 dateOfBirthEpochSeconds = dateMillis(LocalDate.now().minusYears(20)),
                 gender = Gender.MALE,
-                avatarMediaId = null,
                 password = "Password123!"
             )
         ).thenReturn(Result.failure(LoginAlreadyInUseException()))

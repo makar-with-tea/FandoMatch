@@ -17,6 +17,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.Comment
 import ru.hse.fandomatch.domain.model.FullPost
 import ru.hse.fandomatch.domain.model.MediaItem
@@ -58,6 +59,7 @@ class PostViewModelTest {
             getUserUseCase = getUserUseCase,
             likePostUseCase = likePostUseCase,
             downloadMediaToGalleryUseCase = downloadMediaToGalleryUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )
@@ -72,7 +74,7 @@ class PostViewModelTest {
 
     @Test
     fun `load post success sets main state`() = runTest {
-        val fullPost = fullPost(isLiked = false, likeCount = 5)
+        val fullPost = fullPost()
         `when`(getFullPostUseCase.execute("post-1")).thenReturn(Result.success(fullPost))
 
         viewModel.obtainEvent(PostEvent.LoadPost("post-1"))
@@ -203,7 +205,7 @@ class PostViewModelTest {
     }
 
     private suspend fun loadMainState() {
-        `when`(getFullPostUseCase.execute("post-1")).thenReturn(Result.success(fullPost(isLiked = false, likeCount = 5)))
+        `when`(getFullPostUseCase.execute("post-1")).thenReturn(Result.success(fullPost()))
         viewModel.obtainEvent(PostEvent.LoadPost("post-1"))
     }
 
@@ -219,7 +221,7 @@ class PostViewModelTest {
         profileType = ProfileType.Own(login = "me_login", email = "me@mail.com"),
     )
 
-    private fun fullPost(isLiked: Boolean, likeCount: Int) = FullPost(
+    private fun fullPost() = FullPost(
         post = Post(
             id = "post-1",
             authorId = "author-1",
@@ -229,9 +231,9 @@ class PostViewModelTest {
             timestamp = 1L,
             content = "hello",
             mediaItems = listOf(MediaItem("m1", MediaType.IMAGE, "url")),
-            likeCount = likeCount,
+            likeCount = 5,
             commentCount = 0,
-            isLikedByCurrentUser = isLiked,
+            isLikedByCurrentUser = false,
             fandoms = emptyList(),
         ),
         comments = emptyList(),

@@ -17,6 +17,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.ProfileCard
@@ -42,6 +43,7 @@ class MatchesViewModelTest {
         viewModel = MatchesViewModel(
             loadSuggestedProfilesUseCase = loadSuggestedProfilesUseCase,
             likeOrDislikeProfileUseCase = likeOrDislikeProfileUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )
@@ -59,7 +61,6 @@ class MatchesViewModelTest {
         assertTrue(state is MatchesState.Main)
         state as MatchesState.Main
         assertEquals(profiles, state.profileStack)
-        assertEquals(MatchesState.MatchesError.IDLE, state.error)
     }
 
     @Test
@@ -69,8 +70,8 @@ class MatchesViewModelTest {
         viewModel.obtainEvent(MatchesEvent.LoadSuggestedProfiles)
         advanceUntilIdle()
 
-        val state = viewModel.state.first() as MatchesState.Main
-        assertEquals(MatchesState.MatchesError.NETWORK, state.error)
+        val state = viewModel.state.first()
+        assertTrue(state is MatchesState.Error)
     }
 
     @Test

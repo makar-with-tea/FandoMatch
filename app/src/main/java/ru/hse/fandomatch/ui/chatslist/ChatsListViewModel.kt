@@ -1,21 +1,21 @@
 package ru.hse.fandomatch.ui.chatslist
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
 
 class ChatsListViewModel(
     private val subscribeToChatPreviewsUseCase: SubscribeToChatPreviewsUseCase,
+    private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -38,7 +38,7 @@ class ChatsListViewModel(
     }
 
     fun obtainEvent(event: ChatsListEvent) {
-        Log.d("ChatsListViewModel", "Obtained event: $event")
+        logger.d("ChatsListViewModel", "Obtained event: $event")
         when (event) {
             is ChatsListEvent.ChatClicked -> goToChat(event.chatId)
             is ChatsListEvent.LoadChats -> loadChats()
@@ -65,7 +65,7 @@ class ChatsListViewModel(
                 size = currentBatchSize,
             )
                 .onFailure {
-                    Log.e("ChatsListViewModel", "Failed to load chat previews: ${it.message}")
+                    logger.e("ChatsListViewModel", "Failed to load chat previews: ${it.message}")
                     withContext(dispatcherMain) {
                         _state.value = ChatsListState.Error
                     }
@@ -81,7 +81,7 @@ class ChatsListViewModel(
                         )
                     }
                     _allChats.collect {
-                        Log.d("ChatsListViewModel", "Loaded chat previews: $it")
+                        logger.d("ChatsListViewModel", "Loaded chat previews: $it")
                         val query = when (val currentState = _state.value) {
                             is ChatsListState.Main -> currentState.filteredByQuery
                             else -> null

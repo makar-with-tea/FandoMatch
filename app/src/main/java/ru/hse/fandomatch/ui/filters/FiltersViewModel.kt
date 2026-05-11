@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.filters
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -9,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Filters
@@ -23,6 +23,7 @@ class FiltersViewModel(
     private val applyFiltersUseCase: ApplyFiltersUseCase,
     private val getUserUseCase: GetUserUseCase,
     private val getFandomsByQueryUseCase: GetFandomsByQueryUseCase,
+    private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,) : ViewModel() {
     private val _state: MutableStateFlow<FiltersState> = MutableStateFlow(FiltersState.Idle)
@@ -34,7 +35,7 @@ class FiltersViewModel(
         get() = _action
 
     fun obtainEvent(event: FiltersEvent) {
-        Log.d("FiltersViewModel", "Event obtained: $event")
+        logger.d("FiltersViewModel", "Event obtained: $event")
         when (event) {
             is FiltersEvent.LoadInitialFilters -> loadInitialFilters()
             is FiltersEvent.GenderSelected -> updateGender(event.gender)
@@ -57,7 +58,7 @@ class FiltersViewModel(
             _state.value = FiltersState.Loading
             loadInitialFiltersUseCase.execute()
                 .onFailure { exception ->
-                    Log.e(
+                    logger.e(
                         "FiltersViewModel",
                         "Failed to load initial filters: ${exception.message}",
                         exception
@@ -67,7 +68,7 @@ class FiltersViewModel(
                 .onSuccess { filters ->
                     getUserUseCase.execute(profileId = null, isCurrentUser = true)
                         .onFailure { e ->
-                            Log.e("FiltersViewModel", "Failed to load user data: ${e.message}", e)
+                            logger.e("FiltersViewModel", "Failed to load user data: ${e.message}", e)
                             _state.value = FiltersState.Error
                         }
                         .onSuccess { user ->
@@ -148,7 +149,7 @@ class FiltersViewModel(
                 _state.value = currentState.copy(foundFandoms = emptyList(), areFandomsLoading = true)
                 val result = getFandomsByQueryUseCase.execute(query)
                 val foundFandoms = result.getOrNull() ?: run {
-                    Log.e("FiltersViewModel", "Failed to search fandoms: ${result.exceptionOrNull()}")
+                    logger.e("FiltersViewModel", "Failed to search fandoms: ${result.exceptionOrNull()}")
                     withContext(dispatcherMain) {
                         _state.value = currentState.copy(foundFandoms = emptyList(), areFandomsLoading = false)
                     }
@@ -196,7 +197,7 @@ class FiltersViewModel(
                 onlyInUserCity = currentState.onlyInUserCity,
             )
                 .onFailure { e ->
-                    Log.e("FiltersViewModel", "Failed to apply filters: ${e.message}", e)
+                    logger.e("FiltersViewModel", "Failed to apply filters: ${e.message}", e)
                     _action.value = FiltersAction.ShowErrorToast
                 }
                 .onSuccess {

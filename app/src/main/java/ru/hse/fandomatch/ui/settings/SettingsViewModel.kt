@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.settings
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -8,10 +7,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.hse.fandomatch.utils.checkEmailContent
-import ru.hse.fandomatch.utils.checkPasswordContent
-import ru.hse.fandomatch.utils.checkPasswordLength
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.domain.usecase.auth.ChangeEmailUseCase
 import ru.hse.fandomatch.domain.usecase.auth.ChangePasswordUseCase
@@ -22,6 +19,9 @@ import ru.hse.fandomatch.domain.usecase.auth.LogoutUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserPreferencesUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 import ru.hse.fandomatch.domain.usecase.user.UpdateUserPreferencesUseCase
+import ru.hse.fandomatch.utils.checkEmailContent
+import ru.hse.fandomatch.utils.checkPasswordContent
+import ru.hse.fandomatch.utils.checkPasswordLength
 
 class SettingsViewModel(
     private val getUserUseCase: GetUserUseCase,
@@ -33,6 +33,7 @@ class SettingsViewModel(
     private val logoutUseCase: LogoutUseCase,
     private val deleteAccountUseCase: DeleteAccountUseCase,
     private val changePasswordUseCase: ChangePasswordUseCase,
+    private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -78,7 +79,7 @@ class SettingsViewModel(
         viewModelScope.launch(dispatcherIO) {
             getUserUseCase.execute(null, true)
                 .onFailure { exception ->
-                    Log.e("SettingsViewModel", "Failed to load user info", exception)
+                    logger.e("SettingsViewModel", "Failed to load user info", exception)
                     withContext(dispatcherMain) {
                         _state.value = SettingsState.Error(
                             error = SettingsState.SettingsError.NETWORK_FATAL
@@ -89,7 +90,7 @@ class SettingsViewModel(
                 .onSuccess { userInfo ->
                     getUserPreferencesUseCase.execute()
                         .onFailure { exception ->
-                            Log.e("SettingsViewModel", "Failed to load user preferences", exception)
+                            logger.e("SettingsViewModel", "Failed to load user preferences", exception)
                             withContext(dispatcherMain) {
                                 _state.value = SettingsState.Error(
                                     error = SettingsState.SettingsError.NETWORK_FATAL
@@ -123,7 +124,7 @@ class SettingsViewModel(
                 hideMyPostsFromNonMatches = currentState.hideMyPostsFromNonMatches
             )
                 .onFailure {
-                    Log.e("SettingsViewModel", "Failed to update user preferences", it)
+                    logger.e("SettingsViewModel", "Failed to update user preferences", it)
                     withContext(dispatcherMain) {
                         _state.value = currentState.copy(
                             matchNotificationsEnabled = !newValue
@@ -146,7 +147,7 @@ class SettingsViewModel(
                 hideMyPostsFromNonMatches = currentState.hideMyPostsFromNonMatches
             )
                 .onFailure {
-                    Log.e("SettingsViewModel", "Failed to update user preferences", it)
+                    logger.e("SettingsViewModel", "Failed to update user preferences", it)
                     withContext(dispatcherMain) {
                         _state.value = currentState.copy(
                             messageNotificationsEnabled = !newValue
@@ -169,7 +170,7 @@ class SettingsViewModel(
                 hideMyPostsFromNonMatches = newValue
             )
                 .onFailure {
-                    Log.e("SettingsViewModel", "Failed to update user preferences", it)
+                    logger.e("SettingsViewModel", "Failed to update user preferences", it)
                     withContext(dispatcherMain) {
                         _state.value = currentState.copy(
                             hideMyPostsFromNonMatches = !newValue
@@ -214,7 +215,7 @@ class SettingsViewModel(
         viewModelScope.launch(dispatcherIO) {
             changePasswordUseCase.execute(oldPassword, newPassword)
                 .onFailure { exception ->
-                    Log.e("SettingsViewModel", "Failed to change password", exception)
+                    logger.e("SettingsViewModel", "Failed to change password", exception)
                     if (exception is InvalidCredentialsException) {
                         withContext(dispatcherMain) {
                             _state.value = currentState.copy(
@@ -279,7 +280,7 @@ class SettingsViewModel(
         viewModelScope.launch(dispatcherIO) {
             getVerificationCodeUseCase.execute(email)
                 .onFailure { e ->
-                    Log.e("SettingsViewModel", "Failed to get verification code", e)
+                    logger.e("SettingsViewModel", "Failed to get verification code", e)
                     withContext(dispatcherMain) {
                         _state.value = currentState.copy(
                             emailError = SettingsState.SettingsError.NETWORK,
@@ -331,7 +332,7 @@ class SettingsViewModel(
                     }
                     changeEmailUseCase.execute(currentState.email)
                         .onFailure { e ->
-                            Log.e(
+                            logger.e(
                                 "SettingsViewModel",
                                 "Failed to change email",
                                 e
@@ -410,7 +411,7 @@ class SettingsViewModel(
         viewModelScope.launch(dispatcherIO) {
             deleteAccountUseCase.execute()
                 .onFailure {
-                    Log.e("SettingsViewModel", "Failed to delete account", it)
+                    logger.e("SettingsViewModel", "Failed to delete account", it)
                     withContext(dispatcherMain) {
                         _state.value = SettingsState.DeletionError
                     }
@@ -463,7 +464,7 @@ class SettingsViewModel(
         viewModelScope.launch(dispatcherIO) {
             logoutUseCase.execute()
                 .onFailure {
-                    Log.e("SettingsViewModel", "Failed to logout", it)
+                    logger.e("SettingsViewModel", "Failed to logout", it)
                     withContext(dispatcherMain) {
                         _state.value = SettingsState.Error(
                             error = SettingsState.SettingsError.NETWORK

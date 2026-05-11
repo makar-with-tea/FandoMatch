@@ -17,6 +17,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.Post
@@ -42,6 +43,7 @@ class FeedViewModelTest {
         viewModel = FeedViewModel(
             getFeedUseCase = getFeedUseCase,
             likePostUseCase = likePostUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )
@@ -49,8 +51,8 @@ class FeedViewModelTest {
 
     @Test
     fun `load posts success updates state with posts`() = runTest {
-        val post = createPost(id = "1", isLiked = false, likeCount = 3)
-        `when`(getFeedUseCase.execute()).thenReturn(Result.success(listOf(post)))
+        val post = createPost()
+        `when`(getFeedUseCase.execute(null, 1)).thenReturn(Result.success(listOf(post)))
 
         viewModel.obtainEvent(FeedEvent.LoadPosts)
         advanceUntilIdle()
@@ -62,7 +64,7 @@ class FeedViewModelTest {
 
     @Test
     fun `load posts failure updates error state`() = runTest {
-        `when`(getFeedUseCase.execute()).thenReturn(Result.failure(RuntimeException("network")))
+        `when`(getFeedUseCase.execute(null, 1)).thenReturn(Result.failure(RuntimeException("network")))
 
         viewModel.obtainEvent(FeedEvent.LoadPosts)
         advanceUntilIdle()
@@ -86,8 +88,8 @@ class FeedViewModelTest {
 
     @Test
     fun `post liked toggles like in state when request succeeds`() = runTest {
-        val post = createPost(id = "1", isLiked = false, likeCount = 3)
-        `when`(getFeedUseCase.execute()).thenReturn(Result.success(listOf(post)))
+        val post = createPost()
+        `when`(getFeedUseCase.execute(null, 1)).thenReturn(Result.success(listOf(post)))
         `when`(likePostUseCase.execute("1")).thenReturn(Result.success(Unit))
 
         viewModel.obtainEvent(FeedEvent.LoadPosts)
@@ -114,12 +116,8 @@ class FeedViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun createPost(
-        id: String,
-        isLiked: Boolean,
-        likeCount: Int,
-    ) = Post(
-        id = id,
+    private fun createPost() = Post(
+        id = "1",
         authorId = "author",
         authorName = "Author",
         authorLogin = "author_login",
@@ -127,9 +125,9 @@ class FeedViewModelTest {
         timestamp = 1L,
         content = "text",
         mediaItems = emptyList(),
-        likeCount = likeCount,
+        likeCount = 3,
         commentCount = 0,
-        isLikedByCurrentUser = isLiked,
+        isLikedByCurrentUser = false,
         fandoms = emptyList(),
     )
 }

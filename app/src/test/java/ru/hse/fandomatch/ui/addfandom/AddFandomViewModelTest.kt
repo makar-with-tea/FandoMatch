@@ -17,6 +17,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.usecase.fandoms.RequestNewFandomUseCase
 
@@ -35,7 +36,7 @@ class AddFandomViewModelTest {
         testDispatcher = StandardTestDispatcher()
         Dispatchers.setMain(testDispatcher)
         requestNewFandomUseCase = mock(RequestNewFandomUseCase::class.java)
-        viewModel = AddFandomViewModel(requestNewFandomUseCase, testDispatcher, testDispatcher)
+        viewModel = AddFandomViewModel(requestNewFandomUseCase, Logger.NoOpLogger, testDispatcher, testDispatcher)
     }
 
     @Test

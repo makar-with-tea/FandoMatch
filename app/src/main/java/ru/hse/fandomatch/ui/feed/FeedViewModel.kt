@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.feed
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -9,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.usecase.posts.GetFeedUseCase
 import ru.hse.fandomatch.domain.usecase.posts.LikePostUseCase
@@ -16,6 +16,7 @@ import ru.hse.fandomatch.domain.usecase.posts.LikePostUseCase
 class FeedViewModel(
     private val getFeedUseCase: GetFeedUseCase,
     private val likePostUseCase: LikePostUseCase,
+    private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -36,7 +37,7 @@ class FeedViewModel(
     }
 
     fun obtainEvent(event: FeedEvent) {
-        Log.d("FeedViewModel", "Obtained event: $event")
+        logger.d("FeedViewModel", "Obtained event: $event")
         when (event) {
             is FeedEvent.PostClicked -> goToPost(event.postId)
             is FeedEvent.LoadPosts -> loadPosts()
@@ -59,14 +60,14 @@ class FeedViewModel(
                 size = PAGE_SIZE,
             )
                 .onFailure {
-                    Log.e("FeedViewModel", "Failed to load feed posts: ${it.message}")
+                    logger.e("FeedViewModel", "Failed to load feed posts: ${it.message}")
                     withContext(dispatcherMain) {
                         _state.value = FeedState.Error
                     }
                     return@launch
                 }
                 .onSuccess { posts ->
-                    Log.d("FeedViewModel", "Successfully loaded feed posts: $posts")
+                    logger.d("FeedViewModel", "Successfully loaded feed posts: $posts")
                     currentPosts = posts
                     hasMore = posts.size == PAGE_SIZE
                     withContext(dispatcherMain) {
@@ -96,7 +97,7 @@ class FeedViewModel(
                 size = PAGE_SIZE,
             )
             result.onFailure { exception ->
-                Log.e("FeedViewModel", "Failed to load more posts: ${exception.message}")
+                logger.e("FeedViewModel", "Failed to load more posts: ${exception.message}")
                 withContext(dispatcherMain) {
                     val current = _state.value as? FeedState.Main
                     if (current != null) _state.value = current.copy(isLoadingMore = false)
@@ -125,10 +126,10 @@ class FeedViewModel(
         viewModelScope.launch(dispatcherIO) {
             likePostUseCase.execute(postId)
                 .onFailure { exception ->
-                    Log.e("FeedViewModel", "Failed to like post $postId", exception)
+                    logger.e("FeedViewModel", "Failed to like post $postId", exception)
                 }
                 .onSuccess {
-                    Log.d("FeedViewModel", "Liked post $postId successfully")
+                    logger.d("FeedViewModel", "Liked post $postId successfully")
                     withContext(dispatcherMain) {
                         val currentState = _state.value as? FeedState.Main ?: return@withContext
                         val updatedPosts = currentState.posts.map { post ->

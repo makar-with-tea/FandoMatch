@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.authorization
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -10,10 +9,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.usecase.auth.LoginUseCase
 
 class AuthorizationViewModel(
     private val loginUseCase: LoginUseCase,
+    private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -26,7 +27,7 @@ class AuthorizationViewModel(
         get() = _action
 
     fun obtainEvent(event: AuthorizationEvent) {
-        Log.d("AuthorizationViewModel", "Event: $event")
+        logger.d("AuthorizationViewModel", "Event: $event")
         when (event) {
             AuthorizationEvent.LoginButtonClicked -> login()
             is AuthorizationEvent.LoginChanged -> loginChanged(event.login)
@@ -90,7 +91,7 @@ class AuthorizationViewModel(
             loginUseCase.execute(currentState.login, currentState.password)
                 .onFailure { e ->
                     withContext(dispatcherMain) {
-                        Log.e("AuthorizationViewModel", "Login failed", e)
+                        logger.e("AuthorizationViewModel", "Login failed", e)
                         if (e is InvalidCredentialsException) {
                             _state.value = currentState.copy(
                                 loginError = AuthorizationState.AuthorizationError.IDLE,

@@ -17,6 +17,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
@@ -29,6 +30,7 @@ import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.user.EditProfileUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetCitiesByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
+import kotlin.math.log
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditProfileViewModelTest {
@@ -58,6 +60,7 @@ class EditProfileViewModelTest {
             getUserUseCase = getUserUseCase,
             uploadMediaUseCase = uploadMediaUseCase,
             editProfileUseCase = editProfileUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )

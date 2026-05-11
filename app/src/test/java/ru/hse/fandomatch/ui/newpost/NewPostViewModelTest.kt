@@ -17,6 +17,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.MediaType
@@ -47,6 +48,7 @@ class NewPostViewModelTest {
             createPostUseCase = createPostUseCase,
             uploadMediaUseCase = uploadMediaUseCase,
             getFandomsByQueryUseCase = getFandomsByQueryUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )

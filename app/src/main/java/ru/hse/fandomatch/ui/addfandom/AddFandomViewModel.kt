@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.addfandom
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -9,13 +8,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ru.hse.fandomatch.utils.checkDescriptionLength
-import ru.hse.fandomatch.utils.checkFandomNameLength
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.usecase.fandoms.RequestNewFandomUseCase
+import ru.hse.fandomatch.utils.checkDescriptionLength
+import ru.hse.fandomatch.utils.checkFandomNameLength
 
 class AddFandomViewModel(
     private val requestNewFandomUseCase: RequestNewFandomUseCase,
+    private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -101,7 +102,7 @@ class AddFandomViewModel(
                 description = currentState.description,
             )
                 .onFailure {
-                    Log.e(
+                    logger.e(
                         "AddFandomViewModel",
                         "Failed to request new fandom",
                         it

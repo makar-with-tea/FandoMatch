@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.post
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -9,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.Comment
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.ProfileType
@@ -25,6 +25,7 @@ class PostViewModel(
     private val getUserUseCase: GetUserUseCase,
     private val likePostUseCase: LikePostUseCase,
     private val downloadMediaToGalleryUseCase: DownloadMediaToGalleryUseCase,
+    private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -34,7 +35,7 @@ class PostViewModel(
     val action: StateFlow<PostAction?> get() = _action
 
     fun obtainEvent(event: PostEvent) {
-        Log.i("PostViewModel", "Obtained event: $event")
+        logger.i("PostViewModel", "Obtained event: $event")
         when (event) {
             PostEvent.Clear -> clear()
             is PostEvent.LoadPost -> loadPost(event.postId)
@@ -56,7 +57,7 @@ class PostViewModel(
         viewModelScope.launch(dispatcherIO) {
             getFullPostUseCase.execute(postId = profileId)
                 .onFailure { exception ->
-                    Log.e("PostViewModel", "Failed to load post info", exception)
+                    logger.e("PostViewModel", "Failed to load post info", exception)
                     withContext(dispatcherMain) {
                         _state.value = PostState.Error
                     }
@@ -81,12 +82,12 @@ class PostViewModel(
                 timestamp = timestamp,
             )
                 .onFailure { exception ->
-                    Log.e("PostViewModel", "Failed to send comment", exception)
+                    logger.e("PostViewModel", "Failed to send comment", exception)
                 }
                 .onSuccess {
                     getUserUseCase.execute(null, true)
                         .onFailure { e ->
-                            Log.e(
+                            logger.e(
                                 "PostViewModel",
                                 "Failed to load current user info: ${e.message}",
                                 e
@@ -127,7 +128,7 @@ class PostViewModel(
         viewModelScope.launch(dispatcherIO) {
             likePostUseCase.execute(postId = currentState.fullPost.post.id)
                 .onFailure { exception ->
-                    Log.e("PostViewModel", "Failed to like post", exception)
+                    logger.e("PostViewModel", "Failed to like post", exception)
                 }
                 .onSuccess {
                     withContext(dispatcherMain) {
@@ -160,7 +161,7 @@ class PostViewModel(
                 mediaType = mediaItem.mediaType
             )
                 .onFailure {
-                    Log.e("PostViewModel", "Failed to download media item", it)
+                    logger.e("PostViewModel", "Failed to download media item", it)
                     _action.value = PostAction.ShowErrorDownloadToast
                 }
                 .onSuccess {

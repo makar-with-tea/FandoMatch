@@ -84,13 +84,14 @@ import ru.hse.fandomatch.ui.registration.RegistrationViewModel
 import ru.hse.fandomatch.ui.settings.SettingsViewModel
 
 val appModule = module {
-    viewModel<AuthorizationViewModel> { AuthorizationViewModel(loginUseCase = get()) }
+    viewModel<AuthorizationViewModel> { AuthorizationViewModel(loginUseCase = get(), logger = get()) }
     viewModel<RegistrationViewModel> { RegistrationViewModel(
         registerUseCase = get(),
         getVerificationCodeUseCase = get(),
         checkVerificationCodeUseCase = get(),
         uploadMediaUseCase = get(),
         editProfileUseCase = get(),
+        logger = get(),
         )
     }
     viewModel<IntroViewModel> { IntroViewModel(getPastLoginUseCase = get()) }
@@ -98,6 +99,7 @@ val appModule = module {
         MatchesViewModel(
             loadSuggestedProfilesUseCase = get(),
             likeOrDislikeProfileUseCase = get(),
+            logger = get(),
         )
     }
     viewModel<ProfileViewModel> { ProfileViewModel(
@@ -107,17 +109,18 @@ val appModule = module {
         getFriendsUseCase = get(),
         getFriendRequestsUseCase = get(),
         likePostUseCase = get(),
+        logger = get(),
     ) }
-    viewModel<ChatsListViewModel> { ChatsListViewModel(get()) }
-    viewModel<ChatViewModel> { ChatViewModel(get(), get(), get(), get(), get(), get()) }
-    viewModel<FiltersViewModel> { FiltersViewModel(get(), get(), get(), get()) }
-    viewModel<FeedViewModel> { FeedViewModel(get(), get()) }
-    viewModel<EditProfileViewModel> { EditProfileViewModel(get(), get(), get(), get(), get()) }
-    viewModel<SettingsViewModel> { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
-    viewModel<AddFandomViewModel> { AddFandomViewModel(get()) }
-    viewModel<NewPostViewModel> { NewPostViewModel(get(), get(), get()) }
-    viewModel<PasswordRecoveryViewModel> { PasswordRecoveryViewModel(get(), get()) }
-    viewModel<PostViewModel> { PostViewModel(get(), get(), get(), get(), get()) }
+    viewModel<ChatsListViewModel> { ChatsListViewModel(get(), get()) }
+    viewModel<ChatViewModel> { ChatViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel<FiltersViewModel> { FiltersViewModel(get(), get(), get(), get(), get()) }
+    viewModel<FeedViewModel> { FeedViewModel(get(), get(), get()) }
+    viewModel<EditProfileViewModel> { EditProfileViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel<SettingsViewModel> { SettingsViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get()) }
+    viewModel<AddFandomViewModel> { AddFandomViewModel(get(), get()) }
+    viewModel<NewPostViewModel> { NewPostViewModel(get(), get(), get(), get()) }
+    viewModel<PasswordRecoveryViewModel> { PasswordRecoveryViewModel(get(), get(), get()) }
+    viewModel<PostViewModel> { PostViewModel(get(), get(), get(), get(), get(), get()) }
 }
 
 val dataModule = module {
@@ -160,7 +163,6 @@ val dataModule = module {
         )
     }
 
-    // Provide a platform-specific Logger implementation for domain module
     single<Logger> { AndroidLogger() }
 
     single(named("s3Retrofit")) {

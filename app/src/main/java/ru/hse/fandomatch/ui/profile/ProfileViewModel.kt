@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.profile
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -9,13 +8,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.Post
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
-import ru.hse.fandomatch.domain.usecase.user.GetFriendRequestsUseCase
-import ru.hse.fandomatch.domain.usecase.user.GetFriendsUseCase
 import ru.hse.fandomatch.domain.usecase.posts.GetUserPostsUseCase
 import ru.hse.fandomatch.domain.usecase.posts.LikePostUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetFriendRequestsUseCase
+import ru.hse.fandomatch.domain.usecase.user.GetFriendsUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
 
 class ProfileViewModel(
@@ -25,6 +25,7 @@ class ProfileViewModel(
     private val getFriendsUseCase: GetFriendsUseCase,
     private val getFriendRequestsUseCase: GetFriendRequestsUseCase,
     private val likePostUseCase: LikePostUseCase,
+    private val logger: Logger,
     val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -42,7 +43,7 @@ class ProfileViewModel(
     }
 
     fun obtainEvent(event: ProfileEvent) {
-        Log.i("ProfileViewModel", "Obtained event: $event")
+        logger.i("ProfileViewModel", "Obtained event: $event")
         when (event) {
             is ProfileEvent.LoadProfile -> {
                 loadProfile(event.userId, event.isCurrentUser)
@@ -84,7 +85,7 @@ class ProfileViewModel(
         viewModelScope.launch(dispatcherIO) {
             getUserUseCase.execute(userId, isCurrentUser)
                 .onFailure { exception ->
-                    Log.e("ProfileViewModel", "Failed to load profile info", exception)
+                    logger.e("ProfileViewModel", "Failed to load profile info", exception)
                     withContext(dispatcherMain) {
                         _state.value = ProfileState.Error
                     }
@@ -100,7 +101,7 @@ class ProfileViewModel(
                         size = PROFILE_POSTS_PAGE_SIZE,
                     )
                         .onFailure { exception ->
-                            Log.e("ProfileViewModel", "Failed to load profile posts", exception)
+                            logger.e("ProfileViewModel", "Failed to load profile posts", exception)
                             postsIsError = true
                         }
                         .onSuccess {
@@ -110,7 +111,7 @@ class ProfileViewModel(
                             isLoadingMorePosts = false
                         }
                     val type = user.profileType
-                    Log.i("ProfileViewModel", "Loading profile for userId: $userId")
+                    logger.i("ProfileViewModel", "Loading profile for userId: $userId")
                     withContext(dispatcherMain) {
                         _state.value = ProfileState.Main(
                             id = user.id,
@@ -144,7 +145,7 @@ class ProfileViewModel(
         viewModelScope.launch(dispatcherIO) {
             val result = likeOrDislikeProfileUseCase.execute(profileId, isLike)
             if (result.isFailure) {
-                Log.e("ProfileViewModel", "Failed to ${if (isLike) "like" else "dislike"} profile $profileId", result.exceptionOrNull())
+                logger.e("ProfileViewModel", "Failed to ${if (isLike) "like" else "dislike"} profile $profileId", result.exceptionOrNull())
             }
             withContext(dispatcherMain) {
                 _action.value = ProfileAction.GoToMatches
@@ -164,7 +165,7 @@ class ProfileViewModel(
                 size = PROFILE_POSTS_PAGE_SIZE,
             )
                 .onFailure {
-                    Log.e("ProfileViewModel", "Failed to load profile posts", it)
+                    logger.e("ProfileViewModel", "Failed to load profile posts", it)
                     withContext(dispatcherMain) {
                         _state.value = currentState.copy(
                             bottomSheetState = ProfileState.BottomSheetState.Posts(
@@ -214,7 +215,7 @@ class ProfileViewModel(
                 size = PROFILE_POSTS_PAGE_SIZE,
             )
                 .onFailure { exception ->
-                    Log.e("ProfileViewModel", "Failed to load more profile posts", exception)
+                    logger.e("ProfileViewModel", "Failed to load more profile posts", exception)
                     isLoadingMorePosts = false
                     withContext(dispatcherMain) {
                         val latestState = _state.value as? ProfileState.Main ?: return@withContext
@@ -257,7 +258,7 @@ class ProfileViewModel(
         viewModelScope.launch(dispatcherIO) {
             getFriendsUseCase.execute()
                 .onFailure { exception ->
-                    Log.e("ProfileViewModel", "Failed to load friends", exception)
+                    logger.e("ProfileViewModel", "Failed to load friends", exception)
                     withContext(dispatcherMain) {
                         _state.value = currentState.copy(
                             bottomSheetState = ProfileState.BottomSheetState.Friends(
@@ -283,7 +284,7 @@ class ProfileViewModel(
         viewModelScope.launch(dispatcherIO) {
             getFriendRequestsUseCase.execute()
                 .onFailure { exception ->
-                    Log.e("ProfileViewModel", "Failed to load friend requests", exception)
+                    logger.e("ProfileViewModel", "Failed to load friend requests", exception)
                     withContext(dispatcherMain) {
                         _state.value = currentState.copy(
                             bottomSheetState = ProfileState.BottomSheetState.Requests(
@@ -310,7 +311,7 @@ class ProfileViewModel(
         viewModelScope.launch(dispatcherIO) {
             likePostUseCase.execute(postId)
                 .onFailure { exception ->
-                    Log.e("ProfileViewModel", "Failed to like post", exception)
+                    logger.e("ProfileViewModel", "Failed to like post", exception)
                 }
                 .onSuccess {
                     withContext(dispatcherMain) {

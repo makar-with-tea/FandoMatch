@@ -22,6 +22,7 @@ import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.usecase.chat.GetChatMessagesPageUseCase
 import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.MediaItem
@@ -66,6 +67,7 @@ class ChatViewModelTest {
             getChatMessagesPageUseCase = getChatMessagesPageUseCase,
             uploadMediaUseCase = uploadMediaUseCase,
             downloadMediaToGalleryUseCase = downloadMediaToGalleryUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )
@@ -129,7 +131,7 @@ class ChatViewModelTest {
         `when`(uploadMediaUseCase.execute(byteArrayOf(1, 2, 3), MediaType.IMAGE)).thenReturn(Result.success("media-id"))
         `when`(
             sendMessageUseCase.execute(
-                userId = "participant-1",
+                userId = "10",
                 content = "hello",
                 mediaIdsWithTypes = listOf("media-id" to MediaType.IMAGE),
                 timestamp = 123000L,
@@ -234,7 +236,7 @@ class ChatViewModelTest {
 
     private fun chat() = Chat(
         chatId = "chat-1",
-        participantId = "participant-1",
+        participantId = "10",
         participantName = "Nami",
         participantAvatarUrl = "avatar-url",
     )

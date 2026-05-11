@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.registration
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -11,6 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.exception.EmailAlreadyInUseException
 import ru.hse.fandomatch.domain.exception.LoginAlreadyInUseException
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.usecase.auth.CheckVerificationCodeUseCase
@@ -35,6 +35,7 @@ class RegistrationViewModel(
     private val checkVerificationCodeUseCase: CheckVerificationCodeUseCase,
     private val uploadMediaUseCase: UploadMediaUseCase,
     private val editProfileUseCase: EditProfileUseCase,
+    private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main
 ) : ViewModel() {
@@ -184,7 +185,7 @@ class RegistrationViewModel(
         viewModelScope.launch(dispatcherIO) {
             getVerificationCodeUseCase.execute(currentState.email)
                 .onFailure { e ->
-                    Log.e("RegistrationViewModel", "Failed to get verification code", e)
+                    logger.e("RegistrationViewModel", "Failed to get verification code", e)
                     withContext(dispatcherMain) {
                         _state.value = currentState.copy(
                             nameError = RegistrationState.RegistrationError.NETWORK,
@@ -211,7 +212,7 @@ class RegistrationViewModel(
         viewModelScope.launch(dispatcherIO) {
             checkVerificationCodeUseCase.execute(code, form.email)
                 .onFailure {
-                    Log.e("RegistrationViewModel", "Error while checking verification code", it)
+                    logger.e("RegistrationViewModel", "Error while checking verification code", it)
                     withContext(dispatcherMain) {
                         _state.value = RegistrationState.Code(
                             codeError = RegistrationState.RegistrationError.NETWORK,
@@ -220,7 +221,7 @@ class RegistrationViewModel(
                     }
                 }
                 .onSuccess { isValid ->
-                    Log.d("RegistrationViewModel", "Verification code check result: $isValid")
+                    logger.d("RegistrationViewModel", "Verification code check result: $isValid")
                     withContext(dispatcherMain) {
                         if (isValid) {
                             _state.value = RegistrationState.DateOfBirth(form.dateOfBirthEpochSeconds)
@@ -355,7 +356,7 @@ class RegistrationViewModel(
                 form.password
             )
                 .onFailure { e ->
-                    Log.e("RegistrationViewModel", "Registration failed", e)
+                    logger.e("RegistrationViewModel", "Registration failed", e)
                     val loginErr = when (e) {
                         is LoginAlreadyInUseException -> RegistrationState.RegistrationError.LOGIN_TAKEN
                         is EmailAlreadyInUseException -> RegistrationState.RegistrationError.IDLE
@@ -388,10 +389,10 @@ class RegistrationViewModel(
                             MediaType.IMAGE
                         )
                             .onFailure { e ->
-                                Log.e("RegistrationViewModel", "Failed to upload avatar", e)
+                                logger.e("RegistrationViewModel", "Failed to upload avatar", e)
                             }
                             .onSuccess { avatarId ->
-                                Log.d("RegistrationViewModel", "Avatar uploaded successfully with id $avatarId")
+                                logger.d("RegistrationViewModel", "Avatar uploaded successfully with id $avatarId")
                                 editProfileUseCase.execute(
                                     name = form.name,
                                     bio = null,
@@ -401,7 +402,7 @@ class RegistrationViewModel(
                                     backgroundMediaId = null
                                 )
                                     .onFailure { e1 ->
-                                        Log.e("RegistrationViewModel", "Failed to set avatar for user profile", e1)
+                                        logger.e("RegistrationViewModel", "Failed to set avatar for user profile", e1)
                                     }
                             }
                     }

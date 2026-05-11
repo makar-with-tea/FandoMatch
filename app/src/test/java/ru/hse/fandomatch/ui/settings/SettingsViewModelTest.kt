@@ -18,6 +18,7 @@ import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.domain.model.User
@@ -72,6 +73,7 @@ class SettingsViewModelTest {
             logoutUseCase = logoutUseCase,
             deleteAccountUseCase = deleteAccountUseCase,
             changePasswordUseCase = changePasswordUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )
