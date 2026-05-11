@@ -202,7 +202,7 @@ class GlobalRepositoryImpl(
                 username = login,
                 birthDate = dateOfBirthEpochSeconds,
                 hashedPassword = password,
-                gender = GenderDTO.fromDomain(gender).name,
+                gender = GenderDTO.fromDomain(gender),
                 avatarMediaId = null,
             )
         )

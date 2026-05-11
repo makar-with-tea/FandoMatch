@@ -28,7 +28,6 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -315,28 +314,6 @@ fun EndIcon(endIcon: EndIconState) {
             contentDescription = stringResource(endIcon.descriptionId),
             modifier = Modifier.size(24.dp)
         )
-    }
-}
-
-@Composable
-fun MyCheckBox(
-    modifier: Modifier = Modifier,
-    isChecked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    label: String,
-) {
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = modifier
-            .clickable { onCheckedChange(!isChecked) }
-    ) {
-        Checkbox(
-            checked = isChecked,
-            onCheckedChange = null,
-        )
-        Text(label)
     }
 }
 

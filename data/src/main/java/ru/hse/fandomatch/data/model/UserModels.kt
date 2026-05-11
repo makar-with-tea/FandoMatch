@@ -11,11 +11,10 @@ data class UserRegistrationRequestDTO(
     @SerializedName("hashed_password")
     val hashedPassword: String,
     @SerializedName("gender")
-    val gender: String,
+    val gender: GenderDTO,
     @SerializedName("avatar_media_id")
     val avatarMediaId: String? = null,
 )
-
 
 data class UserRegistrationResponseDTO(
     val status: ResponseStatusDTO,
