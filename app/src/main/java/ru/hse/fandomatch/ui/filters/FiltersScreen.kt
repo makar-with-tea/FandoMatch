@@ -73,7 +73,7 @@ fun FiltersScreen(
 
         is FiltersAction.NavigateToAddFandom -> {
             navigateToAddFandom()
-            viewModel.obtainEvent(FiltersEvent.Clear)
+            viewModel.obtainEvent(FiltersEvent.ActionHandled)
         }
 
         is FiltersAction.ShowErrorToast -> {
@@ -82,7 +82,7 @@ fun FiltersScreen(
                 stringResource(R.string.filters_error_toast),
                 Toast.LENGTH_SHORT
             ).show()
-            viewModel.obtainEvent(FiltersEvent.ToastShown)
+            viewModel.obtainEvent(FiltersEvent.ActionHandled)
         }
 
         null -> {}

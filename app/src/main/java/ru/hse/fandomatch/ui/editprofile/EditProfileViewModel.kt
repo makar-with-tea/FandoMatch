@@ -55,7 +55,7 @@ class EditProfileViewModel(
             is EditProfileEvent.NameChanged -> updateName(event.name)
             EditProfileEvent.SaveButtonClicked -> saveData()
             EditProfileEvent.LoadProfileData -> loadProfileData()
-            EditProfileEvent.ToastShown -> _action.value = null
+            EditProfileEvent.ActionHandled -> _action.value = null
             EditProfileEvent.Clear -> clear()
         }
     }

@@ -225,7 +225,7 @@ class FiltersViewModelTest {
         advanceUntilIdle()
         assertEquals(FiltersAction.ShowErrorToast, viewModel.action.first())
 
-        viewModel.obtainEvent(FiltersEvent.ToastShown)
+        viewModel.obtainEvent(FiltersEvent.ActionHandled)
         assertEquals(null, viewModel.action.first())
     }
 

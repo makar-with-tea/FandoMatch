@@ -9,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -30,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -39,16 +36,16 @@ import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
+import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.ui.composables.AvatarWithBackground
+import ru.hse.fandomatch.ui.composables.BasicErrorState
+import ru.hse.fandomatch.ui.composables.CityInput
 import ru.hse.fandomatch.ui.composables.FandomInput
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
-import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.utils.getBytesFromUri
-import ru.hse.fandomatch.ui.composables.BasicErrorState
-import ru.hse.fandomatch.ui.composables.CityInput
 import ru.hse.fandomatch.ui.composables.getName
+import ru.hse.fandomatch.utils.getBytesFromUri
 
 
 @Composable
@@ -65,7 +62,7 @@ fun EditProfileScreen(
     when (action.value) {
         is EditProfileAction.NavigateToAddFandom -> {
             navigateToAddFandom()
-            viewModel.obtainEvent(EditProfileEvent.Clear)
+            viewModel.obtainEvent(EditProfileEvent.ActionHandled)
         }
 
         is EditProfileAction.NavigateToMyProfile -> {
@@ -79,7 +76,7 @@ fun EditProfileScreen(
                 stringResource(R.string.edit_profile_error_toast),
                 Toast.LENGTH_SHORT
             ).show()
-            viewModel.obtainEvent(EditProfileEvent.ToastShown)
+            viewModel.obtainEvent(EditProfileEvent.ActionHandled)
         }
 
         null -> {}

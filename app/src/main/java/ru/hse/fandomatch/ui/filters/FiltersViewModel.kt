@@ -47,7 +47,7 @@ class FiltersViewModel(
             is FiltersEvent.LocationToggled -> toggleLocation(event.isChecked)
             is FiltersEvent.ResetFilters -> resetFilters()
             is FiltersEvent.ApplyFilters -> applyFilters()
-            FiltersEvent.ToastShown -> _action.value = null
+            FiltersEvent.ActionHandled -> _action.value = null
             FiltersEvent.AddFandomClicked -> goToAddFandom()
             is FiltersEvent.Clear -> clear()
         }

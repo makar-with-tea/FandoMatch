@@ -43,7 +43,7 @@ class NewPostViewModel(
             is NewPostEvent.FandomRemoved -> removeFandom(event.fandom)
             is NewPostEvent.FandomSearched -> searchFandom(event.query)
             NewPostEvent.AddFandomClicked -> goToAddFandom()
-            NewPostEvent.ToastShown -> _action.value = null
+            NewPostEvent.ActionHandled -> _action.value = null
             is NewPostEvent.Clear -> clear()
         }
     }

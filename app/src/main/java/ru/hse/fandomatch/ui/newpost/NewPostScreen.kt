@@ -70,12 +70,12 @@ fun NewPostScreen(
 
         is NewPostAction.NavigateToAddFandom -> {
             navigateToAddFandom()
-            viewModel.obtainEvent(NewPostEvent.Clear)
+            viewModel.obtainEvent(NewPostEvent.ActionHandled)
         }
 
         is NewPostAction.ShowErrorToast -> {
             Toast.makeText(LocalContext.current, R.string.network_error, Toast.LENGTH_SHORT).show()
-            viewModel.obtainEvent(NewPostEvent.ToastShown)
+            viewModel.obtainEvent(NewPostEvent.ActionHandled)
         }
 
         null -> {}

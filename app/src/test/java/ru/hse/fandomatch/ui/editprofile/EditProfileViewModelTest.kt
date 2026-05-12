@@ -30,7 +30,6 @@ import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.user.EditProfileUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetCitiesByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
-import kotlin.math.log
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditProfileViewModelTest {
@@ -243,7 +242,7 @@ class EditProfileViewModelTest {
         advanceUntilIdle()
         assertEquals(EditProfileAction.ShowErrorToast, viewModel.action.value)
 
-        viewModel.obtainEvent(EditProfileEvent.ToastShown)
+        viewModel.obtainEvent(EditProfileEvent.ActionHandled)
         assertEquals(null, viewModel.action.value)
     }
 

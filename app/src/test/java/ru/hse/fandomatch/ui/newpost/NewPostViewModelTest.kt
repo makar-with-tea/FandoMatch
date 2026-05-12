@@ -144,7 +144,7 @@ class NewPostViewModelTest {
 
         assertEquals(NewPostAction.ShowErrorToast, viewModel.action.first())
 
-        viewModel.obtainEvent(NewPostEvent.ToastShown)
+        viewModel.obtainEvent(NewPostEvent.ActionHandled)
         assertEquals(null, viewModel.action.first())
     }
 

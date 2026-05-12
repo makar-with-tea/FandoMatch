@@ -30,7 +30,7 @@ sealed class NewPostEvent {
     data class FandomRemoved(val fandom: Fandom): NewPostEvent()
     data class FandomSearched(val query: String?): NewPostEvent()
     data object AddFandomClicked: NewPostEvent()
-    data object ToastShown: NewPostEvent()
+    data object ActionHandled: NewPostEvent()
     data object Clear: NewPostEvent()
 }
 
