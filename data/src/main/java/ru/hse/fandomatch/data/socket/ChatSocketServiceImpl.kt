@@ -31,10 +31,17 @@ class ChatSocketServiceImpl(
                 Log.d("ChatSocket", "WebSocket opened for messages (user=$userId), response=${response.code()}")
             }
             override fun onMessage(webSocket: WebSocket, text: String) {
+                Log.d("ChatSocket", "WebSocket message received for messages (user=$userId): $text")
                 runCatching {
                     val dto = gson.fromJson(text, MessageDTO::class.java)
                     trySend(dto.toDomain())
                 }
+                    .onFailure {
+                        Log.e("ChatSocket", "Failed to parse WebSocket message for messages (user=$userId): $text", it)
+                    }
+                    .onSuccess {
+                        Log.d("ChatSocket", "WebSocket message parsed successfully for messages (user=$userId): $text")
+                    }
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {

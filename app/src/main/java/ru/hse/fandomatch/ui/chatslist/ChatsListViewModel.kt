@@ -40,15 +40,15 @@ class ChatsListViewModel(
     fun obtainEvent(event: ChatsListEvent) {
         logger.d("ChatsListViewModel", "Obtained event: $event")
         when (event) {
-            is ChatsListEvent.ChatClicked -> goToChat(event.chatId)
+            is ChatsListEvent.ChatClicked -> goToChat(event.userId)
             is ChatsListEvent.LoadChats -> loadChats()
             is ChatsListEvent.SearchChats -> searchChats(event.query)
             is ChatsListEvent.Clear -> clear()
         }
     }
 
-    private fun goToChat(chatId: String) {
-        _action.value = ChatsListAction.NavigateToChat(chatId)
+    private fun goToChat(userId: String) {
+        _action.value = ChatsListAction.NavigateToChat(userId)
     }
 
     private fun loadChats() {

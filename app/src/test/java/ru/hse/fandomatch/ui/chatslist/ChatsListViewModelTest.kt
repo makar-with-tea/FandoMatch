@@ -34,7 +34,7 @@ class ChatsListViewModelTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private val chat1 = ChatPreview(
-        chatId = "1",
+        userId = "1",
         participantName = "Luffy",
         participantAvatarUrl = "url1",
         lastMessage = "Yo",
@@ -43,7 +43,7 @@ class ChatsListViewModelTest {
         newMessagesCount = 2,
     )
     private val chat2 = ChatPreview(
-        chatId = "2",
+        userId = "2",
         participantName = "Nami",
         participantAvatarUrl = "url2",
         lastMessage = "Hi",

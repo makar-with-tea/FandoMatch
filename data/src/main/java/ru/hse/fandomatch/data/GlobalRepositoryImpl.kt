@@ -90,7 +90,7 @@ class GlobalRepositoryImpl(
         SupervisorJob() + Dispatchers.IO
     )
 
-    private val chatMessagesJobs = mutableMapOf<String, Job>()
+    private var chatMessagesJob: Job? = null
     private var chatPreviewsJob: Job? = null
 
     override suspend fun getUser(profileId: String): User {
@@ -589,7 +589,7 @@ class GlobalRepositoryImpl(
         }
         val initial = response.successResponse?.previews?.map { dto ->
             ChatPreview(
-                chatId = dto.chatId,
+                userId = dto.chatId,
                 participantName = dto.participantName,
                 participantAvatarUrl = dto.participantAvatarUrl,
                 lastMessage = dto.lastMessage,
@@ -605,7 +605,7 @@ class GlobalRepositoryImpl(
         chatPreviewsJob = chatSocketService.observeChatPreviews()
             .onEach { incoming ->
                 val updated = state.value
-                    .filterNot { it.chatId == incoming.chatId } + incoming
+                    .filterNot { it.userId == incoming.userId } + incoming
                 state.value = updated.sortedByDescending { it.lastMessageTimestamp }
             }
             .launchIn(repositoryScope)
@@ -627,9 +627,10 @@ class GlobalRepositoryImpl(
         )
         val state = MutableStateFlow(initial)
 
-        chatMessagesJobs[userId]?.cancel()
-        chatMessagesJobs[userId] = chatSocketService.observeChatMessages(userId)
+        chatMessagesJob?.cancel()
+        chatMessagesJob = chatSocketService.observeChatMessages(userId)
             .onEach { incoming ->
+                Log.i("GlobalRepositoryImpl", "Received new chat message via socket: $incoming")
                 state.value = (state.value + incoming)
                     .distinctBy { it.messageId }
                     .sortedBy { it.timestamp }
@@ -658,6 +659,7 @@ class GlobalRepositoryImpl(
         response.errorResponse?.let {
             throw Exception("Failed to load chat messages: ${it.errorCode}, ${it.errorMessage}")
         }
+        Log.i("GlobalRepositoryImpl", "Loaded chat messages response: $response")
         return response.successResponse?.messages?.map { dto ->
             Message(
                 messageId = dto.messageId,

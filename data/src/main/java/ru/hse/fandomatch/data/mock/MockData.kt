@@ -287,7 +287,7 @@ internal var mockMessagesFlow = MutableStateFlow(mockMessages)
 internal var mockChatPreviews =
     listOf(
         ChatPreview(
-            chatId = "5",
+            userId = "5",
             participantName = mockProfileCards[4].name,
             participantAvatarUrl = mockProfileCards[4].avatar?.url,
             lastMessage = "Как вы допустили смерть Лидроса на зимке?..",
@@ -297,7 +297,7 @@ internal var mockChatPreviews =
             newMessagesCount = 101,
         ),
         ChatPreview(
-            chatId = "3",
+            userId = "3",
             participantName = mockProfileCards[2].name,
             participantAvatarUrl = mockProfileCards[2].avatar?.url,
             lastMessage = "Привет! Как дела?",
@@ -307,7 +307,7 @@ internal var mockChatPreviews =
             newMessagesCount = 0,
         ),
         ChatPreview(
-            chatId = "2",
+            userId = "2",
             participantName = mockProfileCards[1].name,
             participantAvatarUrl = mockProfileCards[1].avatar?.url,
             lastMessage = "Я тоже люблю аниме!",
@@ -317,7 +317,7 @@ internal var mockChatPreviews =
             newMessagesCount = 2,
         ),
         ChatPreview(
-            chatId = "1",
+            userId = "1",
             participantName = mockProfileCards[0].name,
             participantAvatarUrl = mockProfileCards[0].avatar?.url,
             lastMessage = mockMessages[mockMessages.size - 1].content,
@@ -326,7 +326,7 @@ internal var mockChatPreviews =
             newMessagesCount = 0,
         ),
         ChatPreview(
-            chatId = "4",
+            userId = "4",
             participantName = mockProfileCards[3].name,
             participantAvatarUrl = mockProfileCards[3].avatar?.url,
             lastMessage = "Посмотрела новый эпизод Токийского Гуля, очень понравилось!",

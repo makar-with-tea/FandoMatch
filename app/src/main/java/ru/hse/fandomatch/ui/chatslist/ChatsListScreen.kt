@@ -209,7 +209,7 @@ private fun MainState(
                     .fillMaxWidth()
                     .height(64.dp)
                     .padding(vertical = 1.dp, horizontal = 4.dp)
-                    .clickable { onChatClicked(chat.chatId) }
+                    .clickable { onChatClicked(chat.userId) }
             ) {
                 Row {
                     val placeholderIcon: ImageVector = ImageVector.vectorResource(R.drawable.ic_account_placeholder)
