@@ -12,9 +12,11 @@ import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
+import ru.hse.fandomatch.domain.usecase.chat.UnsubscribeFromChatPreviewsUseCase
 
 class ChatsListViewModel(
     private val subscribeToChatPreviewsUseCase: SubscribeToChatPreviewsUseCase,
+    private val unsubscribeFromChatPreviewsUseCase: UnsubscribeFromChatPreviewsUseCase,
     private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
@@ -116,5 +118,11 @@ class ChatsListViewModel(
         _action.value = null
         currentBatchSize = 0
         job?.cancel()
+        unsubscribeFromChatPreviewsUseCase.execute()
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        clear()
     }
 }

@@ -282,7 +282,7 @@ internal var mockMessages: List<Message> = listOf(
             .toEpochSecond(ZoneOffset.UTC),
     )
 )
-internal var mockMessagesFlow = MutableStateFlow(mockMessages)
+internal var mockMessageFlow: MutableStateFlow<Message?> = MutableStateFlow(null)
 
 internal var mockChatPreviews =
     listOf(

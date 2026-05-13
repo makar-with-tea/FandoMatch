@@ -5,8 +5,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import okhttp3.RequestBody
@@ -589,7 +591,7 @@ class GlobalRepositoryImpl(
         }
         val initial = response.successResponse?.previews?.map { dto ->
             ChatPreview(
-                userId = dto.chatId,
+                userId = dto.userId,
                 participantName = dto.participantName,
                 participantAvatarUrl = dto.participantAvatarUrl,
                 lastMessage = dto.lastMessage,
@@ -613,31 +615,32 @@ class GlobalRepositoryImpl(
         return state
     }
 
-    override suspend fun subscribeToChatMessages(
-        chatId: String,
-        userId: String,
-        beforeTimestamp: Long?,
-        size: Int
-    ): StateFlow<List<Message>> {
-        val initial = getChatMessagesPage(
-            chatId = chatId,
-            userId = userId,
-            beforeTimestamp = beforeTimestamp,
-            size = size
-        )
-        val state = MutableStateFlow(initial)
+    override fun unsubscribeFromChatPreviews() {
+        chatPreviewsJob?.cancel()
+        chatPreviewsJob = null
+        chatSocketService.stopObservingChatPreviews()
+    }
 
+    override suspend fun subscribeToChatMessages(
+        userId: String,
+    ): Flow<Message> {
         chatMessagesJob?.cancel()
-        chatMessagesJob = chatSocketService.observeChatMessages(userId)
+        val messageFlow = chatSocketService.observeChatMessages(userId)
+            .catch { exception ->
+                Log.e("GlobalRepositoryImpl", "WebSocket error", exception)
+            }
             .onEach { incoming ->
                 Log.i("GlobalRepositoryImpl", "Received new chat message via socket: $incoming")
-                state.value = (state.value + incoming)
-                    .distinctBy { it.messageId }
-                    .sortedBy { it.timestamp }
             }
-            .launchIn(repositoryScope)
+        chatMessagesJob = messageFlow.launchIn(repositoryScope)
 
-        return state
+        return messageFlow
+    }
+
+    override fun unsubscribeFromChatMessages() {
+        chatMessagesJob?.cancel()
+        chatMessagesJob = null
+        chatSocketService.stopObservingChatMessages()
     }
 
     override suspend fun getChatMessagesPage(

@@ -20,6 +20,7 @@ import ru.hse.fandomatch.domain.usecase.chat.GetChatMessagesPageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
+import ru.hse.fandomatch.domain.usecase.chat.UnsubscribeFromChatMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.media.DownloadMediaToGalleryUseCase
 import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
 import ru.hse.fandomatch.utils.epochSecondsToDateString
@@ -28,6 +29,7 @@ class ChatViewModel(
     private val sendMessageUseCase: SendMessageUseCase,
     private val loadChatInfoUseCase: LoadChatInfoUseCase,
     private val subscribeToChatMessagesUseCase: SubscribeToChatMessagesUseCase,
+    private val unsubscribeFromChatMessagesUseCase: UnsubscribeFromChatMessagesUseCase,
     private val getChatMessagesPageUseCase: GetChatMessagesPageUseCase,
     private val uploadMediaUseCase: UploadMediaUseCase,
     private val downloadMediaToGalleryUseCase: DownloadMediaToGalleryUseCase,
@@ -40,8 +42,7 @@ class ChatViewModel(
     private val _action = MutableStateFlow<ChatAction?>(null)
     val action: StateFlow<ChatAction?> get() = _action
 
-    private var liveMessages: List<Message> = emptyList()
-    private var olderMessages: List<Message> = emptyList()
+    private var messages: List<Message> = emptyList()
     private var hasMoreOlderMessages: Boolean = true
     private var isLoadingMoreMessages: Boolean = false
     private var activeChat: Chat? = null
@@ -86,8 +87,7 @@ class ChatViewModel(
                 return@launch
             }
 
-            liveMessages = emptyList()
-            olderMessages = emptyList()
+            messages = emptyList()
             hasMoreOlderMessages = true
             isLoadingMoreMessages = false
             activeChat = null
@@ -99,10 +99,26 @@ class ChatViewModel(
                     return@launch
                 }
                 .onSuccess { chat ->
+                    getChatMessagesPageUseCase.execute(
+                        chatId = chat.chatId,
+                        userId = profileId,
+                        beforeTimestamp = null,
+                        size = MESSAGES_BLOCK_SIZE,
+                    )
+                        .onFailure { exception ->
+                            logger.e("ChatViewModel", "Failed to load initial messages", exception)
+                            setState { ChatState.Error }
+                            return@launch
+                        }
+                        .onSuccess { initialMessages ->
+                            messages = initialMessages
+                            hasMoreOlderMessages = initialMessages.size >= MESSAGES_BLOCK_SIZE
+                            activeChat = chat
+                            renderMainState(chat)
+                        }
+                    
                     subscribeToChatMessagesUseCase.execute(
                         userId = profileId,
-                        chatId = chat.chatId,
-                        size = MESSAGES_BLOCK_SIZE,
                     )
                         .onFailure { exception ->
                             logger.e(
@@ -110,18 +126,11 @@ class ChatViewModel(
                                 "Failed to subscribe to chat messages",
                                 exception
                             )
-                            setState { ChatState.Error }
-                            return@launch
                         }
                         .onSuccess { messagesFlow ->
-                            activeChat = chat
-                            liveMessages = messagesFlow.value.sortedBy { it.timestamp }
-                            hasMoreOlderMessages =
-                                messagesFlow.value.size >= MESSAGES_BLOCK_SIZE
-                            renderMainState(chat)
-
-                            messagesFlow.collect { messages ->
-                                liveMessages = messages.sortedBy { it.timestamp }
+                            messagesFlow.collect { newMessage ->
+                                logger.d("ChatViewModel", "Received new message: $newMessage")
+                                messages = listOf(newMessage) + messages
                                 renderMainState(chat)
                             }
                         }
@@ -133,7 +142,7 @@ class ChatViewModel(
         val current = _state.value as? ChatState.Main ?: return
         if (isLoadingMoreMessages || !hasMoreOlderMessages) return
 
-        val timestamp = mergedMessages().minOfOrNull { it.timestamp } ?: return
+        val timestamp = messages.lastOrNull()?.timestamp ?: return
         isLoadingMoreMessages = true
         _state.value = current.copy(isLoadingMore = true)
 
@@ -153,9 +162,8 @@ class ChatViewModel(
                     }
                 }
                 .onSuccess { older ->
-                    olderMessages = (olderMessages + older)
+                    messages = (messages + older)
                         .distinctBy { it.messageId }
-                        .sortedBy { it.timestamp }
                     hasMoreOlderMessages = older.size == MESSAGES_BLOCK_SIZE
                     isLoadingMoreMessages = false
                     activeChat?.let { renderMainState(it) }
@@ -250,19 +258,23 @@ class ChatViewModel(
 
     private fun clear() {
         loadChatJob?.cancel()
-        liveMessages = emptyList()
-        olderMessages = emptyList()
+        messages = emptyList()
         hasMoreOlderMessages = true
         isLoadingMoreMessages = false
         activeChat = null
         viewModelScope.launch(dispatcherMain) {
+            unsubscribeFromChatMessagesUseCase.execute()
             setState { ChatState.Idle }
             _action.value = null
         }
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        clear()
+    }
+
     private suspend fun renderMainState(chat: Chat) {
-        val messages = mergedMessages()
         setState { current ->
             val currentMain = current as? ChatState.Main
             ChatState.Main(
@@ -270,7 +282,7 @@ class ChatViewModel(
                 participantId = chat.participantId,
                 participantName = chat.participantName,
                 participantAvatarUrl = chat.participantAvatarUrl,
-                uiElements = messages.mapMessagesToUiElements().reversed(),
+                uiElements = messages.mapMessagesToUiElements(),
                 hasMoreOlder = hasMoreOlderMessages,
                 isLoadingMore = isLoadingMoreMessages,
                 attachedFilesWithTypes = currentMain?.attachedFilesWithTypes ?: emptyList(),
@@ -280,29 +292,24 @@ class ChatViewModel(
         }
     }
 
-    private fun mergedMessages(): List<Message> =
-        (olderMessages + liveMessages)
-            .distinctBy { it.messageId }
-            .sortedBy { it.timestamp }
-
     private fun List<Message>.mapMessagesToUiElements(): List<ChatUiElement> {
         if (isEmpty()) return emptyList()
 
         val result = mutableListOf<ChatUiElement>()
         var lastDate: String? = null
         for ((index, message) in withIndex()) {
-            val dateString = message.timestamp.epochSecondsToDateString()
-            if (dateString != lastDate) {
-                result.add(ChatUiElement.DayElement(dateString))
-                lastDate = dateString
-            }
-            val hasTail = index == size - 1 || this[index + 1].isFromThisUser != message.isFromThisUser
+            val hasTail = index == 0 || this[index - 1].isFromThisUser != message.isFromThisUser
             result.add(
                 ChatUiElement.MessageElement(
                     message = message,
                     hasTail = hasTail
                 )
             )
+            val dateString = message.timestamp.epochSecondsToDateString()
+            if (dateString != lastDate) {
+                result.add(ChatUiElement.DayElement(dateString))
+                lastDate = dateString
+            }
         }
         return result
     }

@@ -1,8 +1,11 @@
 package ru.hse.fandomatch.data.mock
 
 import android.util.Log
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.mapNotNull
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
 import ru.hse.fandomatch.domain.model.AuthInfo
 import ru.hse.fandomatch.domain.model.Chat
@@ -306,23 +309,26 @@ class GlobalRepositoryMock: GlobalRepository {
             }
     }
 
+    override fun unsubscribeFromChatPreviews() {
+        Log.d("GlobalRepositoryMock", "unsubscribeFromChatPreviews: unsubscribed from chat previews")
+    }
+
     override suspend fun subscribeToChatMessages(
-        chatId: String,
         userId: String,
-        beforeTimestamp: Long?,
-        size: Int
-    ): StateFlow<List<Message>> {
-        mockMessagesFlow.value = mockMessages
-            .filter { beforeTimestamp == null || it.timestamp < beforeTimestamp }
-            .sortedByDescending { it.timestamp }
-            .take(size)
-            .sortedBy { it.timestamp }
-        return mockMessagesFlow.also {
-            Log.d(
-                "GlobalRepositoryMock",
-                "subscribeToChatMessages: returned ${it.value.size} messages for chatId $chatId before $beforeTimestamp"
-            )
+    ): Flow<Message> {
+        mockMessageFlow.value = null
+        return mockMessageFlow
+            .filterNotNull()
+            .also {
+                Log.d(
+                    "GlobalRepositoryMock",
+                    "subscribeToChatMessages: returned flow"
+                )
         }
+    }
+
+    override fun unsubscribeFromChatMessages() {
+        Log.d("GlobalRepositoryMock", "unsubscribeFromChatMessages: unsubscribed from chat messages")
     }
 
     override suspend fun getChatMessagesPage(
@@ -349,7 +355,7 @@ class GlobalRepositoryMock: GlobalRepository {
         mediaIdsWithTypes: List<Pair<String, MediaType>>,
         timestamp: Long
     ) {
-        mockMessages += Message(
+        val message = Message(
             messageId = (mockMessages.size + 1).toString(),
             isFromThisUser = true,
             content = content,
@@ -361,7 +367,8 @@ class GlobalRepositoryMock: GlobalRepository {
             },
             timestamp = timestamp,
         )
-        mockMessagesFlow.value = mockMessages
+        mockMessages += message
+        mockMessageFlow.value = message
 
         mockChatPreviews = mockChatPreviews.map {
             if (it.participantName == mockChat.participantName) {

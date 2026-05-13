@@ -16,7 +16,6 @@ import ru.hse.fandomatch.data.api.ChatApiService
 import ru.hse.fandomatch.data.api.CoreApiService
 import ru.hse.fandomatch.data.api.S3UploadApiService
 import ru.hse.fandomatch.data.api.UserApiService
-import ru.hse.fandomatch.data.mock.GlobalRepositoryMock
 import ru.hse.fandomatch.data.model.BaseUserProfileDTO
 import ru.hse.fandomatch.data.serialization.BaseUserProfileDeserializer
 import ru.hse.fandomatch.data.socket.ChatSocketService
@@ -45,6 +44,8 @@ import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
+import ru.hse.fandomatch.domain.usecase.chat.UnsubscribeFromChatMessagesUseCase
+import ru.hse.fandomatch.domain.usecase.chat.UnsubscribeFromChatPreviewsUseCase
 import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.fandoms.RequestNewFandomUseCase
@@ -111,8 +112,8 @@ val appModule = module {
         likePostUseCase = get(),
         logger = get(),
     ) }
-    viewModel<ChatsListViewModel> { ChatsListViewModel(get(), get()) }
-    viewModel<ChatViewModel> { ChatViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    viewModel<ChatsListViewModel> { ChatsListViewModel(get(), get(), get()) }
+    viewModel<ChatViewModel> { ChatViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     viewModel<FiltersViewModel> { FiltersViewModel(get(), get(), get(), get(), get()) }
     viewModel<FeedViewModel> { FeedViewModel(get(), get(), get()) }
     viewModel<EditProfileViewModel> { EditProfileViewModel(get(), get(), get(), get(), get(), get()) }
@@ -160,6 +161,7 @@ val dataModule = module {
             okHttpClient = get(named("apiClient")),
             gson = get(named("gson")),
             wsBaseUrl = "wss://xsqs-1dmk-iemo.gw-1a.dockhost.net",
+            sharedPrefRepository = get(),
         )
     }
 
@@ -203,6 +205,8 @@ val domainModule = module {
     factory<SendMessageUseCase> { SendMessageUseCase(get()) }
     factory<SubscribeToChatMessagesUseCase> { SubscribeToChatMessagesUseCase(get(), get()) }
     factory<SubscribeToChatPreviewsUseCase> { SubscribeToChatPreviewsUseCase(get(), get()) }
+    factory<UnsubscribeFromChatMessagesUseCase> { UnsubscribeFromChatMessagesUseCase(get()) }
+    factory<UnsubscribeFromChatPreviewsUseCase> { UnsubscribeFromChatPreviewsUseCase(get()) }
     factory<UploadMediaUseCase> { UploadMediaUseCase(get()) }
     factory<DownloadMediaToGalleryUseCase> { DownloadMediaToGalleryUseCase(get()) }
 

@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.domain.usecase.chat
 
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.repos.GlobalRepository
@@ -11,16 +12,11 @@ class SubscribeToChatMessagesUseCase(
 ) {
     suspend fun execute(
         userId: String,
-        chatId: String,
-        size: Int,
-    ): Result<StateFlow<List<Message>>> {
+    ): Result<Flow<Message>> {
         return runCatching {
             refreshAuthUseCase.execute {
                 globalRepository.subscribeToChatMessages(
                     userId = userId,
-                    chatId = chatId,
-                    beforeTimestamp = null,
-                    size = size,
                 )
             }
         }

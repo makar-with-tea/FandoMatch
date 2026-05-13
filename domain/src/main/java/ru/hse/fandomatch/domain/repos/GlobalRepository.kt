@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.domain.repos
 
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.ChatPreview
@@ -79,12 +80,11 @@ interface GlobalRepository {
         beforeTimestamp: Long?,
         size: Int,
     ): StateFlow<List<ChatPreview>>
+    fun unsubscribeFromChatPreviews()
     suspend fun subscribeToChatMessages(
-        chatId: String,
         userId: String,
-        beforeTimestamp: Long?,
-        size: Int,
-    ): StateFlow<List<Message>>
+    ): Flow<Message>
+    fun unsubscribeFromChatMessages()
     suspend fun getChatMessagesPage(
         chatId: String,
         userId: String,
