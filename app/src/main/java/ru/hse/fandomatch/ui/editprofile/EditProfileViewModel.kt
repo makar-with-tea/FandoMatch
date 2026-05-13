@@ -88,7 +88,7 @@ class EditProfileViewModel(
         }
         viewModelScope.launch(dispatcherIO) {
             _state.value = currentState.copy(foundCities = emptyList(), areCitiesLoading = true)
-            getCitiesByQueryUseCase.execute(query)
+            getCitiesByQueryUseCase.execute(query.trim())
                 .onFailure { exception ->
                     logger.e("EditProfileViewModel", "Failed to search cities", exception)
                     withContext(dispatcherMain) {
@@ -149,7 +149,7 @@ class EditProfileViewModel(
         }
         _state.value = currentState.copy(foundFandoms = emptyList(), areFandomsLoading = true)
         viewModelScope.launch(dispatcherIO) {
-            getFandomsByQueryUseCase.execute(query)
+            getFandomsByQueryUseCase.execute(query.trim())
                 .onFailure { exception ->
                     logger.e("EditProfileViewModel", "Failed to search fandoms", exception)
                     withContext(dispatcherMain) {
@@ -261,8 +261,8 @@ class EditProfileViewModel(
                 backgroundMediaId
             } ?: currentState.background?.id
             editProfileUseCase.execute(
-                name = currentState.name,
-                bio = currentState.description,
+                name = currentState.name.trim(),
+                bio = currentState.description?.trim(),
                 city = currentState.city,
                 fandoms = currentState.fandoms,
                 avatarMediaId = avatarMediaId,

@@ -147,7 +147,7 @@ class FiltersViewModel(
             }
             viewModelScope.launch(dispatcherIO) {
                 _state.value = currentState.copy(foundFandoms = emptyList(), areFandomsLoading = true)
-                val result = getFandomsByQueryUseCase.execute(query)
+                val result = getFandomsByQueryUseCase.execute(query.trim())
                 val foundFandoms = result.getOrNull() ?: run {
                     logger.e("FiltersViewModel", "Failed to search fandoms: ${result.exceptionOrNull()}")
                     withContext(dispatcherMain) {

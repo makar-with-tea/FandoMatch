@@ -213,7 +213,7 @@ class SettingsViewModel(
             isLoading = true
         )
         viewModelScope.launch(dispatcherIO) {
-            changePasswordUseCase.execute(oldPassword, newPassword)
+            changePasswordUseCase.execute(oldPassword.trim(), newPassword.trim())
                 .onFailure { exception ->
                     logger.e("SettingsViewModel", "Failed to change password", exception)
                     if (exception is InvalidCredentialsException) {

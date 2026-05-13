@@ -183,7 +183,7 @@ class RegistrationViewModel(
         )
 
         viewModelScope.launch(dispatcherIO) {
-            getVerificationCodeUseCase.execute(currentState.email)
+            getVerificationCodeUseCase.execute(currentState.email.trim())
                 .onFailure { e ->
                     logger.e("RegistrationViewModel", "Failed to get verification code", e)
                     withContext(dispatcherMain) {
@@ -210,7 +210,7 @@ class RegistrationViewModel(
         _state.value = (state.value as? RegistrationState.Code)?.copy(isLoading = true) ?: return
 
         viewModelScope.launch(dispatcherIO) {
-            checkVerificationCodeUseCase.execute(code, form.email)
+            checkVerificationCodeUseCase.execute(code.trim(), form.email.trim())
                 .onFailure {
                     logger.e("RegistrationViewModel", "Error while checking verification code", it)
                     withContext(dispatcherMain) {
@@ -348,12 +348,12 @@ class RegistrationViewModel(
 
         viewModelScope.launch(dispatcherIO) {
             registerUseCase.execute(
-                form.name,
-                form.email,
-                form.login,
+                form.name.trim(),
+                form.email.trim(),
+                form.login.trim(),
                 form.dateOfBirthEpochSeconds!!,
                 form.gender,
-                form.password
+                form.password.trim()
             )
                 .onFailure { e ->
                     logger.e("RegistrationViewModel", "Registration failed", e)

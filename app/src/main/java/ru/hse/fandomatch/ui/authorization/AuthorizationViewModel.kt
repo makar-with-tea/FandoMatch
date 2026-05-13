@@ -88,7 +88,7 @@ class AuthorizationViewModel(
         }
 
         viewModelScope.launch(dispatcherIO) {
-            loginUseCase.execute(currentState.login, currentState.password)
+            loginUseCase.execute(currentState.login.trim(), currentState.password.trim())
                 .onFailure { e ->
                     withContext(dispatcherMain) {
                         logger.e("AuthorizationViewModel", "Login failed", e)

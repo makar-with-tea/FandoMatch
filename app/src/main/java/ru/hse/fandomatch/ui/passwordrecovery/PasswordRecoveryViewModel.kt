@@ -64,7 +64,7 @@ class PasswordRecoveryViewModel(
             return
         }
         viewModelScope.launch(dispatcherIO) {
-            getVerificationCodeUseCase.execute(currentState.email)
+            getVerificationCodeUseCase.execute(currentState.email.trim())
                 .onFailure { exception ->
                     logger.e(
                         "PasswordRecoveryViewModel",
@@ -163,7 +163,7 @@ class PasswordRecoveryViewModel(
 
         _state.value = resetState.copy(isLoading = true)
         viewModelScope.launch(dispatcherIO) {
-            resetPasswordUseCase.execute(code, resetState.newPassword, resetState.email)
+            resetPasswordUseCase.execute(code.trim(), resetState.newPassword.trim(), resetState.email.trim())
                 .onFailure { exception ->
                     logger.e("PasswordRecoveryViewModel", "Failed to reset password", exception)
                     if (exception is IllegalArgumentException) {

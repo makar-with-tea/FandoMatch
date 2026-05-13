@@ -127,7 +127,7 @@ class NewPostViewModel(
                     mediaId to type
                 }
             createPostUseCase.execute(
-                content = currentState.content,
+                content = currentState.content.trim(),
                 mediaIdsWithTypes = mediaIdsWithTypes,
                 fandomIds = currentState.fandoms.map { it.id },
             )

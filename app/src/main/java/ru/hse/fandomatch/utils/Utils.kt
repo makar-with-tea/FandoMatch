@@ -108,7 +108,7 @@ fun FandomCategory.toStringId(): Int = when (this) {
 
 private const val LATIN = "abcdefghijklmnopqrstuvwxyz"
 private const val LOGIN_SPECIAL_SYMBOLS = "_-"
-private const val SPECIAL_SYMBOLS = "!@#$%^*()-_"
+private const val SPECIAL_SYMBOLS = "!@#$%^*()-._"
 fun String.checkNameLength() = this.length in 2..20
 fun String.checkNameContent() = this.all { it.isLetter() || it == ' ' || it == '\'' }
 fun String.checkEmailContent() = this.isNotEmpty() && "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex().matches(this)
