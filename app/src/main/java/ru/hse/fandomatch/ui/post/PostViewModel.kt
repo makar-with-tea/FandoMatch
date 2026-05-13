@@ -71,7 +71,7 @@ class PostViewModel(
     }
 
     private fun sendComment() {
-        val timestamp = Instant.now().toEpochMilli()
+        val timestamp = System.currentTimeMillis() / 1000
         val currentState = (_state.value as? PostState.Main) ?: return
         val commentText = currentState.commentDraft.trim()
         if (commentText.isEmpty()) return
