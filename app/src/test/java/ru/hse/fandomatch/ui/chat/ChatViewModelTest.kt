@@ -31,6 +31,7 @@ import ru.hse.fandomatch.domain.model.Message
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
+import ru.hse.fandomatch.domain.usecase.chat.UnsubscribeFromChatMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.media.DownloadMediaToGalleryUseCase
 
@@ -47,7 +48,8 @@ class ChatViewModelTest {
     private lateinit var getChatMessagesPageUseCase: GetChatMessagesPageUseCase
     private lateinit var uploadMediaUseCase: UploadMediaUseCase
     private lateinit var downloadMediaToGalleryUseCase: DownloadMediaToGalleryUseCase
-    private lateinit var messagesFlow: MutableStateFlow<List<Message>>
+    private lateinit var unsubscribeFromChatMessagesUseCase: UnsubscribeFromChatMessagesUseCase
+    private lateinit var messagesFlow: MutableStateFlow<Message>
     private val testDispatcher = StandardTestDispatcher()
 
     @Before
@@ -59,7 +61,8 @@ class ChatViewModelTest {
         getChatMessagesPageUseCase = mock(GetChatMessagesPageUseCase::class.java)
         uploadMediaUseCase = mock(UploadMediaUseCase::class.java)
         downloadMediaToGalleryUseCase = mock(DownloadMediaToGalleryUseCase::class.java)
-        messagesFlow = MutableStateFlow(emptyList())
+        unsubscribeFromChatMessagesUseCase = mock(UnsubscribeFromChatMessagesUseCase::class.java)
+        messagesFlow = MutableStateFlow(message("0", false, "", 0L))
         viewModel = ChatViewModel(
             sendMessageUseCase = sendMessageUseCase,
             loadChatInfoUseCase = loadChatInfoUseCase,
@@ -67,6 +70,7 @@ class ChatViewModelTest {
             getChatMessagesPageUseCase = getChatMessagesPageUseCase,
             uploadMediaUseCase = uploadMediaUseCase,
             downloadMediaToGalleryUseCase = downloadMediaToGalleryUseCase,
+            unsubscribeFromChatMessagesUseCase = unsubscribeFromChatMessagesUseCase,
             logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
@@ -85,8 +89,8 @@ class ChatViewModelTest {
     @Test
     fun `load chat success sets main state`() = runTest {
         `when`(loadChatInfoUseCase.execute("10")).thenReturn(Result.success(chat()))
-        `when`(subscribeToChatMessagesUseCase.execute("10", "chat-1", 30)).thenReturn(Result.success(messagesFlow))
-        messagesFlow.value = listOf(message("1", false, "hello", 1000L))
+        `when`(getChatMessagesPageUseCase.execute("chat-1", "10", null, 30)).thenReturn(Result.success(listOf(message("1", false, "hello", 1000L))))
+        `when`(subscribeToChatMessagesUseCase.execute("10")).thenReturn(Result.success(messagesFlow))
 
         viewModel.obtainEvent(ChatEvent.LoadChat("10"))
         advanceUntilIdle()
@@ -207,7 +211,7 @@ class ChatViewModelTest {
         `when`(
             getChatMessagesPageUseCase.execute(
                 chatId = eq("chat-1"),
-                userId = eq("participant-1"),
+                userId = eq("10"),
                 beforeTimestamp = anyLong(),
                 size = eq(30),
             )
@@ -229,8 +233,8 @@ class ChatViewModelTest {
 
     private suspend fun prepareMainState() {
         `when`(loadChatInfoUseCase.execute("10")).thenReturn(Result.success(chat()))
-        `when`(subscribeToChatMessagesUseCase.execute("10", "chat-1", 30)).thenReturn(Result.success(messagesFlow))
-        messagesFlow.value = listOf(message("1", false, "hello", 1000L))
+        `when`(getChatMessagesPageUseCase.execute("chat-1", "10", null, 30)).thenReturn(Result.success(listOf(message("1", false, "hello", 1000L))))
+        `when`(subscribeToChatMessagesUseCase.execute("10")).thenReturn(Result.success(messagesFlow))
         viewModel.obtainEvent(ChatEvent.LoadChat("10"))
     }
 

@@ -21,6 +21,7 @@ import org.mockito.Mockito.mock
 import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
+import ru.hse.fandomatch.domain.usecase.chat.UnsubscribeFromChatPreviewsUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChatsListViewModelTest {
@@ -30,6 +31,7 @@ class ChatsListViewModelTest {
 
     private lateinit var viewModel: ChatsListViewModel
     private lateinit var subscribeToChatPreviewsUseCase: SubscribeToChatPreviewsUseCase
+    private lateinit var unsubscribeFromChatPreviewsUseCase: UnsubscribeFromChatPreviewsUseCase
     private lateinit var chatsFlow: MutableStateFlow<List<ChatPreview>>
     private val testDispatcher = StandardTestDispatcher()
 
@@ -56,12 +58,14 @@ class ChatsListViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         subscribeToChatPreviewsUseCase = mock(SubscribeToChatPreviewsUseCase::class.java)
+        unsubscribeFromChatPreviewsUseCase = mock(UnsubscribeFromChatPreviewsUseCase::class.java)
         chatsFlow = MutableStateFlow(emptyList())
         runBlocking {
             `when`(subscribeToChatPreviewsUseCase.execute(30)).thenReturn(Result.success(chatsFlow))
         }
         viewModel = ChatsListViewModel(
             subscribeToChatPreviewsUseCase = subscribeToChatPreviewsUseCase,
+            unsubscribeFromChatPreviewsUseCase = unsubscribeFromChatPreviewsUseCase,
             logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
@@ -87,6 +91,7 @@ class ChatsListViewModelTest {
         `when`(subscribeToChatPreviewsUseCase.execute(30)).thenReturn(Result.failure(RuntimeException()))
         viewModel = ChatsListViewModel(
             subscribeToChatPreviewsUseCase = subscribeToChatPreviewsUseCase,
+            unsubscribeFromChatPreviewsUseCase = unsubscribeFromChatPreviewsUseCase,
             logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
