@@ -20,7 +20,6 @@ import ru.hse.fandomatch.data.model.BaseUserProfileDTO
 import ru.hse.fandomatch.data.serialization.BaseUserProfileDeserializer
 import ru.hse.fandomatch.data.socket.ChatSocketService
 import ru.hse.fandomatch.data.socket.ChatSocketServiceImpl
-import ru.hse.fandomatch.utils.AndroidLogger
 import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import ru.hse.fandomatch.domain.repos.MediaRepository
@@ -47,7 +46,6 @@ import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
 import ru.hse.fandomatch.domain.usecase.chat.UnsubscribeFromChatMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.chat.UnsubscribeFromChatPreviewsUseCase
-import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.fandoms.RequestNewFandomUseCase
 import ru.hse.fandomatch.domain.usecase.matches.ApplyFiltersUseCase
@@ -55,6 +53,7 @@ import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LoadInitialFiltersUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LoadSuggestedProfilesUseCase
 import ru.hse.fandomatch.domain.usecase.media.DownloadMediaToGalleryUseCase
+import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.posts.CreatePostUseCase
 import ru.hse.fandomatch.domain.usecase.posts.GetFeedUseCase
 import ru.hse.fandomatch.domain.usecase.posts.GetFullPostUseCase
@@ -84,6 +83,7 @@ import ru.hse.fandomatch.ui.post.PostViewModel
 import ru.hse.fandomatch.ui.profile.ProfileViewModel
 import ru.hse.fandomatch.ui.registration.RegistrationViewModel
 import ru.hse.fandomatch.ui.settings.SettingsViewModel
+import ru.hse.fandomatch.utils.AndroidLogger
 
 val appModule = module {
     viewModel<AuthorizationViewModel> { AuthorizationViewModel(loginUseCase = get(), logger = get()) }
@@ -182,7 +182,6 @@ val dataModule = module {
     single<S3UploadApiService> { get<Retrofit>(named("s3Retrofit")).create(S3UploadApiService::class.java) }
 
     single<GlobalRepository> { GlobalRepositoryImpl(get(), get(), get(), get(), get()) }
-//    single<GlobalRepository> { GlobalRepositoryMock() }
 }
 
 val domainModule = module {
@@ -198,7 +197,7 @@ val domainModule = module {
     factory<RefreshAuthUseCase> { RefreshAuthUseCase(get(), get(), get()) }
     factory<RegisterUseCase> { RegisterUseCase(get(), get()) }
     factory<ResetPasswordUseCase> { ResetPasswordUseCase(get()) }
-    factory<SaveDeviceTokenUseCase> { SaveDeviceTokenUseCase(get()) }
+    factory<SaveDeviceTokenUseCase> { SaveDeviceTokenUseCase(get(), get()) }
     factory<SetPermissionShownUseCase> { SetPermissionShownUseCase(get()) }
 
     factory<LoadChatInfoUseCase> { LoadChatInfoUseCase(get()) }

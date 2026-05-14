@@ -11,6 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import ru.hse.fandomatch.MainActivity
@@ -93,7 +94,15 @@ class FandoMatchMessagingService : FirebaseMessagingService(), KoinComponent {
 
     override fun onNewToken(token: String) {
         Log.d("FCM", "Refreshed token: $token")
-        saveDeviceTokenUseCase.execute(token)
+        serviceScope.launch(Dispatchers.IO) {
+            saveDeviceTokenUseCase.execute(token)
+                .onSuccess {
+                    Log.d("FCM", "Device token saved successfully")
+                }
+                .onFailure { e ->
+                    Log.e("FCM", "Failed to save device token", e)
+                }
+        }
     }
 
     override fun onDestroy() {
