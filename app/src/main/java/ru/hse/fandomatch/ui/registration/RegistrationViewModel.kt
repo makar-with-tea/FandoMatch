@@ -273,9 +273,13 @@ class RegistrationViewModel(
             !password.checkPasswordContent() -> RegistrationState.RegistrationError.PASSWORD_CONTENT
             else -> RegistrationState.RegistrationError.IDLE
         }
+        val repeatErr = if (currentState.passwordRepeat != password)
+            RegistrationState.RegistrationError.PASSWORD_MISMATCH
+        else RegistrationState.RegistrationError.IDLE
         _state.value = currentState.copy(
             password = password,
-            passwordError = passErr
+            passwordError = passErr,
+            passwordRepeatError = repeatErr
         )
     }
 

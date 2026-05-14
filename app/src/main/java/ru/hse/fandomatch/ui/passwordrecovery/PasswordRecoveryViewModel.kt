@@ -92,9 +92,13 @@ class PasswordRecoveryViewModel(
             !password.checkPasswordContent() -> PasswordRecoveryState.PasswordRecoveryError.PASSWORD_CONTENT
             else -> PasswordRecoveryState.PasswordRecoveryError.IDLE
         }
+        val repeatErr = if (password != currentState.repeatNewPassword)
+            PasswordRecoveryState.PasswordRecoveryError.PASSWORD_MISMATCH
+        else PasswordRecoveryState.PasswordRecoveryError.IDLE
         _state.value = currentState.copy(
             newPassword = password,
             newPasswordError = passwordErr,
+            repeatNewPasswordError = repeatErr,
         )
     }
 
