@@ -43,9 +43,10 @@ class ChatsListViewModel(
         logger.d("ChatsListViewModel", "Obtained event: $event")
         when (event) {
             is ChatsListEvent.ChatClicked -> goToChat(event.userId)
-            is ChatsListEvent.LoadChats -> loadChats()
+            ChatsListEvent.LoadChats -> loadChats()
             is ChatsListEvent.SearchChats -> searchChats(event.query)
-            is ChatsListEvent.Clear -> clear()
+            ChatsListEvent.UnsubscribeFromChatsUpdates -> unsubscribe()
+            ChatsListEvent.Clear -> clear()
         }
     }
 
@@ -94,6 +95,12 @@ class ChatsListViewModel(
         }
     }
 
+    private fun unsubscribe() {
+        job?.cancel()
+        job = null
+        unsubscribeFromChatPreviewsUseCase.execute()
+    }
+
     private fun searchChats(query: String?) {
         val currentState = _state.value as? ChatsListState.Main ?: return
         val allChats = _allChats.value
@@ -114,11 +121,11 @@ class ChatsListViewModel(
     }
 
     private fun clear() {
+        logger.d("ChatsListViewModel", "Clearing chat list view model")
+        unsubscribe()
         _state.value = ChatsListState.Idle
         _action.value = null
         currentBatchSize = 0
-        job?.cancel()
-        unsubscribeFromChatPreviewsUseCase.execute()
     }
 
     override fun onCleared() {

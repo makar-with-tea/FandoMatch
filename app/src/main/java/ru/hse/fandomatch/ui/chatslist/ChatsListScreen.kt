@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -54,10 +55,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
+import ru.hse.fandomatch.ui.chat.ChatEvent
 import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.ImageOrPlaceholder
 import ru.hse.fandomatch.ui.composables.MyTitle
@@ -76,6 +81,31 @@ fun ChatsListScreen(
     val listState = rememberLazyListState()
 
     Log.d("ChatsListScreen", "State: $state")
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    viewModel.obtainEvent(ChatsListEvent.LoadChats)
+                }
+
+                Lifecycle.Event.ON_STOP -> {
+                    viewModel.obtainEvent(ChatsListEvent.Clear)
+                }
+
+                else -> Unit
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            viewModel.obtainEvent(ChatsListEvent.Clear)
+        }
+    }
+
     when (val action = action.value) {
         is ChatsListAction.NavigateToChat -> {
             navigateToChat(action.chatId)
@@ -98,7 +128,6 @@ fun ChatsListScreen(
         }
         is ChatsListState.Idle -> {
             IdleState()
-            viewModel.obtainEvent(ChatsListEvent.LoadChats)
         }
         is ChatsListState.Loading -> {
             LoadingState()

@@ -21,6 +21,7 @@ sealed class ChatsListEvent {
     ): ChatsListEvent()
     data object LoadChats: ChatsListEvent()
     data class SearchChats(val query: String?): ChatsListEvent()
+    data object UnsubscribeFromChatsUpdates : ChatsListEvent()
     data object Clear: ChatsListEvent()
 }
 

@@ -31,7 +31,7 @@ class ChatSocketServiceImpl(
             .url("$wsBaseUrl/messaging/ws")
             .build()
 
-        var ws: WebSocket? = null
+        var ws: WebSocket?
 
         val listener = object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -76,9 +76,7 @@ class ChatSocketServiceImpl(
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.e("ChatSocket", "WebSocket failure for messages (user=$userId)", t)
-                if (!isClosedForSend) {
-                    close(t)
-                }
+                close(t)
             }
         }
 
@@ -110,7 +108,7 @@ class ChatSocketServiceImpl(
             .url("$wsBaseUrl/messaging/ws")
             .build()
 
-        var ws: WebSocket? = null
+        var ws: WebSocket?
 
         val listener = object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -155,9 +153,7 @@ class ChatSocketServiceImpl(
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.e("ChatSocket", "WebSocket failure for previews", t)
-                if (!isClosedForSend) {
-                    close(t)
-                }
+                close(t)
             }
         }
 

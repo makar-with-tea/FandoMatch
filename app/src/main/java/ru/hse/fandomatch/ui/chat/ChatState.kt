@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.ui.chat
 
+import androidx.compose.ui.text.input.TextFieldValue
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.Message
@@ -19,7 +20,7 @@ sealed class ChatState {
         val isLoadingMore: Boolean = false,
         val error: ChatError = ChatError.IDLE,
         val attachedFilesWithTypes: List<Pair<ByteArray, MediaType>> = emptyList(),
-        val messageDraft: String = "",
+        val messageDraft: TextFieldValue = TextFieldValue(""),
     ) : ChatState()
 
     data object Loading : ChatState()
@@ -35,11 +36,13 @@ sealed class ChatEvent {
         val profileId: String?,
     ) : ChatEvent()
     data object ProfileClicked: ChatEvent()
-    data class MessageDraftChanged(val draft: String) : ChatEvent()
+    data class MessageDraftChanged(val draft: TextFieldValue) : ChatEvent()
     data class AttachmentsChanged(val filesWithTypes: List<Pair<ByteArray, MediaType>>) : ChatEvent()
     data class DownloadMediaItem(val mediaItem: MediaItem) : ChatEvent()
     data object LoadOlderMessages : ChatEvent()
     data object ToastShown : ChatEvent()
+    data class SubscribeToChatUpdates(val profileId: String?) : ChatEvent()
+    data object UnsubscribeFromChatUpdates : ChatEvent()
     data object Clear : ChatEvent()
 }
 

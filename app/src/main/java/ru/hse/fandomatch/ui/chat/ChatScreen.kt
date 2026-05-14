@@ -31,6 +31,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -48,8 +49,12 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.MediaItem
@@ -106,6 +111,30 @@ fun ChatScreen(
 
     Log.d("ChatScreen", "State: $state")
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    viewModel.obtainEvent(ChatEvent.SubscribeToChatUpdates(profileId))
+                }
+
+                Lifecycle.Event.ON_STOP -> {
+                    viewModel.obtainEvent(ChatEvent.Clear)
+                }
+
+                else -> Unit
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            viewModel.obtainEvent(ChatEvent.Clear)
+        }
+    }
+
     when (state.value) {
         is ChatState.Main -> MainState(
             state = state.value as ChatState.Main,
@@ -154,24 +183,38 @@ private fun MainState(
     state: ChatState.Main,
     setTopBarState: (TopBarState?) -> Unit,
     onAttachmentsChanged: (List<Pair<ByteArray, MediaType>>) -> Unit,
-    onMessageDraftChanged: (String) -> Unit,
+    onMessageDraftChanged: (TextFieldValue) -> Unit,
     onSendMessage: () -> Unit,
     onClickProfile: () -> Unit,
     onDownloadMediaItem: (MediaItem) -> Unit,
     onLoadOlderMessages: () -> Unit,
 ) {
-    setTopBarState(
-        TopBarState(
-            titleContent = {
-                AvatarAndNameBlock(
-                    name = state.participantName,
-                    avatarUrl = state.participantAvatarUrl,
-                    login = null,
-                    onClick = { onClickProfile() },
-                )
-            },
-        )
-    )
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    setTopBarState(
+                        TopBarState(
+                            titleContent = {
+                                AvatarAndNameBlock(
+                                    name = state.participantName,
+                                    avatarUrl = state.participantAvatarUrl,
+                                    login = null,
+                                    onClick = { onClickProfile() },
+                                )
+                            },
+                        )
+                    )
+                }
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     val context = LocalContext.current
     val pickMedia = when (MAX_NUMBER_OF_ATTACHMENTS - state.attachedFilesWithTypes.size) {
@@ -365,11 +408,11 @@ private fun MainState(
                         .size(24.dp)
                         .clip(CircleShape)
                         .background(
-                            if (state.messageDraft.isBlank() && state.attachedFilesWithTypes.isEmpty())
+                            if (state.messageDraft.text.isBlank() && state.attachedFilesWithTypes.isEmpty())
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                             else MaterialTheme.colorScheme.primaryContainer
                         ),
-                    enabled = state.messageDraft.isNotBlank() || state.attachedFilesWithTypes.isNotEmpty(),
+                    enabled = state.messageDraft.text.isNotBlank() || state.attachedFilesWithTypes.isNotEmpty(),
                     onClick = {
                         onSendMessage()
                     },
