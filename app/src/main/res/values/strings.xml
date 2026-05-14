@@ -153,7 +153,7 @@
     <string name="gender_not_specified_icon_description">пол не указан</string>
     <string name="posts_label">Посты</string>
     <string name="friends_label">Друзья</string>
-    <string name="your_requests_label">Ваши заявки</string>
+    <string name="your_requests_label">Ваши лайки</string>
 
     <string name="notification_allow_popup_name">Разрешение на уведомления</string>
     <string name="notification_allow_popup_description">Разрешите уведомления, чтобы получать оповещения о новых сообщениях и мэтчах.</string>

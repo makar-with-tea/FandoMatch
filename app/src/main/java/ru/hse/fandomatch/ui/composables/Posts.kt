@@ -71,7 +71,7 @@ fun FeedPost(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(4.dp)
+            .padding(vertical = 4.dp, horizontal = 8.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(backgroundColor)
             .padding(horizontal = 4.dp)
@@ -373,13 +373,13 @@ fun LoadingPosts() {
         verticalArrangement = Arrangement.Top,
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 16.dp, bottom = 0.dp, start = 16.dp, end = 16.dp)
+            .padding(top = 16.dp, bottom = 0.dp, start = 8.dp, end = 8.dp)
     ) {
-        repeat(5) {
+        repeat(10) {
             SkeletonView(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(80.dp)
+                    .height(140.dp)
                     .padding(vertical = 4.dp)
                     .clip(shape = RoundedCornerShape(12.dp)),
                 globalX = globalX,

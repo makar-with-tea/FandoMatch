@@ -490,7 +490,7 @@ private fun LoadingMessages() {
             .fillMaxSize()
             .padding(top = 16.dp, bottom = 0.dp, start = 16.dp, end = 16.dp)
     ) {
-        repeat(5) {
+        repeat(8) {
             SkeletonView(
                 modifier = Modifier
                     .fillMaxWidth()

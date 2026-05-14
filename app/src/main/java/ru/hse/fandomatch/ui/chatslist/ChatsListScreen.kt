@@ -127,9 +127,23 @@ fun ChatsListScreen(
             )
         }
         is ChatsListState.Idle -> {
+            setTopBarState(
+                TopBarState(
+                    titleContent = {
+                         MyTitle(text = stringResource(R.string.chats_list_title))
+                    },
+                )
+            )
             IdleState()
         }
         is ChatsListState.Loading -> {
+            setTopBarState(
+                TopBarState(
+                    titleContent = {
+                        MyTitle(text = stringResource(R.string.chats_list_title))
+                    },
+                )
+            )
             LoadingState()
         }
         is ChatsListState.Error -> {
@@ -361,7 +375,7 @@ private fun LoadingState() {
         modifier = Modifier
             .fillMaxSize()
     ) {
-        repeat(5) {
+        repeat(10) {
             SkeletonView(
                 modifier = Modifier
                     .fillMaxWidth()
