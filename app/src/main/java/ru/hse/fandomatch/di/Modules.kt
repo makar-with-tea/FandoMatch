@@ -40,6 +40,7 @@ import ru.hse.fandomatch.domain.usecase.auth.ResetPasswordUseCase
 import ru.hse.fandomatch.domain.usecase.auth.SaveDeviceTokenUseCase
 import ru.hse.fandomatch.domain.usecase.auth.SetPermissionShownUseCase
 import ru.hse.fandomatch.domain.usecase.chat.GetChatMessagesPageUseCase
+import ru.hse.fandomatch.domain.usecase.chat.GetCurrentChatIdUseCase
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
@@ -197,15 +198,16 @@ val domainModule = module {
     factory<RefreshAuthUseCase> { RefreshAuthUseCase(get(), get(), get()) }
     factory<RegisterUseCase> { RegisterUseCase(get(), get()) }
     factory<ResetPasswordUseCase> { ResetPasswordUseCase(get()) }
-    factory<SaveDeviceTokenUseCase> { SaveDeviceTokenUseCase(get(), get()) }
+    factory<SaveDeviceTokenUseCase> { SaveDeviceTokenUseCase(get()) }
     factory<SetPermissionShownUseCase> { SetPermissionShownUseCase(get()) }
 
     factory<LoadChatInfoUseCase> { LoadChatInfoUseCase(get()) }
     factory<GetChatMessagesPageUseCase> { GetChatMessagesPageUseCase(get(), get()) }
+    factory<GetCurrentChatIdUseCase> { GetCurrentChatIdUseCase(get()) }
     factory<SendMessageUseCase> { SendMessageUseCase(get()) }
-    factory<SubscribeToChatMessagesUseCase> { SubscribeToChatMessagesUseCase(get(), get()) }
+    factory<SubscribeToChatMessagesUseCase> { SubscribeToChatMessagesUseCase(get(), get(), get()) }
     factory<SubscribeToChatPreviewsUseCase> { SubscribeToChatPreviewsUseCase(get(), get()) }
-    factory<UnsubscribeFromChatMessagesUseCase> { UnsubscribeFromChatMessagesUseCase(get()) }
+    factory<UnsubscribeFromChatMessagesUseCase> { UnsubscribeFromChatMessagesUseCase(get(), get()) }
     factory<UnsubscribeFromChatPreviewsUseCase> { UnsubscribeFromChatPreviewsUseCase(get()) }
     factory<UploadMediaUseCase> { UploadMediaUseCase(get()) }
     factory<DownloadMediaToGalleryUseCase> { DownloadMediaToGalleryUseCase(get()) }

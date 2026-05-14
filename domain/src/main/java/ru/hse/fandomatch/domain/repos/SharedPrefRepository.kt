@@ -13,4 +13,8 @@ interface SharedPrefRepository {
     fun clearRefreshToken()
     fun saveNotificationPermissionShown(shown: Boolean)
     fun getNotificationPermissionShown(): Boolean
+    fun saveFCMToken(token: String)
+    fun getFCMToken(): String?
+    fun saveCurrentChatId(chatId: String?)
+    fun getCurrentChatId(): String?
 }

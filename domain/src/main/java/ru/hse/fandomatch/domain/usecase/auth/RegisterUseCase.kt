@@ -27,5 +27,9 @@ class RegisterUseCase(
         sharedPrefRepository.saveUserId(res.userId)
         sharedPrefRepository.saveToken(res.accessToken)
         sharedPrefRepository.saveRefreshToken(res.refreshToken)
+        val fcmToken = sharedPrefRepository.getFCMToken()
+        fcmToken?.let {
+            globalRepository.saveDeviceToken(it, res.userId)
+        }
     }
 }

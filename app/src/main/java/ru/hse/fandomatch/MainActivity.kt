@@ -50,24 +50,14 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun askNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
-                PackageManager.PERMISSION_GRANTED
-            ) {
-                val channelId = "default_channel"
-                val channelName = "Default Channel"
-                val channelDescription = "General notifications"
-                val importance = NotificationManager.IMPORTANCE_DEFAULT
-                val channel = NotificationChannel(channelId, channelName, importance).apply {
-                    description = channelDescription
-                }
-                val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                manager.createNotificationChannel(channel)
-            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
-                showNotificationRationale = true
-            } else {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        ) return
+        if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+            showNotificationRationale = true
+        } else {
+            requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
@@ -78,6 +68,20 @@ class MainActivity : ComponentActivity() {
         if (!getPermissionShownUseCase.execute()) {
             askNotificationPermission()
             setPermissionShownUseCase.execute(true)
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            Log.i("MainActivity", "Setting up notification channel")
+            val channelId = "default_channel"
+            val channelName = "Default Channel"
+            val channelDescription = "General notifications"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(channelId, channelName, importance).apply {
+                description = channelDescription
+            }
+            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            manager.createNotificationChannel(channel)
         }
 
         enableEdgeToEdge()
@@ -110,7 +114,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     MainView(
                         navigateTo = navigateToTarget,
-                        id = targetId,
+                        userId = targetId,
                         onNotificationConsumed = {
                             navigateToTarget = null
                             targetId = null
