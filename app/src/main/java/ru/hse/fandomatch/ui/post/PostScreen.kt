@@ -177,7 +177,7 @@ private fun MainState(
                 Spacer(modifier = Modifier.height(4.dp))
             }
 
-            items(state.fullPost.comments.reversed()) {
+            items(state.fullPost.comments) {
                 PostComment(
                     comment = it,
                     modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp),
