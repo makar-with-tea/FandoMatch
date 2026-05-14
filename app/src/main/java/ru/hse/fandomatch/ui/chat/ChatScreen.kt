@@ -282,6 +282,18 @@ private fun MainState(
         currentItemIndex = 0
         attachmentsSenderName = ""
         attachmentsSentTime = ""
+        setTopBarState(
+            TopBarState(
+                titleContent = {
+                    AvatarAndNameBlock(
+                        name = state.participantName,
+                        avatarUrl = state.participantAvatarUrl,
+                        login = null,
+                        onClick = { onClickProfile() },
+                    )
+                },
+            )
+        )
     }
 
     Column(
