@@ -274,6 +274,7 @@ fun MainState(
 private fun NewPostState.Main.canPost() : Boolean {
     return contentError == NewPostState.NewPostError.IDLE
             && (content.isNotBlank() || attachedFilesWithTypes.isNotEmpty())
+            && !isLoading
 }
 
 @Composable

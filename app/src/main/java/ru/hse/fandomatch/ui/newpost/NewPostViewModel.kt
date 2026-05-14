@@ -112,6 +112,7 @@ class NewPostViewModel(
 
     private fun post() {
         val currentState = _state.value as? NewPostState.Main ?: return
+        _state.value = currentState.copy(isLoading = true)
         viewModelScope.launch(dispatcherIO) {
             val mediaIdsWithTypes =
                 currentState.attachedFilesWithTypes.mapNotNull { (bytes, type) ->
@@ -133,7 +134,10 @@ class NewPostViewModel(
             )
                 .onFailure { exception ->
                     logger.e("NewPostViewModel", "Failed to create post: $exception", exception)
-                    _action.value = NewPostAction.ShowErrorToast
+                    withContext(dispatcherMain){
+                        _action.value = NewPostAction.ShowErrorToast
+                        _state.value = currentState.copy(isLoading = false)
+                    }
                 }
                 .onSuccess {
                     withContext(dispatcherMain) {
