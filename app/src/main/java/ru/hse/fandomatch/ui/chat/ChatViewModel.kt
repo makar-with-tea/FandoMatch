@@ -208,9 +208,10 @@ class ChatViewModel(
                 }
                 mediaId to type
             }
+            if (message.isBlank() && mediaIds.isEmpty()) return@launch
             sendMessageUseCase.execute(
                 userId = currentState.participantId,
-                content = message,
+                content = message.trim(),
                 mediaIdsWithTypes = mediaIds,
                 timestamp = timestamp,
             )
