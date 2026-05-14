@@ -62,7 +62,7 @@
     <string name="login_taken_error">Данный логин уже занят</string>
     <string name="registration_failed_error">Ошибка регистрации</string>
     <string name="email_content_error">Неверный формат почты</string>
-    <string name="birthdate_too_young_error">Возраст должен быть не менее 12 лет</string>
+    <string name="birthdate_too_young_error">Возраст должен быть не менее 16 лет</string>
     <string name="birthdate_empty_error">Дата рождения не может быть пустой</string>
     <string name="gender_not_selected_error">Необходимо выбрать пол</string>
     <string name="password_complexity_error">Пароль должен содержать заглавные и строчные буквы, цифры и специальные символы</string>
