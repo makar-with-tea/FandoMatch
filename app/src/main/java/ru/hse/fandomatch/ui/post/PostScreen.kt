@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
@@ -117,7 +118,7 @@ private fun MainState(
     onClickProfile: () -> Unit,
     onClickLike: () -> Unit,
     onDownloadMediaItem: (MediaItem) -> Unit,
-    onUpdateCommentDraft: (String) -> Unit,
+    onUpdateCommentDraft: (TextFieldValue) -> Unit,
 ) {
     setTopBarState(
         TopBarState(
@@ -185,12 +186,10 @@ private fun MainState(
             }
         }
 
-        var commentDraft by remember { mutableStateOf(state.commentDraft) }
         OutlinedTextField(
-            value = commentDraft,
+            value = state.commentDraft,
             onValueChange = {
                 onUpdateCommentDraft(it)
-                commentDraft = it
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -205,16 +204,12 @@ private fun MainState(
                         .size(24.dp)
                         .clip(CircleShape)
                         .background(
-                            if (commentDraft.isBlank())
+                            if (state.commentDraft.text.isBlank())
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                             else MaterialTheme.colorScheme.primaryContainer
                         ),
-                    enabled = commentDraft.isNotBlank(),
-                    onClick = {
-                        onSendComment()
-                        commentDraft = ""
-                        onUpdateCommentDraft("")
-                    },
+                    enabled = state.commentDraft.text.isNotBlank(),
+                    onClick = { onSendComment() },
                 ) {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_send),

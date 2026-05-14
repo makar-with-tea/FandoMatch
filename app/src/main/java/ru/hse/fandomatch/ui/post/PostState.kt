@@ -1,12 +1,13 @@
 package ru.hse.fandomatch.ui.post
 
+import androidx.compose.ui.text.input.TextFieldValue
 import ru.hse.fandomatch.domain.model.FullPost
 import ru.hse.fandomatch.domain.model.MediaItem
 
 sealed class PostState {
     data class Main(
         val fullPost: FullPost,
-        val commentDraft: String = "",
+        val commentDraft: TextFieldValue = TextFieldValue(""),
         val images: List<String> = emptyList(),
     ) : PostState()
 
@@ -17,7 +18,7 @@ sealed class PostState {
 
 sealed class PostEvent {
     data class LoadPost(val postId: String?) : PostEvent()
-    data class UpdateCommentDraft(val commentDraft: String) : PostEvent()
+    data class UpdateCommentDraft(val commentDraft: TextFieldValue) : PostEvent()
     data object SendComment : PostEvent()
     data object ProfileClicked : PostEvent()
     data object LikeClicked : PostEvent()

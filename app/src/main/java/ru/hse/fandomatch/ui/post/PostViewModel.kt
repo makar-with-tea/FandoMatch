@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.ui.post
 
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -17,7 +18,6 @@ import ru.hse.fandomatch.domain.usecase.posts.GetFullPostUseCase
 import ru.hse.fandomatch.domain.usecase.posts.LikePostUseCase
 import ru.hse.fandomatch.domain.usecase.posts.SendCommentUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
-import java.time.Instant
 
 class PostViewModel(
     private val getFullPostUseCase: GetFullPostUseCase,
@@ -73,7 +73,7 @@ class PostViewModel(
     private fun sendComment() {
         val timestamp = System.currentTimeMillis() / 1000
         val currentState = (_state.value as? PostState.Main) ?: return
-        val commentText = currentState.commentDraft.trim()
+        val commentText = currentState.commentDraft.text.trim()
         if (commentText.isEmpty()) return
         viewModelScope.launch(dispatcherIO) {
             sendCommentUseCase.execute(
@@ -96,7 +96,7 @@ class PostViewModel(
                         .onSuccess { currentUser ->
                             withContext(dispatcherMain) {
                                 _state.value = currentState.copy(
-                                    commentDraft = "",
+                                    commentDraft = TextFieldValue(""),
                                     fullPost = currentState.fullPost.copy(
                                         comments = currentState.fullPost.comments + Comment(
                                             authorName = currentUser.name,
@@ -149,7 +149,7 @@ class PostViewModel(
         }
     }
 
-    private fun updateCommentDraft(commentDraft: String) {
+    private fun updateCommentDraft(commentDraft: TextFieldValue) {
         val currentState = (_state.value as? PostState.Main) ?: return
         _state.value = currentState.copy(commentDraft = commentDraft)
     }
