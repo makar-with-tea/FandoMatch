@@ -116,7 +116,7 @@ class ChatViewModel(
                             activeChat = chat
                             renderMainState(chat)
                         }
-                    
+
                     subscribeToChatMessagesUseCase.execute(
                         userId = profileId,
                     )
@@ -182,7 +182,8 @@ class ChatViewModel(
     private fun attachmentsChanged(filesWithTypes: List<Pair<ByteArray, MediaType>>) {
         viewModelScope.launch(dispatcherMain) {
             setState { current ->
-                (current as? ChatState.Main)?.copy(attachedFilesWithTypes = filesWithTypes) ?: current
+                (current as? ChatState.Main)?.copy(attachedFilesWithTypes = filesWithTypes)
+                    ?: current
             }
         }
     }
@@ -214,24 +215,25 @@ class ChatViewModel(
                 timestamp = timestamp,
             )
                 .onFailure { exception ->
-                logger.e("ChatViewModel", "Failed to send message", exception)
-            }
+                    logger.e("ChatViewModel", "Failed to send message", exception)
+                }
                 .onSuccess {
-            setState { current ->
-                (current as? ChatState.Main)?.copy(
-                    messageDraft = "",
-                    attachedFilesWithTypes = emptyList()
-                ) ?: current
-            }
+                    setState { current ->
+                        (current as? ChatState.Main)?.copy(
+                            messageDraft = "",
+                            attachedFilesWithTypes = emptyList()
+                        ) ?: current
+                    }
+                }
         }
     }
-        }
 
     private fun goToProfile() {
         when (val currentState = _state.value) {
             is ChatState.Main -> _action.value = ChatAction.GoToProfile(
                 profileId = currentState.participantId
             )
+
             else -> Unit
         }
     }
@@ -296,8 +298,13 @@ class ChatViewModel(
         if (isEmpty()) return emptyList()
 
         val result = mutableListOf<ChatUiElement>()
-        var lastDate: String? = null
+        var currentDate: String? = firstOrNull()?.timestamp?.epochSecondsToDateString()
         for ((index, message) in withIndex()) {
+            val dateString = message.timestamp.epochSecondsToDateString()
+            if (dateString != currentDate) {
+                result.add(ChatUiElement.DayElement(dateString))
+                currentDate = dateString
+            }
             val hasTail = index == 0 || this[index - 1].isFromThisUser != message.isFromThisUser
             result.add(
                 ChatUiElement.MessageElement(
@@ -305,10 +312,12 @@ class ChatViewModel(
                     hasTail = hasTail
                 )
             )
-            val dateString = message.timestamp.epochSecondsToDateString()
-            if (dateString != lastDate) {
-                result.add(ChatUiElement.DayElement(dateString))
-                lastDate = dateString
+        }
+        if (result.lastOrNull() !is ChatUiElement.DayElement) {
+            val dateString = result.lastOrNull { it is ChatUiElement.MessageElement }
+                ?.let { (it as ChatUiElement.MessageElement).message.timestamp.epochSecondsToDateString() }
+            dateString?.let {
+                result.add(ChatUiElement.DayElement(it))
             }
         }
         return result
