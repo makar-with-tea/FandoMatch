@@ -10,7 +10,6 @@
     <string name="forgot_password_button">Забыли пароль?</string>
     <string name="register_button">Зарегистрироваться</string>
 
-
     <string name="my_profile_icon_description">Аккаунт</string>
     <string name="matches_icon_description">Знакомства</string>
     <string name="feed_icon_description">Лента</string>
@@ -98,7 +97,7 @@
     <string name="fandom_category_cartoons">Мультфильмы</string>
     <string name="fandom_category_films">Фильмы</string>
     <string name="fandom_category_tv_series">Сериалы</string>
-    <string name="fandom_category_games">Игры</string>
+    <string name="fandom_category_games">Компьютерные игры</string>
     <string name="fandom_category_tabletop_games">Настольные игры</string>
     <string name="fandom_category_music">Музыка</string>
     <string name="fandom_category_theater_musicals">Театр и мюзиклы</string>

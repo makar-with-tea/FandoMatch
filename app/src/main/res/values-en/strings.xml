@@ -1,0 +1,236 @@
+<resources>
+    <string name="app_name">FandoMatch</string>
+
+    <string name="intro_title">Welcome!</string>
+
+    <string name="authorization_title">Sign In</string>
+    <string name="login_label">Login</string>
+    <string name="password_label">Password</string>
+    <string name="login_button">Sign In</string>
+    <string name="forgot_password_button">Forgot password?</string>
+    <string name="register_button">Sign Up</string>
+
+    <string name="my_profile_icon_description">Account</string>
+    <string name="matches_icon_description">Matches</string>
+    <string name="feed_icon_description">Feed</string>
+    <string name="chats_list_icon_description">Chats</string>
+    <string name="filters_icon_description">Filters</string>
+    <string name="settings_icon_description">Settings</string>
+    <string name="edit_profile_icon_description">Edit profile</string>
+
+    <string name="account_title">Account</string>
+    <string name="my_profile_title">My Profile</string>
+
+    <string name="registration_title">Sign Up</string>
+    <string name="name_label">Name</string>
+    <string name="email_label">Email</string>
+    <string name="repeat_password_label">Repeat password</string>
+    <string name="already_have_account">Already have an account?</string>
+    <string name="next_step">Next</string>
+    <string name="birthdate_title">Date of birth</string>
+    <string name="select_birthdate">Select date of birth</string>
+    <string name="gender_title">Gender</string>
+    <string name="select_gender">Select gender</string>
+    <string name="male_gender">Male</string>
+    <string name="female_gender">Female</string>
+    <string name="unspecified_gender">Not specified</string>
+    <string name="avatar_title">Avatar</string>
+    <string name="select_avatar">Select avatar</string>
+    <string name="no_avatar_selected">No avatar selected</string>
+    <string name="avatar_success">Avatar uploaded successfully</string>
+    <string name="avatar_error">Avatar upload error</string>
+    <string name="agree_terms">I agree to the Terms of Service</string>
+    <string name="show_terms_of_service">View terms</string>
+    <string name="terms_content">1. General Provisions\n1.1. These Rules govern the use of the FandoMatch mobile application (hereinafter referred to as the "Application").\n1.2. Registration in the Application means the user agrees to these Rules.\n1.3. The Application is designed to help users find acquaintances and communicate with each other based on common interests.\n2. Registration and Account\n2.1. The User must provide accurate information during registration.\n2.2. The minimum user age is 16 years.\n2.3. Sharing your account with third parties is prohibited.\n3. Rules of Conduct\n3.1. The User is prohibited from:\n- posting offensive, discriminatory or illegal content;\n- publishing materials that infringe copyright;\n- using the Application to distribute spam;\n- impersonating another person;\n- posting malicious links or software.\n3.2. The Administration reserves the right to restrict access to an account for violation of these Rules.\n4. Publications and Content\n4.1. The User is solely responsible for the content they post (posts, comments, images).\n4.2. By posting content, the User confirms that they have the rights to publish it.\n4.3. The content must not violate the law or the rights of third parties.\n5. Confidentiality\n5.1. Personal data is processed for the purpose of functioning of the Application.\n5.2. Data is not transferred to third parties without legal grounds.\n5.3. The User has the right to delete their account and related data through the Application settings.\n6. Liability\n6.1. The Application is provided "as is".\n6.2. The Administration is not responsible for the actions of users.\n7. Final Provisions\n7.1. The Administration reserves the right to make changes to these Rules.\n7.2. Continued use of the Application after changes have been made constitutes the user\'s consent to the updated version.</string>
+    <string name="terms_of_service_title">Terms of Service</string>
+    <string name="close">Close</string>
+    <string name="complete_registration">Complete registration</string>
+    <string name="code_verification_title">Verification code</string>
+    <string name="code_verification_description">We’ve sent a code to your email.\nPlease enter it🌺</string>
+
+    <string name="name_content_error">Name must contain letters only</string>
+    <string name="surname_content_error">Surname must contain letters only</string>
+    <string name="name_length_error">Name must be 2–20 characters long</string>
+    <string name="surname_length_error">Surname must be 2–20 characters long</string>
+    <string name="login_length_error">Login must be 5–15 characters long</string>
+    <string name="login_content_error">Login must contain only Latin letters and numbers</string>
+    <string name="password_length_error">Password must be at least 8 characters long</string>
+    <string name="password_content_error">Password must contain Latin letters, numbers and special characters !@#$%^*()-_</string>
+    <string name="password_mismatch_error">Passwords do not match</string>
+    <string name="email_taken_error">This email is already in use</string>
+    <string name="login_taken_error">This login is already taken</string>
+    <string name="registration_failed_error">Registration failed</string>
+    <string name="email_content_error">Invalid email format</string>
+    <string name="birthdate_too_young_error">You must be at least 16 years old</string>
+    <string name="birthdate_empty_error">Date of birth cannot be empty</string>
+    <string name="gender_not_selected_error">Please select a gender</string>
+    <string name="password_complexity_error">Password must contain uppercase and lowercase letters, numbers and special characters</string>
+
+    <string name="empty_login_error">Login cannot be empty</string>
+    <string name="empty_password_error">Password cannot be empty</string>
+    <string name="invalid_credentials_error">Invalid login or password</string>
+    <string name="network_error">Network error</string>
+    <string name="network_error_long">Failed to connect to the server. Please check your internet connection.</string>
+
+    <string name="password_incorrect_error">Incorrect password</string>
+    <string name="turn_visibility_off_description">Hide password</string>
+    <string name="turn_visibility_on_description">Show password</string>
+
+    <string name="arrow_back_description">Back</string>
+
+    <string name="repeat_new_password_label">Repeat new password</string>
+    <string name="verification_code_label">Code from email</string>
+    <string name="empty_code_error">Code cannot be empty</string>
+    <string name="invalid_code_error">Invalid code</string>
+    <string name="password_recovery_title">Password recovery</string>
+    <string name="send_recovery_code_button">Send code</string>
+    <string name="password_recovery_success">Password changed successfully</string>
+
+    <string name="matches_title">Matches</string>
+    <string name="no_profiles_found_error">No profiles found. Try changing your filters.</string>
+    <string name="retry_load">Retry</string>
+    <string name="like_profile_description">Like</string>
+    <string name="dislike_profile_description">Dislike</string>
+
+    <string name="fandom_category_anime_manga">Anime and manga</string>
+    <string name="fandom_category_books">Books</string>
+    <string name="fandom_category_cartoons">Cartoons</string>
+    <string name="fandom_category_films">Films</string>
+    <string name="fandom_category_tv_series">Series</string>
+    <string name="fandom_category_games">Computer games</string>
+    <string name="fandom_category_tabletop_games">Tabletop games</string>
+    <string name="fandom_category_music">Music</string>
+    <string name="fandom_category_theater_musicals">Theater and musicals</string>
+    <string name="fandom_category_podcasts">Podcasts</string>
+    <string name="fandom_category_comics">Comics</string>
+    <string name="fandom_category_celebrities">Celebrities</string>
+    <string name="fandom_category_sports">Sports</string>
+    <string name="fandom_category_history">History</string>
+    <string name="fandom_category_mythology">Mythology</string>
+    <string name="fandom_category_other">Other</string>
+
+    <string name="filters_title">Filters</string>
+    <string name="gender_filter_label">Gender</string>
+    <string name="age_filter_label">Age</string>
+    <string name="age_filter_selected_range">Selected range: %1$d - %2$s</string>
+    <string name="age_filter_no_age">Age not specified</string>
+    <string name="fandom_category_filter_label">Fandom categories</string>
+    <string name="fandom_filter_label">Fandoms</string>
+    <string name="fandom_filter_input_fandom_name">Enter fandom...</string>
+    <string name="clear_search_icon_description">Clear search</string>
+    <string name="fandom_filter_no_fandoms_found">No fandoms found</string>
+    <string name="fandom_filter_delete_fandom_icon_description">Remove fandom</string>
+    <string name="city_filter_label">Your city: %1$s</string>
+    <string name="city_filter_no_city">not specified</string>
+    <string name="city_filter_only_in_city_checkbox">Only in my city</string>
+    <string name="reset_filters_button">Reset</string>
+    <string name="apply_filters_button">Apply</string>
+    <string name="filters_error_toast">Failed to save filters</string>
+
+    <string name="chats_list_title">Chats</string>
+    <string name="search_icon_description">Search</string>
+    <string name="last_message_time_years">yr.</string>
+    <string name="last_message_time_months">mon.</string>
+    <string name="last_message_time_weeks">wk.</string>
+    <string name="last_message_time_days">day(s)</string>
+    <string name="search_name_input">Enter a name…</string>
+    <string name="no_chats_found">You don’t have any chats yet. Time to fix that!</string>
+
+    <string name="type_a_message">Type a message…</string>
+    <string name="send_message_button_description">Send message</string>
+    <string name="attach_file_button_description">Attach file</string>
+    <string name="detach_file_button_description">Remove attachment</string>
+    <string name="download_media_button_description">Download photo or video</string>
+    <string name="attachments_sender_and_time_description">%1$s, %2$s</string>
+    <string name="you">You</string>
+
+    <string name="login_hidden">Login hidden</string>
+    <string name="go_to_chat_button_description">Send message</string>
+    <string name="profile_no_city">City not specified</string>
+    <string name="gender_female_icon_description">Female</string>
+    <string name="gender_male_icon_description">Male</string>
+    <string name="gender_not_specified_icon_description">Not specified</string>
+    <string name="posts_label">Posts</string>
+    <string name="friends_label">Friends</string>
+    <string name="your_requests_label">Your likes</string>
+
+    <string name="notification_allow_popup_name">Notification permission</string>
+    <string name="notification_allow_popup_description">Allow notifications to receive alerts about new messages and matches.</string>
+    <string name="ok">OK</string>
+    <string name="no_thanks">No, thanks</string>
+    <string name="notification_title_new_message">New message</string>
+    <string name="notification_title_new_match">New match</string>
+    <string name="notification_message_new_message">%1$s sent you a message!</string>
+    <string name="notification_message_new_match">%1$s matched with you!</string>
+
+    <string name="edit_profile_title">Edit profile</string>
+    <string name="edit_avatar_icon_description">Change avatar</string>
+    <string name="edit_background_icon_description">Change profile background</string>
+    <string name="description_label">Profile description</string>
+    <string name="description_length_error">Description must not exceed 500 characters</string>
+    <string name="city_label">Your city</string>
+    <string name="save_profile_button">Save</string>
+    <string name="city_not_found_error">Cities not found</string>
+    <string name="search_city_label">Enter city name...</string>
+    <string name="did_not_found_fandom_label">Didn\'t find your fandom?</string>
+    <string name="here_you_go_button">Click here!</string>
+    <string name="edit_profile_error_toast">Failed to save profile changes</string>
+    <string name="your_fandoms_label">Your fandoms</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="change_email_title">Change email</string>
+    <string name="change_email_button">Change email</string>
+    <string name="change_password_title">Change password</string>
+    <string name="change_password_button">Change password</string>
+    <string name="delete_account_button">Delete account</string>
+    <string name="delete_account_title">Delete account</string>
+    <string name="delete_account_confirmation">Are you sure you want to delete your account?</string>
+    <string name="logout_button">Log out</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="old_password_label">Old password</string>
+    <string name="new_password_label">New password</string>
+    <string name="save_button">Save</string>
+    <string name="loading_error">Network error</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="retry_button_text">Try again</string>
+    <string name="account_not_found_error">Account not found</string>
+    <string name="account_delete_error">Failed to delete account</string>
+    <string name="notification_settings_title">Push notifications</string>
+    <string name="match_notifications_label">Notify about new matches</string>
+    <string name="message_notifications_label">Notify about new messages</string>
+    <string name="privacy_settings_title">Privacy</string>
+    <string name="hide_my_posts_from_non_matches">Hide my posts from everyone except friends</string>
+
+    <string name="like_button_description">Like or unlike</string>
+    <string name="comment_button_description">Leave a comment</string>
+
+    <string name="feed_title">Feed</string>
+    <string name="type_a_comment">Type a comment…</string>
+    <string name="send_comment_button_description">Send comment</string>
+
+    <string name="add_fandom_title">Add fandom</string>
+    <string name="add_fandom_description">If you don\'t see your favorite fandom on the list, you can submit a request to add it. Please include the fandom\'s name, category, and brief description. We\'ll review your request and add it as soon as possible!</string>
+    <string name="add_fandom_success">Fandom request submitted successfully</string>
+    <string name="add_fandom_error">Request was not sent. Please try again!</string>
+    <string name="fandom_name_label">Fandom name</string>
+    <string name="fandom_category_label">Fandom category</string>
+    <string name="fandom_description_label">Fandom description</string>
+    <string name="fandom_name_length_error">Name must be 2–100 characters long</string>
+    <string name="fandom_description_length_error">Description must not exceed 3000 characters</string>
+    <string name="send_request_button">Submit request</string>
+
+    <string name="new_post_title">New post</string>
+    <string name="create_post_label">Create post</string>
+    <string name="post_button">Publish</string>
+    <string name="post_content_label">What\'s on your mind?</string>
+    <string name="post_fandoms_label">Post fandoms</string>
+    <string name="post_content_too_long_error">Post content must not exceed 2000 characters</string>
+
+    <string name="error_icon_description">Error</string>
+    <string name="basic_error_message">An error occurred while loading :(\nPlease check your internet connection</string>
+
+    <string name="success_downloading_media_toast">Media downloaded successfully</string>
+    <string name="error_downloading_media_toast">Failed to download media</string>
+    <string name="cancel_button_text">Cancel</string>
+</resources>

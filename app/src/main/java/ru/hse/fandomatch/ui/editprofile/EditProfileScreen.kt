@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
@@ -168,7 +170,9 @@ private fun MainState(
                         text = stringResource(R.string.save_profile_button),
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.secondaryContainer,
+                        textAlign = TextAlign.Center,
                         modifier = Modifier
+                            .widthIn(min = 80.dp)
                             .clip(RoundedCornerShape(30.dp))
                             .background(MaterialTheme.colorScheme.onSecondaryContainer)
                             .clickable { onSave() }
