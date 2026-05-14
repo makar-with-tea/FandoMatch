@@ -406,7 +406,7 @@ private fun MainState(
                             ) {
                                 FeedPost(
                                     userName = post.authorName,
-                                    userLogin = post.authorLogin,
+                                    userLogin = state.login ?: stringResource(R.string.login_hidden),
                                     userAvatarUrl = post.authorAvatar?.url,
                                     postDateTime = post.timestamp.epochSecondsToDateTimeString(),
                                     postText = post.content,
