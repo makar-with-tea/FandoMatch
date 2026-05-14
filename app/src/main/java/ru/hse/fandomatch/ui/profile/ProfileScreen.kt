@@ -450,16 +450,23 @@ private fun MainState(
                                     .fillMaxSize()
                                     .padding(horizontal = 8.dp),
                             ) {
-                                AvatarAndNameBlock(
-                                    name = friend.name,
-                                    avatarUrl = friend.avatar?.url,
-                                    login = friend.login,
-                                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-                                    avatarSize = 36.dp,
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .clickable { onProfileClicked(friend.id) }
-                                )
+                                Box {
+                                    AvatarAndNameBlock(
+                                        name = friend.name,
+                                        avatarUrl = friend.avatar?.url,
+                                        login = friend.login,
+                                        backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                                        avatarSize = 36.dp,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(12.dp))
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .matchParentSize()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .clickable { onProfileClicked(friend.id) }
+                                    )
+                                }
 
                                 Spacer(
                                     modifier = Modifier
@@ -486,16 +493,23 @@ private fun MainState(
                                     .fillMaxSize()
                                     .padding(horizontal = 8.dp),
                             ) {
-                                AvatarAndNameBlock(
-                                    name = possibleFriend.name,
-                                    avatarUrl = possibleFriend.avatar?.url,
-                                    login = possibleFriend.login,
-                                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-                                    avatarSize = 36.dp,
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .clickable { onProfileClicked(possibleFriend.id) }
-                                )
+                                Box {
+                                    AvatarAndNameBlock(
+                                        name = possibleFriend.name,
+                                        avatarUrl = possibleFriend.avatar?.url,
+                                        login = possibleFriend.login,
+                                        backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                                        avatarSize = 36.dp,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(12.dp))
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .matchParentSize()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .clickable { onProfileClicked(possibleFriend.id) }
+                                    )
+                                }
 
                                 Spacer(
                                     modifier = Modifier
