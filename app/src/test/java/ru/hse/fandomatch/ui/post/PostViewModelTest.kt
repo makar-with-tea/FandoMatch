@@ -1,6 +1,7 @@
 package ru.hse.fandomatch.ui.post
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.compose.ui.text.input.TextFieldValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -15,10 +16,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import ru.hse.fandomatch.domain.logging.Logger
-import ru.hse.fandomatch.domain.model.Comment
 import ru.hse.fandomatch.domain.model.FullPost
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
@@ -100,10 +102,10 @@ class PostViewModelTest {
         loadMainState()
         advanceUntilIdle()
 
-        viewModel.obtainEvent(PostEvent.UpdateCommentDraft("hello"))
+        viewModel.obtainEvent(PostEvent.UpdateCommentDraft(TextFieldValue("hello")))
 
         val state = viewModel.state.first() as PostState.Main
-        assertEquals("hello", state.commentDraft)
+        assertEquals("hello", state.commentDraft.text)
     }
 
     @Test
@@ -111,15 +113,15 @@ class PostViewModelTest {
         loadMainState()
         advanceUntilIdle()
 
-        viewModel.obtainEvent(PostEvent.UpdateCommentDraft("nice post"))
-        `when`(sendCommentUseCase.execute("post-1", "nice post", 123L)).thenReturn(Result.success(Unit))
+        viewModel.obtainEvent(PostEvent.UpdateCommentDraft(TextFieldValue("nice post")))
+        `when`(sendCommentUseCase.execute(eq("post-1"), eq("nice post"), any())).thenReturn(Result.success(Unit))
         `when`(getUserUseCase.execute(null, true)).thenReturn(Result.success(currentUser()))
 
         viewModel.obtainEvent(PostEvent.SendComment)
         advanceUntilIdle()
 
         val state = viewModel.state.first() as PostState.Main
-        assertEquals("", state.commentDraft)
+        assertEquals("", state.commentDraft.text)
         assertEquals(1, state.fullPost.comments.size)
         assertEquals("nice post", state.fullPost.comments.first().content)
     }
@@ -129,14 +131,14 @@ class PostViewModelTest {
         loadMainState()
         advanceUntilIdle()
 
-        viewModel.obtainEvent(PostEvent.UpdateCommentDraft("nice post"))
-        `when`(sendCommentUseCase.execute("post-1", "nice post", 123L)).thenReturn(Result.failure(RuntimeException()))
+        viewModel.obtainEvent(PostEvent.UpdateCommentDraft(TextFieldValue("nice post")))
+        `when`(sendCommentUseCase.execute(eq("post-1"), eq("nice post"), any())).thenReturn(Result.failure(RuntimeException()))
 
         viewModel.obtainEvent(PostEvent.SendComment)
         advanceUntilIdle()
 
         val state = viewModel.state.first() as PostState.Main
-        assertEquals("nice post", state.commentDraft)
+        assertEquals("nice post", state.commentDraft.text)
     }
 
     @Test

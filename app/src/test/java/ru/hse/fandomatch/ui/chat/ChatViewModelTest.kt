@@ -1,6 +1,7 @@
 package ru.hse.fandomatch.ui.chat
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.compose.ui.text.input.TextFieldValue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,7 +63,7 @@ class ChatViewModelTest {
         uploadMediaUseCase = mock(UploadMediaUseCase::class.java)
         downloadMediaToGalleryUseCase = mock(DownloadMediaToGalleryUseCase::class.java)
         unsubscribeFromChatMessagesUseCase = mock(UnsubscribeFromChatMessagesUseCase::class.java)
-        messagesFlow = MutableStateFlow(message("0", false, "", 0L))
+        messagesFlow = MutableStateFlow(message("0", "", 0L))
         viewModel = ChatViewModel(
             sendMessageUseCase = sendMessageUseCase,
             loadChatInfoUseCase = loadChatInfoUseCase,
@@ -89,7 +90,7 @@ class ChatViewModelTest {
     @Test
     fun `load chat success sets main state`() = runTest {
         `when`(loadChatInfoUseCase.execute("10")).thenReturn(Result.success(chat()))
-        `when`(getChatMessagesPageUseCase.execute("chat-1", "10", null, 30)).thenReturn(Result.success(listOf(message("1", false, "hello", 1000L))))
+        `when`(getChatMessagesPageUseCase.execute("chat-1", "10", null, 30)).thenReturn(Result.success(listOf(message("1", "hello", 1000L))))
         `when`(subscribeToChatMessagesUseCase.execute("10")).thenReturn(Result.success(messagesFlow))
 
         viewModel.obtainEvent(ChatEvent.LoadChat("10"))
@@ -118,11 +119,11 @@ class ChatViewModelTest {
         prepareMainState()
         advanceUntilIdle()
 
-        viewModel.obtainEvent(ChatEvent.MessageDraftChanged("draft"))
+        viewModel.obtainEvent(ChatEvent.MessageDraftChanged(TextFieldValue("draft")))
         viewModel.obtainEvent(ChatEvent.AttachmentsChanged(listOf(byteArrayOf(1, 2, 3) to MediaType.IMAGE)))
 
         val state = viewModel.state.first() as ChatState.Main
-        assertEquals("draft", state.messageDraft)
+        assertEquals("draft", state.messageDraft.text)
         assertEquals(1, state.attachedFilesWithTypes.size)
     }
 
@@ -130,7 +131,7 @@ class ChatViewModelTest {
     fun `send message success clears draft and attachments`() = runTest {
         prepareMainState()
         advanceUntilIdle()
-        viewModel.obtainEvent(ChatEvent.MessageDraftChanged("hello"))
+        viewModel.obtainEvent(ChatEvent.MessageDraftChanged(TextFieldValue("hello")))
         viewModel.obtainEvent(ChatEvent.AttachmentsChanged(listOf(byteArrayOf(1, 2, 3) to MediaType.IMAGE)))
         `when`(uploadMediaUseCase.execute(byteArrayOf(1, 2, 3), MediaType.IMAGE)).thenReturn(Result.success("media-id"))
         `when`(
@@ -146,7 +147,7 @@ class ChatViewModelTest {
         advanceUntilIdle()
 
         val state = viewModel.state.first() as ChatState.Main
-        assertEquals("", state.messageDraft)
+        assertEquals("", state.messageDraft.text)
         assertTrue(state.attachedFilesWithTypes.isEmpty())
     }
 
@@ -159,7 +160,7 @@ class ChatViewModelTest {
         advanceUntilIdle()
 
         val state = viewModel.state.first() as ChatState.Main
-        assertEquals("", state.messageDraft)
+        assertEquals("", state.messageDraft.text)
         assertTrue(state.attachedFilesWithTypes.isEmpty())
     }
 
@@ -215,7 +216,7 @@ class ChatViewModelTest {
                 beforeTimestamp = anyLong(),
                 size = eq(30),
             )
-        ).thenReturn(Result.success(listOf(message("0", false, "older", 900L))))
+        ).thenReturn(Result.success(listOf(message("0", "older", 900L))))
 
         viewModel.obtainEvent(ChatEvent.LoadOlderMessages)
         advanceUntilIdle()
@@ -233,7 +234,7 @@ class ChatViewModelTest {
 
     private suspend fun prepareMainState() {
         `when`(loadChatInfoUseCase.execute("10")).thenReturn(Result.success(chat()))
-        `when`(getChatMessagesPageUseCase.execute("chat-1", "10", null, 30)).thenReturn(Result.success(listOf(message("1", false, "hello", 1000L))))
+        `when`(getChatMessagesPageUseCase.execute("chat-1", "10", null, 30)).thenReturn(Result.success(listOf(message("1", "hello", 1000L))))
         `when`(subscribeToChatMessagesUseCase.execute("10")).thenReturn(Result.success(messagesFlow))
         viewModel.obtainEvent(ChatEvent.LoadChat("10"))
     }
@@ -245,9 +246,9 @@ class ChatViewModelTest {
         participantAvatarUrl = "avatar-url",
     )
 
-    private fun message(id: String, fromThisUser: Boolean, content: String, timestamp: Long) = Message(
+    private fun message(id: String, content: String, timestamp: Long) = Message(
         messageId = id,
-        isFromThisUser = fromThisUser,
+        isFromThisUser = false,
         content = content,
         timestamp = timestamp,
     )

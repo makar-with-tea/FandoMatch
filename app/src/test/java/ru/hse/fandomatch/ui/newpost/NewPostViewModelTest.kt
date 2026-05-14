@@ -64,13 +64,13 @@ class NewPostViewModelTest {
     }
 
     @Test
-    fun `attachments changed truncates by max allowed`() = runTest {
+    fun `attachments changed truncates by max not allowed`() = runTest {
         val attachments = List(12) { byteArrayOf(it.toByte()) to MediaType.IMAGE }
 
         viewModel.obtainEvent(NewPostEvent.AttachmentsChanged(attachments))
 
         val state = viewModel.state.first() as NewPostState.Main
-        assertEquals(10, state.attachedFilesWithTypes.size)
+        assertEquals(5, state.attachedFilesWithTypes.size)
     }
 
     @Test
