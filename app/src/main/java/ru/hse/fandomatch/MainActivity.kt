@@ -47,6 +47,7 @@ class MainActivity : ComponentActivity() {
     private fun updateNotificationTarget(intent: Intent?) {
         navigateToTarget = intent?.getStringExtra("navigateTo")
         targetId = intent?.getStringExtra("userId")
+        Log.i("MainActivity", "Received intent with navigateTo: $navigateToTarget, userId: $targetId")
     }
 
     private fun askNotificationPermission() {

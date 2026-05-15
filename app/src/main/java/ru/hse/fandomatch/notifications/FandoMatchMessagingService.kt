@@ -32,17 +32,17 @@ class FandoMatchMessagingService : FirebaseMessagingService(), KoinComponent {
             NotificationType.MATCH.rawValue -> NotificationType.MATCH
             else -> return
         }
+        val userId = message.data[USER_ID]
         if (type == NotificationType.CHAT) {
             val currentChatId = getCurrentChatIdUseCase.execute()
-            if (currentChatId != null && currentChatId == message.data[USER_ID]) {
+            if (currentChatId != null && currentChatId == userId) {
                 Log.i("FCM", "Notification ignored, user is currently in chat with user $currentChatId")
                 return
             } else {
-                Log.i("FCM", "current chat with $currentChatId, message from ${message.data[USER_ID]}")
+                Log.i("FCM", "current chat with $currentChatId, message from $userId")
             }
         }
 
-        val id = message.data[USER_ID]
         val title = resources.getString(
             when (type) {
                 NotificationType.CHAT -> R.string.notification_title_new_message
@@ -64,12 +64,13 @@ class FandoMatchMessagingService : FirebaseMessagingService(), KoinComponent {
 
         val intent = Intent(this, MainActivity::class.java).apply {
             putExtra(NAVIGATE_TO, type.rawValue)
-            putExtra(USER_ID, id)
+            putExtra(USER_ID, userId)
+            Log.i("FCM", "Creating intent with navigateTo: ${type.rawValue}, userId: $userId")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or
                 Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
-        val requestCode = "$type:$id".hashCode()
+        val requestCode = "$type:$userId".hashCode()
         val pendingIntent = PendingIntent.getActivity(
             this,
             requestCode,
