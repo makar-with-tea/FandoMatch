@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
 
     private fun updateNotificationTarget(intent: Intent?) {
         navigateToTarget = intent?.getStringExtra("navigateTo")
-        targetId = intent?.getStringExtra("id")
+        targetId = intent?.getStringExtra("userId")
     }
 
     private fun askNotificationPermission() {
