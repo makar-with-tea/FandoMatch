@@ -27,6 +27,11 @@ class SharedPrefRepositoryImpl(
         }
     }
 
+    override fun clearUserId() {
+        Log.d("SharedPrefRepository", "clearUserId")
+        preferences.edit { remove("user_id") }
+    }
+
     override fun clearInfo() {
         Log.d("SharedPrefRepository", "clearInfo")
         preferences.edit { clear() }
@@ -62,5 +67,21 @@ class SharedPrefRepositoryImpl(
 
     override fun saveNotificationPermissionShown(shown: Boolean) {
         preferences.edit { putBoolean("notification_permission_shown", shown) }
+    }
+
+    override fun saveFCMToken(token: String) {
+        preferences.edit { putString("fcm_token", token) }
+    }
+
+    override fun getFCMToken(): String? {
+        return preferences.getString("fcm_token", null)
+    }
+
+    override fun saveCurrentChatId(chatId: String?) {
+        preferences.edit { putString("current_chat_id", chatId) }
+    }
+
+    override fun getCurrentChatId(): String? {
+        return preferences.getString("current_chat_id", null)
     }
 }

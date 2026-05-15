@@ -8,14 +8,19 @@ class GetUserPostsUseCase(
     private val globalRepository: GlobalRepository,
     private val sharedPrefRepository: SharedPrefRepository,
 ) {
-    suspend fun execute(profileId: String?, isCurrentUser: Boolean): Result<List<Post>> {
+    suspend fun execute(
+        profileId: String?,
+        isCurrentUser: Boolean,
+        beforeTimestamp: Long?,
+        size: Int,
+    ): Result<List<Post>> {
         return runCatching {
             val id = when {
                 !profileId.isNullOrEmpty() -> profileId
                 isCurrentUser -> sharedPrefRepository.getUserId()
                 else -> null
             } ?: throw RuntimeException("No user ID provided for fetching posts")
-            globalRepository.getUserPosts(id, null, 100500) // todo pagination
+            globalRepository.getUserPosts(id, beforeTimestamp, size)
         }
     }
 }

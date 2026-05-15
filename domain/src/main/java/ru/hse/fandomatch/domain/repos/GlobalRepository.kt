@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.domain.repos
 
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.ChatPreview
@@ -27,9 +28,8 @@ interface GlobalRepository {
         name: String,
         email: String,
         login: String,
-        dateOfBirthMillis: Long,
+        dateOfBirthEpochSeconds: Long,
         gender: Gender,
-        avatarMediaId: String?,
         password: String
     ): AuthInfo
     suspend fun logout()
@@ -49,7 +49,7 @@ interface GlobalRepository {
     suspend fun getFriendRequests(id: String): List<OtherProfileItem>
     suspend fun getVerificationCode(email: String)
     suspend fun checkVerificationCode(code: String, email: String): Boolean
-    suspend fun resetPassword(code: String, newPassword: String)
+    suspend fun resetPassword(code: String, newPassword: String, email: String)
     suspend fun getCitiesByQuery(query: String): List<City>
     suspend fun getUserPreferences(): UserPreferences
     suspend fun updateUserPreferences(
@@ -58,6 +58,7 @@ interface GlobalRepository {
         hideMyPostsFromNonMatches: Boolean
     )
     suspend fun changeEmail(newEmail: String)
+    suspend fun saveDeviceToken(token: String, userId: String?)
 
     // Matches
 
@@ -79,12 +80,17 @@ interface GlobalRepository {
         beforeTimestamp: Long?,
         size: Int,
     ): StateFlow<List<ChatPreview>>
+    fun unsubscribeFromChatPreviews()
     suspend fun subscribeToChatMessages(
+        userId: String,
+    ): Flow<Message>
+    fun unsubscribeFromChatMessages()
+    suspend fun getChatMessagesPage(
         chatId: String,
         userId: String,
         beforeTimestamp: Long?,
         size: Int,
-    ): StateFlow<List<Message>>
+    ): List<Message>
     suspend fun loadChatInfo(userId: String): Chat
     suspend fun sendMessage(
         receiverId: String,
@@ -117,6 +123,11 @@ interface GlobalRepository {
         content: String,
         mediaIdsWithTypes: List<Pair<String, MediaType>>,
         fandomIds: List<String>,
+    )
+    suspend fun sendComment(
+        postId: String,
+        content: String,
+        timestamp: Long,
     )
 
     // Fandoms

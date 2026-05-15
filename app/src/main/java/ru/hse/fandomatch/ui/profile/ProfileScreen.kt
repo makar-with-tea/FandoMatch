@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
@@ -24,7 +26,9 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,7 +41,6 @@ import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.utils.epochMillisToDateString
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.AvatarWithBackground
 import ru.hse.fandomatch.ui.composables.BasicErrorState
@@ -48,6 +51,7 @@ import ru.hse.fandomatch.ui.composables.FeedPost
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyFloatingButton
 import ru.hse.fandomatch.ui.composables.MyTitle
+import ru.hse.fandomatch.utils.epochSecondsToDateTimeString
 
 @Composable
 fun ProfileScreen(
@@ -65,6 +69,22 @@ fun ProfileScreen(
 ) {
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(listState, state.value) {
+        snapshotFlow {
+            val totalCount = listState.layoutInfo.totalItemsCount
+            val lastVisibleIndex = listState.layoutInfo.visibleItemsInfo.maxOfOrNull { it.index } ?: 0
+            totalCount to lastVisibleIndex
+        }.collect { (totalCount, lastVisibleIndex) ->
+            val current = state.value as? ProfileState.Main ?: return@collect
+            val postsState = current.bottomSheetState as? ProfileState.BottomSheetState.Posts ?: return@collect
+            val isNearEnd = totalCount > 0 && lastVisibleIndex >= totalCount - LOAD_MORE_THRESHOLD_ITEMS
+            if (isNearEnd && postsState.hasMore && !postsState.isLoadingMore && !postsState.isError) {
+                viewModel.obtainEvent(ProfileEvent.LoadMorePosts)
+            }
+        }
+    }
     Log.i("ProfileScreen", "Rendering ProfileScreen with state: ${state.value}")
 
     when (val action = action.value) {
@@ -148,6 +168,7 @@ fun ProfileScreen(
             onPostLiked = { postId ->
                 viewModel.obtainEvent(ProfileEvent.PostLiked(postId))
             },
+            listState = listState,
         )
 
         is ProfileState.Loading -> LoadingState()
@@ -181,6 +202,7 @@ private fun MainState(
     onProfileClicked: (String) -> Unit,
     onPostClicked: (String) -> Unit,
     onPostLiked: (String) -> Unit,
+    listState: LazyListState,
 ) {
     setTopBarState(
         TopBarState(
@@ -231,6 +253,7 @@ private fun MainState(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
+            state = listState,
         ) {
             item {
                 Column(
@@ -383,9 +406,9 @@ private fun MainState(
                             ) {
                                 FeedPost(
                                     userName = post.authorName,
-                                    userLogin = post.authorLogin,
+                                    userLogin = state.login ?: stringResource(R.string.login_hidden),
                                     userAvatarUrl = post.authorAvatar?.url,
-                                    postDate = post.timestamp.epochMillisToDateString(),
+                                    postDateTime = post.timestamp.epochSecondsToDateTimeString(),
                                     postText = post.content,
                                     mediaItems = post.mediaItems,
                                     areReactionsAvailable = state.type is ProfileType.Own
@@ -427,16 +450,23 @@ private fun MainState(
                                     .fillMaxSize()
                                     .padding(horizontal = 8.dp),
                             ) {
-                                AvatarAndNameBlock(
-                                    name = friend.name,
-                                    avatarUrl = friend.avatar?.url,
-                                    login = friend.login,
-                                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-                                    avatarSize = 36.dp,
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .clickable { onProfileClicked(friend.id) }
-                                )
+                                Box {
+                                    AvatarAndNameBlock(
+                                        name = friend.name,
+                                        avatarUrl = friend.avatar?.url,
+                                        login = friend.login,
+                                        backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                                        avatarSize = 36.dp,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(12.dp))
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .matchParentSize()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .clickable { onProfileClicked(friend.id) }
+                                    )
+                                }
 
                                 Spacer(
                                     modifier = Modifier
@@ -463,16 +493,23 @@ private fun MainState(
                                     .fillMaxSize()
                                     .padding(horizontal = 8.dp),
                             ) {
-                                AvatarAndNameBlock(
-                                    name = possibleFriend.name,
-                                    avatarUrl = possibleFriend.avatar?.url,
-                                    login = possibleFriend.login,
-                                    backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-                                    avatarSize = 36.dp,
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .clickable { onProfileClicked(possibleFriend.id) }
-                                )
+                                Box {
+                                    AvatarAndNameBlock(
+                                        name = possibleFriend.name,
+                                        avatarUrl = possibleFriend.avatar?.url,
+                                        login = possibleFriend.login,
+                                        backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                                        avatarSize = 36.dp,
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(12.dp))
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .matchParentSize()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .clickable { onProfileClicked(possibleFriend.id) }
+                                    )
+                                }
 
                                 Spacer(
                                     modifier = Modifier
@@ -496,6 +533,8 @@ private fun MainState(
         }
     }
 }
+
+private const val LOAD_MORE_THRESHOLD_ITEMS = 4
 
 @Composable
 private fun LoadingState() = LoadingBlock()

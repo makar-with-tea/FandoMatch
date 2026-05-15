@@ -12,14 +12,17 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
+import ru.hse.fandomatch.domain.usecase.chat.UnsubscribeFromChatPreviewsUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChatsListViewModelTest {
@@ -29,11 +32,12 @@ class ChatsListViewModelTest {
 
     private lateinit var viewModel: ChatsListViewModel
     private lateinit var subscribeToChatPreviewsUseCase: SubscribeToChatPreviewsUseCase
+    private lateinit var unsubscribeFromChatPreviewsUseCase: UnsubscribeFromChatPreviewsUseCase
     private lateinit var chatsFlow: MutableStateFlow<List<ChatPreview>>
     private val testDispatcher = StandardTestDispatcher()
 
     private val chat1 = ChatPreview(
-        chatId = "1",
+        userId = "1",
         participantName = "Luffy",
         participantAvatarUrl = "url1",
         lastMessage = "Yo",
@@ -42,7 +46,7 @@ class ChatsListViewModelTest {
         newMessagesCount = 2,
     )
     private val chat2 = ChatPreview(
-        chatId = "2",
+        userId = "2",
         participantName = "Nami",
         participantAvatarUrl = "url2",
         lastMessage = "Hi",
@@ -55,12 +59,15 @@ class ChatsListViewModelTest {
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
         subscribeToChatPreviewsUseCase = mock(SubscribeToChatPreviewsUseCase::class.java)
+        unsubscribeFromChatPreviewsUseCase = mock(UnsubscribeFromChatPreviewsUseCase::class.java)
         chatsFlow = MutableStateFlow(emptyList())
         runBlocking {
-            `when`(subscribeToChatPreviewsUseCase.execute()).thenReturn(Result.success(chatsFlow))
+            `when`(subscribeToChatPreviewsUseCase.execute(30)).thenReturn(Result.success(chatsFlow))
         }
         viewModel = ChatsListViewModel(
             subscribeToChatPreviewsUseCase = subscribeToChatPreviewsUseCase,
+            unsubscribeFromChatPreviewsUseCase = unsubscribeFromChatPreviewsUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )
@@ -77,13 +84,16 @@ class ChatsListViewModelTest {
         state as ChatsListState.Main
         assertEquals(listOf(chat1, chat2), state.chats)
         assertEquals(null, state.filteredByQuery)
+        assertFalse(state.hasMore)
     }
 
     @Test
     fun `load chats failure updates error state`() = runTest {
-        `when`(subscribeToChatPreviewsUseCase.execute()).thenReturn(Result.failure(RuntimeException()))
+        `when`(subscribeToChatPreviewsUseCase.execute(30)).thenReturn(Result.failure(RuntimeException()))
         viewModel = ChatsListViewModel(
             subscribeToChatPreviewsUseCase = subscribeToChatPreviewsUseCase,
+            unsubscribeFromChatPreviewsUseCase = unsubscribeFromChatPreviewsUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )

@@ -1,16 +1,13 @@
 package ru.hse.fandomatch.ui.chatslist
 
 import ru.hse.fandomatch.domain.model.ChatPreview
-import java.util.AbstractQueue
 
 sealed class ChatsListState {
-    enum class ChatsListError {
-        NETWORK,
-        IDLE
-    }
     data class Main(
         val chats: List<ChatPreview>,
         val filteredByQuery: String? = null,
+        val hasMore: Boolean = true,
+        val isLoadingMore: Boolean = false,
     ) : ChatsListState()
 
     data object Loading : ChatsListState()
@@ -20,10 +17,11 @@ sealed class ChatsListState {
 
 sealed class ChatsListEvent {
     data class ChatClicked(
-        val chatId: String,
+        val userId: String,
     ): ChatsListEvent()
     data object LoadChats: ChatsListEvent()
     data class SearchChats(val query: String?): ChatsListEvent()
+    data object UnsubscribeFromChatsUpdates : ChatsListEvent()
     data object Clear: ChatsListEvent()
 }
 

@@ -13,14 +13,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
-import ru.hse.fandomatch.domain.model.Fandom
-import ru.hse.fandomatch.domain.model.FandomCategory
-import ru.hse.fandomatch.domain.model.Gender
-import ru.hse.fandomatch.domain.model.ProfileCard
+import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.SwipeableCardStack
 
@@ -56,6 +52,9 @@ fun MatchesScreen(
             onReload = { viewModel.obtainEvent(MatchesEvent.LoadSuggestedProfiles) }
         )
         is MatchesState.Loading -> LoadingState()
+        is MatchesState.Error -> ErrorState(
+            onRetry = { viewModel.obtainEvent(MatchesEvent.LoadSuggestedProfiles) }
+        )
     }
 }
 
@@ -92,11 +91,6 @@ private fun MainState(
                     Text(stringResource(id = R.string.retry_load))
                 }
             }
-
-            val errorText = state.error.toText()
-            if (errorText.isNotEmpty()) {
-                Text(errorText)
-            }
         }
     }
 
@@ -106,14 +100,14 @@ private fun MainState(
 }
 
 @Composable
-private fun MatchesState.MatchesError.toText() = when (this) {
-    MatchesState.MatchesError.NETWORK -> stringResource(id = R.string.network_error)
-    MatchesState.MatchesError.NO_PROFILES_FOUND -> stringResource(id = R.string.no_profiles_found_error)
-    MatchesState.MatchesError.IDLE -> ""
-}
-
-@Composable
 private fun LoadingState() = LoadingBlock()
 
 @Composable
 private fun IdleState() = LoadingBlock()
+
+@Composable
+private fun ErrorState(
+    onRetry: () -> Unit
+) {
+    BasicErrorState { onRetry() }
+}

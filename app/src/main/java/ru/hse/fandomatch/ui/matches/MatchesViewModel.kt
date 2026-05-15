@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.matches
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -10,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.ProfileCard
 import ru.hse.fandomatch.domain.usecase.matches.LikeOrDislikeProfileUseCase
 import ru.hse.fandomatch.domain.usecase.matches.LoadSuggestedProfilesUseCase
@@ -18,6 +18,7 @@ import java.util.ArrayDeque
 class MatchesViewModel(
     private val loadSuggestedProfilesUseCase: LoadSuggestedProfilesUseCase,
     private val likeOrDislikeProfileUseCase: LikeOrDislikeProfileUseCase,
+    private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -32,7 +33,7 @@ class MatchesViewModel(
     @Volatile private var isLoadingNext: Boolean = false
 
     fun obtainEvent(event: MatchesEvent) {
-        Log.i("MatchesViewModel", "Obtained event: $event")
+        logger.i("MatchesViewModel", "Obtained event: $event")
         when (event) {
             is MatchesEvent.LikedProfile -> {
                 likeProfile(event.profileId)
@@ -54,19 +55,14 @@ class MatchesViewModel(
         _state.value = MatchesState.Main(
             profileStack = buffer.toList(),
             isLoading = true,
-            error = MatchesState.MatchesError.IDLE
         )
-        Log.i("MatchesViewModel", "Starting initial load of suggested profiles")
+        logger.i("MatchesViewModel", "Starting initial load of suggested profiles")
         viewModelScope.launch(dispatcherIO) {
             loadSuggestedProfilesUseCase.execute(batchSize)
                 .onFailure {
-                    Log.e("MatchesViewModel", "Failed to load suggested profiles: $it")
+                    logger.e("MatchesViewModel", "Failed to load suggested profiles: $it")
                     withContext(dispatcherMain) {
-                        _state.value = MatchesState.Main(
-                            profileStack = buffer.toList(),
-                            isLoading = false,
-                            error = MatchesState.MatchesError.NETWORK
-                        )
+                        _state.value = MatchesState.Error
                     }
                 }
                 .onSuccess { profiles ->
@@ -76,7 +72,6 @@ class MatchesViewModel(
                         _state.value = MatchesState.Main(
                             profileStack = buffer.toList(),
                             isLoading = false,
-                            error = if (buffer.isEmpty()) MatchesState.MatchesError.NO_PROFILES_FOUND else MatchesState.MatchesError.IDLE
                         )
                     }
                 }
@@ -87,7 +82,7 @@ class MatchesViewModel(
         viewModelScope.launch(dispatcherIO) {
             likeOrDislikeProfileUseCase.execute(profileId, isLike = true)
                 .onFailure {
-                    Log.e("MatchesViewModel", "Failed to like profile $profileId: $it")
+                    logger.e("MatchesViewModel", "Failed to like profile $profileId: $it")
                 }
         }
         popAndMaybePrefetch()
@@ -97,7 +92,7 @@ class MatchesViewModel(
         viewModelScope.launch(dispatcherIO) {
             likeOrDislikeProfileUseCase.execute(profileId, isLike = false)
                 .onFailure {
-                    Log.e("MatchesViewModel", "Failed to dislike profile $profileId: $it")
+                    logger.e("MatchesViewModel", "Failed to dislike profile $profileId: $it")
                 }
         }
         popAndMaybePrefetch()
@@ -114,7 +109,6 @@ class MatchesViewModel(
         _state.value = MatchesState.Main(
             profileStack = buffer.toList(),
             isLoading = false,
-            error = if (buffer.isEmpty()) MatchesState.MatchesError.NO_PROFILES_FOUND else MatchesState.MatchesError.IDLE
         )
 
         if (buffer.size <= prefetchThreshold) prefetchNextBatch()
@@ -126,16 +120,18 @@ class MatchesViewModel(
         viewModelScope.launch(dispatcherIO) {
             loadSuggestedProfilesUseCase.execute(batchSize)
                 .onFailure {
-                    Log.e(
+                    logger.e(
                         "MatchesViewModel",
                         "Failed to prefetch suggested profiles: $it"
                     )
                     withContext(dispatcherMain) {
-                        _state.value = MatchesState.Main(
-                            profileStack = buffer.toList(),
-                            isLoading = false,
-                            error = if (buffer.isEmpty()) MatchesState.MatchesError.NETWORK else MatchesState.MatchesError.IDLE
-                        )
+                        if (buffer.isEmpty()) _state.value = MatchesState.Error
+                        else {
+                            _state.value = MatchesState.Main(
+                                profileStack = buffer.toList(),
+                                isLoading = false,
+                            )
+                        }
                     }
                 }
                 .onSuccess { next ->
@@ -144,7 +140,6 @@ class MatchesViewModel(
                         _state.value = MatchesState.Main(
                             profileStack = buffer.toList(),
                             isLoading = false,
-                            error = MatchesState.MatchesError.IDLE
                         )
                     }
                     isLoadingNext = false

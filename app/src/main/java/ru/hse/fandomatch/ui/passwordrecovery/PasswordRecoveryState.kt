@@ -30,6 +30,7 @@ sealed class PasswordRecoveryState {
         val codeError: PasswordRecoveryError = PasswordRecoveryError.IDLE,
         val newPasswordError: PasswordRecoveryError = PasswordRecoveryError.IDLE,
         val repeatNewPasswordError: PasswordRecoveryError = PasswordRecoveryError.IDLE,
+        val email: String = "",
     ) : PasswordRecoveryState()
 }
 

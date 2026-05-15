@@ -8,13 +8,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import ru.hse.fandomatch.domain.usecase.auth.GetPastLoginUseCase
 
 class IntroViewModel(
     private val getPastLoginUseCase: GetPastLoginUseCase,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
-    private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
     private val _state: MutableStateFlow<IntroState> =
         MutableStateFlow(IntroState.Idle)
@@ -33,6 +31,7 @@ class IntroViewModel(
             is IntroEvent.GoToRegistrationButtonClicked -> {
                 goToRegister()
             }
+
             is IntroEvent.Clear -> clear()
             is IntroEvent.CheckPastLogin -> checkPastLogin()
         }
@@ -57,15 +56,11 @@ class IntroViewModel(
     }
 
     private fun checkPastLogin() {
-        viewModelScope.launch(dispatcherIO) {
-            val userId = getPastLoginUseCase.execute()
-            withContext(dispatcherMain) {
-                if (userId != null) {
-                    _action.value = IntroAction.NavigateToMatches
-                } else {
-                    _state.value = IntroState.Main
-                }
-            }
+        val userId = getPastLoginUseCase.execute()
+        if (userId != null) {
+            _action.value = IntroAction.NavigateToMatches
+        } else {
+            _state.value = IntroState.Main
         }
     }
 }

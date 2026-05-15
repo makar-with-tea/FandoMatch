@@ -8,7 +8,7 @@ data class Chat(
 )
 
 data class ChatPreview(
-    val chatId: String,
+    val userId: String,
     val participantName: String,
     val participantAvatarUrl: String?,
     val lastMessage: String,

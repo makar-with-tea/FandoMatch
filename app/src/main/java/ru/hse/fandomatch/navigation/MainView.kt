@@ -39,9 +39,9 @@ import ru.hse.fandomatch.ui.post.PostScreen
 
 sealed class Route(val route: String) {
     data object Authorization : Route("authorization")
-    data object Chat : Route("chat/{chat_id}") {
-        fun createRoute(chatId: String?): String {
-            return "chat/$chatId"
+    data object Chat : Route("chat/{user_id}") {
+        fun createRoute(userId: String?): String {
+            return "chat/$userId"
         }
     }
 
@@ -77,10 +77,10 @@ sealed class Route(val route: String) {
 @Composable
 fun MainView(
     navigateTo: String? = null,
-    id: String? = null,
+    userId: String? = null,
     onNotificationConsumed: () -> Unit = {},
 ) {
-    Log.d("MainView", "MainView created: navigateTo=$navigateTo, id=$id")
+    Log.d("MainView", "MainView created: navigateTo=$navigateTo, userId=$userId")
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -179,11 +179,11 @@ fun MainView(
 
     val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
-    LaunchedEffect(navigateTo, id) {
-        val targetRoute = id?.let {
+    LaunchedEffect(navigateTo, userId) {
+        val targetRoute = userId?.let {
             when (navigateTo) {
-                "chat" -> Route.Chat.createRoute(chatId = id)
-                "match" -> Route.Profile.createRoute(profileId = id)
+                "chat" -> Route.Chat.createRoute(userId = userId)
+                "match" -> Route.Profile.createRoute(profileId = userId)
                 else -> null
             }
         }
@@ -263,11 +263,11 @@ fun MainView(
                         userId = null,
                         isCurrentUser = true,
                         setTopBarState = { setTopBarState(it, Route.MyProfile.route) },
-                        goToMessages = { chatId ->
+                        goToMessages = { userId ->
                             /* do nothing */
                             Log.d(
                                 "Navigation",
-                                "Impossible: go to messages with chatId $chatId from MyProfile"
+                                "Impossible: go to messages with userId $userId from MyProfile"
                             )
                         },
                         goToEditProfile = {
@@ -304,10 +304,10 @@ fun MainView(
                 }
                 composable(Route.ChatsList.route) {
                     ChatsListScreen(
-                        navigateToChat = { chatId ->
-                            Log.d("Navigation", "Navigate to chat $chatId")
+                        navigateToChat = { userId ->
+                            Log.d("Navigation", "Navigate to chat $userId")
                             navigateToRouteWithArgs(
-                                Route.Chat.createRoute(chatId)
+                                Route.Chat.createRoute(userId)
                             )
                         },
                         setTopBarState = { setTopBarState(it, Route.ChatsList.route) },
@@ -320,8 +320,8 @@ fun MainView(
                         userId = profileId,
                         isCurrentUser = false,
                         setTopBarState = { setTopBarState(it, Route.Profile.route) },
-                        goToMessages = { chatId ->
-                            navigateToRouteWithArgs(Route.Chat.createRoute(chatId = chatId))
+                        goToMessages = { userId ->
+                            navigateToRouteWithArgs(Route.Chat.createRoute(userId = userId))
                         },
                         goToEditProfile = {
                             /* do nothing */
@@ -362,9 +362,9 @@ fun MainView(
                     )
                 }
                 composable(Route.Chat.route) { backStackEntry ->
-                    val chatId = backStackEntry.arguments?.getString("chat_id")
+                    val userId = backStackEntry.arguments?.getString("user_id")
                     ChatScreen(
-                        profileId = chatId,
+                        profileId = userId,
                         setTopBarState = { setTopBarState(it, Route.Chat.route) },
                         goToProfile = { profileId ->
                             navigateToRouteWithArgs(

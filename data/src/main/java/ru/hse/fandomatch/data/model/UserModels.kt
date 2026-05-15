@@ -9,7 +9,11 @@ data class UserRegistrationRequestDTO(
     val birthDate: Long,
     val name: String,
     @SerializedName("hashed_password")
-    val hashedPassword: String
+    val hashedPassword: String,
+    @SerializedName("gender")
+    val gender: GenderDTO,
+    @SerializedName("avatar_media_id")
+    val avatarMediaId: String? = null,
 )
 
 data class UserRegistrationResponseDTO(
@@ -19,8 +23,7 @@ data class UserRegistrationResponseDTO(
 )
 
 data class UserLoginRequestDTO(
-    val email: String? = null,
-    val username: String? = null,
+    val username: String,
     @SerializedName("hashed_password")
     val hashedPassword: String
 )
@@ -105,7 +108,9 @@ data class RefreshAndAccessTokensDTO(
 
 data class DeviceTokenRequestDTO(
     @SerializedName("fcm_token")
-    val fcmToken: String
+    val fcmToken: String,
+    @SerializedName("user_id")
+    val userId: String? = null
 )
 
 data class GetFcmTokenRequestDTO(
@@ -116,4 +121,51 @@ data class GetFcmTokenRequestDTO(
 data class FcmTokenResponseDTO(
     @SerializedName("fcm_token")
     val fcmToken: String? = null
+)
+
+data class DeleteProfileResponseDTO(
+    val status: ResponseStatusDTO,
+    val errorResponse: ErrorDTO? = null
+)
+
+data class ChangeEmailRequestDTO(
+    @SerializedName("new_email")
+    val newEmail: String
+)
+
+data class ChangeEmailResponseDTO(
+    val status: ResponseStatusDTO,
+    val errorResponse: ErrorDTO? = null
+)
+
+data class SendVerificationCodeRequestDTO(
+    val email: String
+)
+
+data class SendVerificationCodeResponseDTO(
+    val status: ResponseStatusDTO,
+    val errorResponse: ErrorDTO? = null
+)
+
+data class CheckVerificationCodeRequestDTO(
+    val email: String,
+    val code: String
+)
+
+data class CheckVerificationCodeResponseDTO(
+    val status: ResponseStatusDTO,
+    val result: Boolean? = null,
+    val errorResponse: ErrorDTO? = null
+)
+
+data class ResetPasswordRequestDTO(
+    val email: String,
+    val code: String,
+    @SerializedName("new_password")
+    val newPassword: String
+)
+
+data class ResetPasswordResponseDTO(
+    val status: ResponseStatusDTO,
+    val errorResponse: ErrorDTO? = null
 )

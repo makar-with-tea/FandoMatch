@@ -1,6 +1,6 @@
 package ru.hse.fandomatch.ui.chat
 
-import android.util.Log
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -12,22 +12,29 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.logging.Logger
+import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.Message
+import ru.hse.fandomatch.domain.usecase.chat.GetChatMessagesPageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
-import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
+import ru.hse.fandomatch.domain.usecase.chat.UnsubscribeFromChatMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.media.DownloadMediaToGalleryUseCase
-import ru.hse.fandomatch.utils.epochMillisToDateString
+import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
+import ru.hse.fandomatch.utils.epochSecondsToDateString
 
 class ChatViewModel(
     private val sendMessageUseCase: SendMessageUseCase,
     private val loadChatInfoUseCase: LoadChatInfoUseCase,
     private val subscribeToChatMessagesUseCase: SubscribeToChatMessagesUseCase,
+    private val unsubscribeFromChatMessagesUseCase: UnsubscribeFromChatMessagesUseCase,
+    private val getChatMessagesPageUseCase: GetChatMessagesPageUseCase,
     private val uploadMediaUseCase: UploadMediaUseCase,
     private val downloadMediaToGalleryUseCase: DownloadMediaToGalleryUseCase,
+    private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -36,10 +43,17 @@ class ChatViewModel(
     private val _action = MutableStateFlow<ChatAction?>(null)
     val action: StateFlow<ChatAction?> get() = _action
 
-    private var _messages: StateFlow<List<Message>> = MutableStateFlow(emptyList())
+    private var messages: List<Message> = emptyList()
+    private var hasMoreOlderMessages: Boolean = true
+    private var isLoadingMoreMessages: Boolean = false
+    private var activeChat: Chat? = null
 
     private val stateMutex = Mutex()
-    private var loadChatJob: Job? = null
+    private var subscriptionJob: Job? = null
+
+    private companion object {
+        const val MESSAGES_BLOCK_SIZE = 30
+    }
 
     private suspend fun setState(reducer: (ChatState) -> ChatState) {
         withContext(dispatcherMain) {
@@ -50,7 +64,7 @@ class ChatViewModel(
     }
 
     fun obtainEvent(event: ChatEvent) {
-        Log.i("ChatViewModel", "Obtained event: $event")
+        logger.i("ChatViewModel", "Obtained event: $event")
         when (event) {
             ChatEvent.Clear -> clear()
             is ChatEvent.LoadChat -> loadChat(event.profileId)
@@ -59,13 +73,15 @@ class ChatViewModel(
             is ChatEvent.AttachmentsChanged -> attachmentsChanged(event.filesWithTypes)
             is ChatEvent.ProfileClicked -> goToProfile()
             is ChatEvent.DownloadMediaItem -> downloadMediaItem(event.mediaItem)
+            ChatEvent.LoadOlderMessages -> loadOlderMessages()
             ChatEvent.ToastShown -> toastShown()
+            is ChatEvent.SubscribeToChatUpdates -> subscribe(event.profileId)
+            ChatEvent.UnsubscribeFromChatUpdates -> unsubscribe()
         }
     }
 
     private fun loadChat(profileId: String?) {
-        loadChatJob?.cancel()
-        loadChatJob = viewModelScope.launch(dispatcherIO) {
+        viewModelScope.launch(dispatcherIO) {
             setState { ChatState.Loading }
 
             if (profileId == null) {
@@ -73,47 +89,101 @@ class ChatViewModel(
                 return@launch
             }
 
-            val result = loadChatInfoUseCase.execute(userId = profileId)
-            val chat = result.getOrNull() ?: run {
-                Log.e("ChatViewModel", "Failed to load chat info", result.exceptionOrNull())
-                setState { ChatState.Error }
-                return@launch
-            }
+            messages = emptyList()
+            hasMoreOlderMessages = true
+            isLoadingMoreMessages = false
+            activeChat = null
 
-            val messagesResult = subscribeToChatMessagesUseCase.execute(
-                userId = profileId,
-                chatId = chat.chatId
-            )
-            val messagesFlow = messagesResult.getOrNull() ?: run {
-                Log.e("ChatViewModel", "Failed to subscribe to chat messages", result.exceptionOrNull())
-                setState { ChatState.Error }
-                return@launch
-            }
-            _messages = messagesFlow
-
-            setState {
-                ChatState.Main(
-                    chatId = chat.chatId,
-                    participantId = chat.participantId,
-                    participantName = chat.participantName,
-                    participantAvatarUrl = chat.participantAvatarUrl,
-                    uiElements = messagesFlow.value.mapMessagesToUiElements().reversed(),
-                )
-            }
-
-            messagesFlow.collect { messages ->
-                setState { current ->
-                    if (current is ChatState.Main) {
-                        current.copy(
-                            uiElements = messages.mapMessagesToUiElements().reversed()
-                        )
-                    } else current
+            loadChatInfoUseCase.execute(userId = profileId)
+                .onFailure { exception ->
+                    logger.e("ChatViewModel", "Failed to load chat info", exception)
+                    setState { ChatState.Error }
+                    return@launch
                 }
-            }
+                .onSuccess { chat ->
+                    getChatMessagesPageUseCase.execute(
+                        chatId = chat.chatId,
+                        userId = profileId,
+                        beforeTimestamp = null,
+                        size = MESSAGES_BLOCK_SIZE,
+                    )
+                        .onFailure { exception ->
+                            logger.e("ChatViewModel", "Failed to load initial messages", exception)
+                            setState { ChatState.Error }
+                            return@launch
+                        }
+                        .onSuccess { initialMessages ->
+                            messages = initialMessages
+                            hasMoreOlderMessages = initialMessages.size >= MESSAGES_BLOCK_SIZE
+                            activeChat = chat
+                            renderMainState()
+                        }
+                }
         }
     }
 
-    private fun draftChanged(draft: String) {
+    private fun subscribe(profileId: String?) {
+        profileId ?: return
+        subscriptionJob?.cancel()
+        subscriptionJob = viewModelScope.launch(dispatcherIO) {
+            subscribeToChatMessagesUseCase.execute(profileId)
+                .onFailure { exception ->
+                    logger.e(
+                        "ChatViewModel",
+                        "Failed to subscribe to chat messages",
+                        exception
+                    )
+                }
+                .onSuccess { messagesFlow ->
+                    messagesFlow.collect { newMessage ->
+                        logger.d("ChatViewModel", "Received new message: $newMessage")
+                        messages = listOf(newMessage) + messages
+                        renderMainState()
+                    }
+                }
+        }
+    }
+
+    private fun unsubscribe() {
+        subscriptionJob?.cancel()
+        subscriptionJob = null
+        unsubscribeFromChatMessagesUseCase.execute()
+    }
+
+    private fun loadOlderMessages() {
+        val current = _state.value as? ChatState.Main ?: return
+        if (isLoadingMoreMessages || !hasMoreOlderMessages) return
+
+        val timestamp = messages.lastOrNull()?.timestamp ?: return
+        isLoadingMoreMessages = true
+        _state.value = current.copy(isLoadingMore = true)
+
+        viewModelScope.launch(dispatcherIO) {
+            getChatMessagesPageUseCase.execute(
+                chatId = current.chatId,
+                userId = current.participantId,
+                beforeTimestamp = timestamp,
+                size = MESSAGES_BLOCK_SIZE,
+            )
+                .onFailure { exception ->
+                    logger.e("ChatViewModel", "Failed to load older messages", exception)
+                    isLoadingMoreMessages = false
+                    withContext(dispatcherMain) {
+                        val state = _state.value as? ChatState.Main ?: return@withContext
+                        _state.value = state.copy(isLoadingMore = false)
+                    }
+                }
+                .onSuccess { older ->
+                    messages = (messages + older)
+                        .distinctBy { it.messageId }
+                    hasMoreOlderMessages = older.size == MESSAGES_BLOCK_SIZE
+                    isLoadingMoreMessages = false
+                    renderMainState()
+                }
+        }
+    }
+
+    private fun draftChanged(draft: TextFieldValue) {
         viewModelScope.launch(dispatcherMain) {
             setState { current ->
                 (current as? ChatState.Main)?.copy(messageDraft = draft) ?: current
@@ -124,7 +194,8 @@ class ChatViewModel(
     private fun attachmentsChanged(filesWithTypes: List<Pair<ByteArray, MediaType>>) {
         viewModelScope.launch(dispatcherMain) {
             setState { current ->
-                (current as? ChatState.Main)?.copy(attachedFilesWithTypes = filesWithTypes) ?: current
+                (current as? ChatState.Main)?.copy(attachedFilesWithTypes = filesWithTypes)
+                    ?: current
             }
         }
     }
@@ -133,14 +204,14 @@ class ChatViewModel(
         val currentState = _state.value as? ChatState.Main ?: return
         val message = currentState.messageDraft
         val filesWithTypes = currentState.attachedFilesWithTypes
-        if (message.isBlank() && filesWithTypes.isEmpty()) return
-        Log.i("ChatViewModel", "Sending message: $message at $timestamp")
+        if (message.text.isBlank() && filesWithTypes.isEmpty()) return
+        logger.i("ChatViewModel", "Sending message: $message at $timestamp")
         viewModelScope.launch(dispatcherIO) {
             val mediaIds = filesWithTypes.mapNotNull { (bytes, type) ->
                 val uploadInfoResult = uploadMediaUseCase.execute(bytes, type)
                 val mediaId = uploadInfoResult.getOrNull()
                 mediaId ?: run {
-                    Log.e(
+                    logger.e(
                         "ChatViewModel",
                         "Failed to get upload media url",
                         uploadInfoResult.exceptionOrNull()
@@ -149,22 +220,24 @@ class ChatViewModel(
                 }
                 mediaId to type
             }
-            val result = sendMessageUseCase.execute(
+            if (message.text.isBlank() && mediaIds.isEmpty()) return@launch
+            sendMessageUseCase.execute(
                 userId = currentState.participantId,
-                content = message,
+                content = message.text.trim(),
                 mediaIdsWithTypes = mediaIds,
-                timestamp = timestamp * 1000,
+                timestamp = timestamp,
             )
-            if (result.isFailure) {
-                Log.e("ChatViewModel", "Failed to send message", result.exceptionOrNull())
-                return@launch
-            }
-            setState { current ->
-                (current as? ChatState.Main)?.copy(
-                    messageDraft = "",
-                    attachedFilesWithTypes = emptyList()
-                ) ?: current
-            }
+                .onFailure { exception ->
+                    logger.e("ChatViewModel", "Failed to send message", exception)
+                }
+                .onSuccess {
+                    setState { current ->
+                        (current as? ChatState.Main)?.copy(
+                            messageDraft = TextFieldValue(""),
+                            attachedFilesWithTypes = emptyList()
+                        ) ?: current
+                    }
+                }
         }
     }
 
@@ -173,6 +246,7 @@ class ChatViewModel(
             is ChatState.Main -> _action.value = ChatAction.GoToProfile(
                 profileId = currentState.participantId
             )
+
             else -> Unit
         }
     }
@@ -184,7 +258,7 @@ class ChatViewModel(
                 mediaType = mediaItem.mediaType
             )
                 .onFailure {
-                    Log.e("ChatViewModel", "Failed to download media item", it)
+                    logger.e("ChatViewModel", "Failed to download media item", it)
                     _action.value = ChatAction.ShowErrorDownloadToast
                 }
                 .onSuccess {
@@ -198,10 +272,38 @@ class ChatViewModel(
     }
 
     private fun clear() {
-        loadChatJob?.cancel()
+        unsubscribe()
+        messages = emptyList()
+        hasMoreOlderMessages = true
+        isLoadingMoreMessages = false
+        activeChat = null
         viewModelScope.launch(dispatcherMain) {
             setState { ChatState.Idle }
             _action.value = null
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        clear()
+    }
+
+    private suspend fun renderMainState() {
+        val chat = activeChat ?: return
+        setState { current ->
+            val currentMain = current as? ChatState.Main
+            ChatState.Main(
+                chatId = chat.chatId,
+                participantId = chat.participantId,
+                participantName = chat.participantName,
+                participantAvatarUrl = chat.participantAvatarUrl,
+                uiElements = messages.mapMessagesToUiElements(),
+                hasMoreOlder = hasMoreOlderMessages,
+                isLoadingMore = isLoadingMoreMessages,
+                attachedFilesWithTypes = currentMain?.attachedFilesWithTypes ?: emptyList(),
+                messageDraft = currentMain?.messageDraft ?: TextFieldValue(""),
+                error = currentMain?.error ?: ChatState.ChatError.IDLE,
+            )
         }
     }
 
@@ -209,20 +311,25 @@ class ChatViewModel(
         if (isEmpty()) return emptyList()
 
         val result = mutableListOf<ChatUiElement>()
-        var lastDate: String? = null
+        var currentDate: String? = firstOrNull()?.timestamp?.epochSecondsToDateString()
         for ((index, message) in withIndex()) {
-            val dateString = message.timestamp.epochMillisToDateString()
-            if (dateString != lastDate) {
-                result.add(ChatUiElement.DayElement(dateString))
-                lastDate = dateString
+            val dateString = message.timestamp.epochSecondsToDateString()
+            if (dateString != currentDate) {
+                currentDate?.let { result.add(ChatUiElement.DayElement(it)) }
+                currentDate = dateString
             }
-            val hasTail = index == size - 1 || this[index + 1].isFromThisUser != message.isFromThisUser
+            val hasTail = index == 0 || this[index - 1].isFromThisUser != message.isFromThisUser
             result.add(
                 ChatUiElement.MessageElement(
                     message = message,
                     hasTail = hasTail
                 )
             )
+        }
+        val dateString = result.lastOrNull { it is ChatUiElement.MessageElement }
+            ?.let { (it as ChatUiElement.MessageElement).message.timestamp.epochSecondsToDateString() }
+        dateString?.let {
+            result.add(ChatUiElement.DayElement(it))
         }
         return result
     }

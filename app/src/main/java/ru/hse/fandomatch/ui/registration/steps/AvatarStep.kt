@@ -37,8 +37,8 @@ import androidx.compose.ui.unit.dp
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.registration.RegistrationState
-import ru.hse.fandomatch.utils.BitmapHelper
 import ru.hse.fandomatch.utils.getBytesFromUri
+import ru.hse.fandomatch.utils.toBitmap
 
 @Composable
 internal fun AvatarStep(
@@ -84,7 +84,7 @@ internal fun AvatarStep(
                 )
             }
         ) {
-            val avatarImageBitmap = BitmapHelper.byteArrayToBitmap(avatarByteArray)?.asImageBitmap()
+            val avatarImageBitmap = avatarByteArray.toBitmap()?.asImageBitmap()
             if (avatarImageBitmap != null) {
                 Image(
                     bitmap = avatarImageBitmap,

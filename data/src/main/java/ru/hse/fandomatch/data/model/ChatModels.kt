@@ -45,8 +45,8 @@ data class ChatDTO(
 )
 
 data class ChatPreviewDTO(
-    @SerializedName("chat_id")
-    val chatId: String,
+    @SerializedName("user_id")
+    val userId: String,
     @SerializedName("participant_name")
     val participantName: String,
     @SerializedName("participant_avatar_url")
@@ -61,7 +61,7 @@ data class ChatPreviewDTO(
     val newMessagesCount: Int
 ) {
     fun toDomain() = ChatPreview(
-        chatId = chatId,
+        userId = userId,
         participantName = participantName,
         participantAvatarUrl = participantAvatarUrl,
         lastMessage = lastMessage,

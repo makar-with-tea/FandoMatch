@@ -1,5 +1,6 @@
 package ru.hse.fandomatch.data.model
 
+import com.google.gson.JsonParseException
 import com.google.gson.annotations.SerializedName
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Comment
@@ -25,8 +26,6 @@ data class ErrorDTO(
     @SerializedName("error_message")
     val errorMessage: String? = null
 )
-
-class EmptySuccessDTO
 
 data class TimestampPaginationRequestDTO(
     @SerializedName("cursor_timestamp")
@@ -68,17 +67,6 @@ data class MediaItemDTO(
         },
         url = url
     )
-
-    companion object {
-        fun fromDomain(mediaItem: MediaItem) = MediaItemDTO(
-            mediaId = mediaItem.id,
-            mediaType = when (mediaItem.mediaType) {
-                MediaType.IMAGE -> MediaTypeDTO.IMAGE
-                MediaType.VIDEO -> MediaTypeDTO.VIDEO
-            },
-            url = mediaItem.url
-        )
-    }
 }
 
 enum class GenderDTO {
@@ -106,55 +94,7 @@ enum class GenderDTO {
     }
 }
 
-enum class CityCodeDTO {
-    @SerializedName("MOSCOW")
-    MOSCOW,
-
-    @SerializedName("SAINT_PETERSBURG")
-    SAINT_PETERSBURG,
-
-    @SerializedName("NOVOSIBIRSK")
-    NOVOSIBIRSK,
-
-    @SerializedName("YEKATERINBURG")
-    YEKATERINBURG,
-
-    @SerializedName("KAZAN")
-    KAZAN,
-
-    @SerializedName("NIZHNY_NOVGOROD")
-    NIZHNY_NOVGOROD,
-
-    @SerializedName("CHELYABINSK")
-    CHELYABINSK,
-
-    @SerializedName("SAMARA")
-    SAMARA,
-
-    @SerializedName("ROSTOV_ON_DON")
-    ROSTOV_ON_DON,
-
-    @SerializedName("UFA")
-    UFA,
-
-    @SerializedName("KRASNOYARSK")
-    KRASNOYARSK,
-
-    @SerializedName("VORONEZH")
-    VORONEZH,
-
-    @SerializedName("PERM")
-    PERM,
-
-    @SerializedName("VOLGOGRAD")
-    VOLGOGRAD,
-
-    @SerializedName("OTHER")
-    OTHER
-}
-
 data class CityDTO(
-    val code: CityCodeDTO,
     @SerializedName("name_en")
     val nameEn: String,
     @SerializedName("name_ru")
@@ -167,23 +107,6 @@ data class CityDTO(
 
     companion object {
         fun fromDomain(city: City) = CityDTO(
-            code = when (city.nameEnglish) {
-                "Moscow" -> CityCodeDTO.MOSCOW
-                "Saint Petersburg" -> CityCodeDTO.SAINT_PETERSBURG
-                "Novosibirsk" -> CityCodeDTO.NOVOSIBIRSK
-                "Yekaterinburg" -> CityCodeDTO.YEKATERINBURG
-                "Kazan" -> CityCodeDTO.KAZAN
-                "Nizhny Novgorod" -> CityCodeDTO.NIZHNY_NOVGOROD
-                "Chelyabinsk" -> CityCodeDTO.CHELYABINSK
-                "Samara" -> CityCodeDTO.SAMARA
-                "Rostov-on-Don" -> CityCodeDTO.ROSTOV_ON_DON
-                "Ufa" -> CityCodeDTO.UFA
-                "Krasnoyarsk" -> CityCodeDTO.KRASNOYARSK
-                "Voronezh" -> CityCodeDTO.VORONEZH
-                "Perm" -> CityCodeDTO.PERM
-                "Volgograd" -> CityCodeDTO.VOLGOGRAD
-                else -> CityCodeDTO.OTHER
-            },
             nameEn = city.nameEnglish,
             nameRu = city.nameRussian
         )
@@ -281,7 +204,7 @@ enum class FandomCategoryDTO {
 }
 
 data class UserProfileRequestDTO(
-    val username: String
+    val uuid: String
 )
 
 data class UserProfileResponseDTO(
@@ -298,7 +221,16 @@ enum class ProfileTypeDTO {
     FRIEND,
 
     @SerializedName("OTHER")
-    OTHER
+    OTHER;
+
+    companion object {
+        fun fromString(type: String) = when (type) {
+            "OWN" -> OWN
+            "FRIEND" -> FRIEND
+            "OTHER" -> OTHER
+            else -> throw JsonParseException("Unknown profile_type: $type")
+        }
+    }
 }
 
 sealed interface BaseUserProfileDTO {
@@ -319,7 +251,7 @@ data class FullUserProfileResponseDTO(
     val avatar: MediaItemDTO? = null,
     val background: MediaItemDTO? = null,
     val name: String,
-    val gender: GenderDTO? = null,
+    val gender: GenderDTO,
     @SerializedName("birth_date")
     val birthDate: Long,
     val age: Long,
@@ -338,7 +270,9 @@ data class PublicUserProfileResponseDTO(
     val city: CityDTO? = null,
     val fandoms: List<FandomDTO>,
     @SerializedName("has_current_user_reacted")
-    val hasCurrentUserReacted: Boolean
+    val hasCurrentUserReacted: Boolean,
+    val age: Long,
+    val gender: GenderDTO
 ) : BaseUserProfileDTO
 
 data class FriendUserProfileResponseDTO(
@@ -351,7 +285,9 @@ data class FriendUserProfileResponseDTO(
     val avatar: MediaItemDTO? = null,
     val background: MediaItemDTO? = null,
     val city: CityDTO? = null,
-    val fandoms: List<FandomDTO>? = null
+    val fandoms: List<FandomDTO>? = null,
+    val age: Long,
+    val gender: GenderDTO
 ) : BaseUserProfileDTO
 
 data class EditUserProfileRequestDTO(
@@ -361,8 +297,9 @@ data class EditUserProfileRequestDTO(
     @SerializedName("background_media_id")
     val backgroundMediaId: String? = null,
     val name: String? = null,
-    val gender: GenderDTO? = null,
-    val city: CityDTO? = null
+    val city: CityDTO? = null,
+    @SerializedName("fandom_ids")
+    val fandomIds: List<String>? = null
 )
 
 data class EditUserProfileResponseDTO(
@@ -415,6 +352,7 @@ data class MatchCandidateResponseDTO(
     val username: String,
     val name: String,
     val age: Int,
+    val gender: GenderDTO,
     val city: CityDTO? = null,
     val avatar: MediaItemDTO? = null,
     val fandoms: List<FandomDTO>,
@@ -487,7 +425,7 @@ data class CurrentFiltersResponseDTO(
 
 data class PostsGetRequestDTO(
     val uuid: String,
-    val pagination: TimestampPaginationRequestDTO? = null
+    val pagination: TimestampPaginationRequestDTO
 )
 
 data class PostMediaInputDTO(
@@ -498,10 +436,9 @@ data class PostMediaInputDTO(
 )
 
 data class CreatePostRequestDTO(
-    val title: String,
     val content: String,
-    @SerializedName("fandom_id")
-    val fandomId: String? = null,
+    @SerializedName("fandom_ids")
+    val fandomIds: List<String>? = null,
     @SerializedName("media_items")
     val mediaItems: List<PostMediaInputDTO>? = null
 )
@@ -515,12 +452,13 @@ data class PostAuthorDTO(
 
 data class PostDTO(
     val id: String,
-    val title: String,
     val content: String,
     @SerializedName("like_count")
-    val likeCount: Int? = null,
+    val likeCount: Int,
     @SerializedName("comment_count")
-    val commentCount: Int? = null,
+    val commentCount: Int,
+    @SerializedName("is_liked_by_current_user")
+    val isLikedByCurrentUser: Boolean,
     val author: PostAuthorDTO,
     val fandoms: List<FandomDTO>? = null,
     @SerializedName("created_at")
@@ -531,12 +469,13 @@ data class PostDTO(
 
 data class ExtendedPostDTO(
     val id: String,
-    val title: String,
     val content: String,
     @SerializedName("like_count")
-    val likeCount: Int? = null,
+    val likeCount: Int,
     @SerializedName("comment_count")
-    val commentCount: Int? = null,
+    val commentCount: Int,
+    @SerializedName("is_liked_by_current_user")
+    val isLikedByCurrentUser: Boolean,
     val author: PostAuthorDTO,
     val fandoms: List<FandomDTO>? = null,
     @SerializedName("created_at")
@@ -555,9 +494,9 @@ data class ExtendedPostDTO(
             timestamp = createdAt,
             content = content,
             mediaItems = mediaItems?.map { it.toDomain() } ?: listOf(),
-            likeCount = likeCount ?: 0,
-            commentCount = commentCount ?: 0,
-            isLikedByCurrentUser = false, // todo даша
+            likeCount = likeCount,
+            commentCount = commentCount,
+            isLikedByCurrentUser = isLikedByCurrentUser,
             fandoms = fandoms?.map { it.toDomain() } ?: listOf()
         ),
         comments = comments?.map { it.toDomain() } ?: listOf()
@@ -663,12 +602,12 @@ data class FandomListResponseDTO(
 data class FandomDTO(
     val id: String,
     val name: String,
-    val category: FandomCategoryDTO? = null
+    val category: FandomCategoryDTO
 ) {
     fun toDomain() = Fandom(
         id = id,
         name = name,
-        category = category!!.toDomain() // todo даша
+        category = category.toDomain()
     )
 
     companion object {
@@ -681,7 +620,7 @@ data class FandomDTO(
 }
 
 data class FandomCategoryListDataDTO(
-    val categories: List<String>
+    val categories: List<FandomCategoryDTO>
 )
 
 data class FandomCategoryListResponseDTO(
@@ -702,3 +641,49 @@ data class FandomRequestCreateResponseDTO(
     val status: ResponseStatusDTO,
     val errorResponse: ErrorDTO? = null
 )
+
+data class UserPreferencesDTO(
+    @SerializedName("match_notifications_enabled")
+    val matchNotificationsEnabled: Boolean,
+    @SerializedName("message_notifications_enabled")
+    val messageNotificationsEnabled: Boolean,
+    @SerializedName("hide_my_posts_from_non_matches")
+    val hideMyPostsFromNonMatches: Boolean
+)
+
+data class UserPreferencesResponseDTO(
+    val status: ResponseStatusDTO,
+    val successResponse: UserPreferencesDTO? = null,
+    val errorResponse: ErrorDTO? = null
+)
+
+data class UpdateUserPreferencesRequestDTO(
+    @SerializedName("match_notifications_enabled")
+    val matchNotificationsEnabled: Boolean,
+    @SerializedName("message_notifications_enabled")
+    val messageNotificationsEnabled: Boolean,
+    @SerializedName("hide_my_posts_from_non_matches")
+    val hideMyPostsFromNonMatches: Boolean
+)
+
+data class CitySearchDataDTO(
+    val cities: List<CityDTO>
+)
+
+data class CitySearchResponseDTO(
+    val status: ResponseStatusDTO,
+    val successResponse: CitySearchDataDTO? = null,
+    val errorResponse: ErrorDTO? = null
+)
+
+data class CreateCommentRequestDTO(
+    val content: String,
+    val timestamp: Long? = null
+)
+
+data class CreateCommentResponseDTO(
+    val status: ResponseStatusDTO,
+    val successResponse: CommentDTO? = null,
+    val errorResponse: ErrorDTO? = null
+)
+

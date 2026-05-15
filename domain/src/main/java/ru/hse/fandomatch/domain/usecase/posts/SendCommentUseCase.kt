@@ -11,7 +11,11 @@ class SendCommentUseCase(
         timestamp: Long,
     ): Result<Unit> {
         return runCatching {
-            // todo жду ручки от даши
+            globalRepository.sendComment(
+                postId = postId,
+                content = content,
+                timestamp = timestamp,
+            )
         }
     }
 }

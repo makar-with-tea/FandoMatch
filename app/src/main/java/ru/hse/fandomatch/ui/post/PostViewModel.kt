@@ -1,6 +1,6 @@
 package ru.hse.fandomatch.ui.post
 
-import android.util.Log
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.Comment
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.ProfileType
@@ -17,7 +18,6 @@ import ru.hse.fandomatch.domain.usecase.posts.GetFullPostUseCase
 import ru.hse.fandomatch.domain.usecase.posts.LikePostUseCase
 import ru.hse.fandomatch.domain.usecase.posts.SendCommentUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetUserUseCase
-import java.time.Instant
 
 class PostViewModel(
     private val getFullPostUseCase: GetFullPostUseCase,
@@ -25,6 +25,7 @@ class PostViewModel(
     private val getUserUseCase: GetUserUseCase,
     private val likePostUseCase: LikePostUseCase,
     private val downloadMediaToGalleryUseCase: DownloadMediaToGalleryUseCase,
+    private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main,
 ): ViewModel() {
@@ -34,7 +35,7 @@ class PostViewModel(
     val action: StateFlow<PostAction?> get() = _action
 
     fun obtainEvent(event: PostEvent) {
-        Log.i("PostViewModel", "Obtained event: $event")
+        logger.i("PostViewModel", "Obtained event: $event")
         when (event) {
             PostEvent.Clear -> clear()
             is PostEvent.LoadPost -> loadPost(event.postId)
@@ -54,49 +55,61 @@ class PostViewModel(
             return
         }
         viewModelScope.launch(dispatcherIO) {
-            val result = getFullPostUseCase.execute(postId = profileId)
-            val fullPost = result.getOrNull() ?: run {
-                Log.e("PostViewModel", "Failed to load post info", result.exceptionOrNull())
-                _state.value = PostState.Error
-                return@launch
-            }
-            _state.value = PostState.Main(fullPost)
+            getFullPostUseCase.execute(postId = profileId)
+                .onFailure { exception ->
+                    logger.e("PostViewModel", "Failed to load post info", exception)
+                    withContext(dispatcherMain) {
+                        _state.value = PostState.Error
+                    }
+                }
+                .onSuccess { fullPost ->
+                    withContext(dispatcherMain) {
+                        _state.value = PostState.Main(fullPost)
+                    }
+                }
         }
     }
 
     private fun sendComment() {
-        val timestamp = Instant.now().toEpochMilli()
+        val timestamp = System.currentTimeMillis() / 1000
         val currentState = (_state.value as? PostState.Main) ?: return
-        val commentText = currentState.commentDraft.trim()
+        val commentText = currentState.commentDraft.text.trim()
         if (commentText.isEmpty()) return
         viewModelScope.launch(dispatcherIO) {
-            val result = sendCommentUseCase.execute(
+            sendCommentUseCase.execute(
                 postId = currentState.fullPost.post.id,
                 content = commentText,
                 timestamp = timestamp,
             )
-            if (result.isFailure) {
-                Log.e("PostViewModel", "Failed to send comment", result.exceptionOrNull())
-                return@launch
-            }
-            val currentUser = getUserUseCase.execute(null, true).getOrNull() ?: run {
-                Log.e("PostViewModel", "Failed to load current user info", result.exceptionOrNull())
-                return@launch
-            }
-            withContext(dispatcherMain) {
-                _state.value = currentState.copy(
-                    commentDraft = "",
-                    fullPost = currentState.fullPost.copy(
-                        comments = currentState.fullPost.comments + Comment(
-                            authorName = currentUser.name,
-                            authorLogin = (currentUser.profileType as ProfileType.Own).login,
-                            authorAvatar = currentUser.avatar,
-                            content = commentText,
-                            timestamp = timestamp,
-                        )
-                    )
-                )
-            }
+                .onFailure { exception ->
+                    logger.e("PostViewModel", "Failed to send comment", exception)
+                }
+                .onSuccess {
+                    getUserUseCase.execute(null, true)
+                        .onFailure { e ->
+                            logger.e(
+                                "PostViewModel",
+                                "Failed to load current user info: ${e.message}",
+                                e
+                            )
+                        }
+                        .onSuccess { currentUser ->
+                            withContext(dispatcherMain) {
+                                _state.value = currentState.copy(
+                                    commentDraft = TextFieldValue(""),
+                                    fullPost = currentState.fullPost.copy(
+                                        comments = currentState.fullPost.comments + Comment(
+                                            authorName = currentUser.name,
+                                            authorLogin = (currentUser.profileType as ProfileType.Own).login,
+                                            authorAvatar = currentUser.avatar,
+                                            content = commentText,
+                                            timestamp = timestamp,
+                                        )
+                                    )
+                                )
+                            }
+                        }
+                }
         }
     }
 
@@ -113,27 +126,30 @@ class PostViewModel(
     private fun onLikeClicked() {
         val currentState = (_state.value as? PostState.Main) ?: return
         viewModelScope.launch(dispatcherIO) {
-            val result = likePostUseCase.execute(postId = currentState.fullPost.post.id)
-            if (result.isFailure) {
-                Log.e("PostViewModel", "Failed to like post", result.exceptionOrNull())
-                return@launch
-            }
-            _state.value = currentState.copy(
-                fullPost = currentState.fullPost.copy(
-                    post = currentState.fullPost.post.copy(
-                        isLikedByCurrentUser = !currentState.fullPost.post.isLikedByCurrentUser,
-                        likeCount = if (currentState.fullPost.post.isLikedByCurrentUser) {
-                            currentState.fullPost.post.likeCount - 1
-                        } else {
-                            currentState.fullPost.post.likeCount + 1
-                        }
-                    )
-                )
-            )
+            likePostUseCase.execute(postId = currentState.fullPost.post.id)
+                .onFailure { exception ->
+                    logger.e("PostViewModel", "Failed to like post", exception)
+                }
+                .onSuccess {
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            fullPost = currentState.fullPost.copy(
+                                post = currentState.fullPost.post.copy(
+                                    isLikedByCurrentUser = !currentState.fullPost.post.isLikedByCurrentUser,
+                                    likeCount = if (currentState.fullPost.post.isLikedByCurrentUser) {
+                                        currentState.fullPost.post.likeCount - 1
+                                    } else {
+                                        currentState.fullPost.post.likeCount + 1
+                                    }
+                                )
+                            )
+                        )
+                    }
+                }
         }
     }
 
-    private fun updateCommentDraft(commentDraft: String) {
+    private fun updateCommentDraft(commentDraft: TextFieldValue) {
         val currentState = (_state.value as? PostState.Main) ?: return
         _state.value = currentState.copy(commentDraft = commentDraft)
     }
@@ -145,7 +161,7 @@ class PostViewModel(
                 mediaType = mediaItem.mediaType
             )
                 .onFailure {
-                    Log.e("PostViewModel", "Failed to download media item", it)
+                    logger.e("PostViewModel", "Failed to download media item", it)
                     _action.value = PostAction.ShowErrorDownloadToast
                 }
                 .onSuccess {

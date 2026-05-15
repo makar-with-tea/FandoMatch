@@ -31,20 +31,21 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.ui.chat.ChatAction
-import ru.hse.fandomatch.ui.chat.ChatEvent
-import ru.hse.fandomatch.utils.epochMillisToDateString
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
 import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.FullPost
 import ru.hse.fandomatch.ui.composables.ImagesScreen
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.PostComment
+import ru.hse.fandomatch.utils.epochSecondsToDateTimeString
 
 @Composable
 fun PostScreen(
@@ -117,7 +118,7 @@ private fun MainState(
     onClickProfile: () -> Unit,
     onClickLike: () -> Unit,
     onDownloadMediaItem: (MediaItem) -> Unit,
-    onUpdateCommentDraft: (String) -> Unit,
+    onUpdateCommentDraft: (TextFieldValue) -> Unit,
 ) {
     setTopBarState(
         TopBarState(
@@ -149,7 +150,7 @@ private fun MainState(
         ) {
             item {
                 FullPost(
-                    postDate = state.fullPost.post.timestamp.epochMillisToDateString(),
+                    postDate = state.fullPost.post.timestamp.epochSecondsToDateTimeString(),
                     postText = state.fullPost.post.content,
                     mediaItems = state.fullPost.post.mediaItems,
                     areReactionsAvailable = true,
@@ -159,7 +160,7 @@ private fun MainState(
                     isLiked = state.fullPost.post.isLikedByCurrentUser,
                     onLikeClick = { onClickLike() },
                     onItemClick = { urls, index ->
-                        itemsForScreen = urls // todo move to view model
+                        itemsForScreen = urls
                         currentItemIndex = index
                     },
                     modifier = Modifier,
@@ -177,7 +178,7 @@ private fun MainState(
                 Spacer(modifier = Modifier.height(4.dp))
             }
 
-            items(state.fullPost.comments.reversed()) {
+            items(state.fullPost.comments) {
                 PostComment(
                     comment = it,
                     modifier = Modifier.padding(vertical = 2.dp, horizontal = 4.dp),
@@ -185,12 +186,10 @@ private fun MainState(
             }
         }
 
-        var commentDraft by remember { mutableStateOf(state.commentDraft) }
         OutlinedTextField(
-            value = commentDraft,
+            value = state.commentDraft,
             onValueChange = {
                 onUpdateCommentDraft(it)
-                commentDraft = it
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -205,16 +204,12 @@ private fun MainState(
                         .size(24.dp)
                         .clip(CircleShape)
                         .background(
-                            if (commentDraft.isBlank())
+                            if (state.commentDraft.text.isBlank())
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                             else MaterialTheme.colorScheme.primaryContainer
                         ),
-                    enabled = commentDraft.isNotBlank(),
-                    onClick = {
-                        onSendComment()
-                        commentDraft = ""
-                        onUpdateCommentDraft("")
-                    },
+                    enabled = state.commentDraft.text.isNotBlank(),
+                    onClick = { onSendComment() },
                 ) {
                     Icon(
                         imageVector = ImageVector.vectorResource(id = R.drawable.ic_send),
@@ -230,7 +225,15 @@ private fun MainState(
             items = itemsForScreen,
             initialPage = currentItemIndex,
             titleContent = {
-                // todo: from <user>, <time>
+                Text(
+                    text = stringResource(
+                        R.string.attachments_sender_and_time_description,
+                        state.fullPost.post.authorName,
+                        state.fullPost.post.timestamp.epochSecondsToDateTimeString(),
+                    ),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                )
             },
             onDownloadItem = onDownloadMediaItem,
             setTopBarState = setTopBarState,

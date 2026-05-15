@@ -17,10 +17,11 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.MediaType
-import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
+import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.posts.CreatePostUseCase
 
@@ -47,6 +48,7 @@ class NewPostViewModelTest {
             createPostUseCase = createPostUseCase,
             uploadMediaUseCase = uploadMediaUseCase,
             getFandomsByQueryUseCase = getFandomsByQueryUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )
@@ -62,13 +64,13 @@ class NewPostViewModelTest {
     }
 
     @Test
-    fun `attachments changed truncates by max allowed`() = runTest {
+    fun `attachments changed truncates by max not allowed`() = runTest {
         val attachments = List(12) { byteArrayOf(it.toByte()) to MediaType.IMAGE }
 
         viewModel.obtainEvent(NewPostEvent.AttachmentsChanged(attachments))
 
         val state = viewModel.state.first() as NewPostState.Main
-        assertEquals(10, state.attachedFilesWithTypes.size)
+        assertEquals(5, state.attachedFilesWithTypes.size)
     }
 
     @Test
@@ -142,7 +144,7 @@ class NewPostViewModelTest {
 
         assertEquals(NewPostAction.ShowErrorToast, viewModel.action.first())
 
-        viewModel.obtainEvent(NewPostEvent.ToastShown)
+        viewModel.obtainEvent(NewPostEvent.ActionHandled)
         assertEquals(null, viewModel.action.first())
     }
 

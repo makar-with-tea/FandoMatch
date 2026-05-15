@@ -11,13 +11,15 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
@@ -66,6 +68,7 @@ class ProfileViewModelTest {
             getFriendsUseCase = getFriendsUseCase,
             getFriendRequestsUseCase = getFriendRequestsUseCase,
             likePostUseCase = likePostUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )
@@ -73,13 +76,14 @@ class ProfileViewModelTest {
 
     @Test
     fun `load profile success sets main state`() = runTest {
-        `when`(getUserUseCase.execute("1", true)).thenReturn(Result.success(user()))
-        `when`(getUserPostsUseCase.execute("1", true)).thenReturn(Result.success(listOf(post("p1"))))
+        `when`(getUserUseCase.execute(any(), any())).thenReturn(Result.success(user()))
+        `when`(getUserPostsUseCase.execute(anyOrNull(), any(), anyOrNull(), any())).thenReturn(Result.success(listOf(post("p1"))))
 
         viewModel.obtainEvent(ProfileEvent.LoadProfile("1", true))
         advanceUntilIdle()
 
-        val state = viewModel.state.first()
+        val state = viewModel.state.value
+        println(state)
         assertTrue(state is ProfileState.Main)
         state as ProfileState.Main
         assertEquals("1", state.id)
@@ -129,7 +133,7 @@ class ProfileViewModelTest {
 
         `when`(getFriendsUseCase.execute()).thenReturn(Result.success(listOf(otherProfile("friend-1"))))
         `when`(getFriendRequestsUseCase.execute()).thenReturn(Result.success(listOf(otherProfile("req-1"))))
-        `when`(getUserPostsUseCase.execute("1", true)).thenReturn(Result.success(listOf(post("p1"))))
+        `when`(getUserPostsUseCase.execute(anyOrNull(), any(), anyOrNull(), any())).thenReturn(Result.success(listOf(post("p1"))))
 
         viewModel.obtainEvent(ProfileEvent.FriendsButtonClicked)
         advanceUntilIdle()
@@ -165,7 +169,7 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         `when`(likePostUseCase.execute("post-1")).thenReturn(Result.success(Unit))
-        `when`(getUserPostsUseCase.execute("1", true)).thenReturn(Result.success(listOf(post("post-1", liked = false, likeCount = 3))))
+        `when`(getUserPostsUseCase.execute(anyOrNull(), any(), anyOrNull(), any())).thenReturn(Result.success(listOf(post("post-1", liked = false, likeCount = 3))))
 
         viewModel.obtainEvent(ProfileEvent.PostsButtonClicked)
         advanceUntilIdle()
@@ -195,8 +199,8 @@ class ProfileViewModelTest {
     }
 
     private suspend fun loadMainState() {
-        `when`(getUserUseCase.execute("1", true)).thenReturn(Result.success(user()))
-        `when`(getUserPostsUseCase.execute("1", true)).thenReturn(Result.success(listOf(post("p1"))))
+        `when`(getUserUseCase.execute(any(), any())).thenReturn(Result.success(user()))
+        `when`(getUserPostsUseCase.execute(anyOrNull(), any(), anyOrNull(), any())).thenReturn(Result.success(listOf(post("p1"))))
         viewModel.obtainEvent(ProfileEvent.LoadProfile("1", true))
     }
 

@@ -14,7 +14,6 @@ import ru.hse.fandomatch.R
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.ui.theme.CustomColors
-import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
@@ -22,34 +21,16 @@ import java.time.ZonedDateTime
 
 fun Boolean?.orFalse(): Boolean = this ?: false
 
-fun Int?.orZero(): Int = this ?: 0
-
-fun <T> T?.orDefault(default: T): T = this ?: default
-
-class BitmapHelper {
-    companion object {
-        fun bitmapToByteArray(bitmap: Bitmap?): ByteArray? {
-            val stream = ByteArrayOutputStream()
-            bitmap?.compress(Bitmap.CompressFormat.PNG, 100, stream) ?: return null
-            return stream.toByteArray()
-        }
-
-        fun byteArrayToBitmap(byteArray: ByteArray?): Bitmap? {
-            byteArray ?: return null
-            return BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-        }
-    }
-}
-
-fun rawResId(name: String, context: Context): Int {
-    return context.resources.getIdentifier(name, "raw", context.packageName)
+fun ByteArray?.toBitmap(): Bitmap? {
+    this ?: return null
+    return BitmapFactory.decodeByteArray(this, 0, this.size)
 }
 
 fun nameAndAgeString(name: String, age: Int): String = "$name, $age"
 
-fun epochMillisToTimeAgo(timestamp: Long, context: Context) : String {
-    val dateTime = LocalDateTime.ofEpochSecond(timestamp / 1000, 0, currentZoneOffset())
-    val secondsAgo = (System.currentTimeMillis() - timestamp) / 1000
+fun epochSecondsToTimeAgo(timestamp: Long, context: Context) : String {
+    val dateTime = LocalDateTime.ofEpochSecond(timestamp, 0, currentZoneOffset())
+    val secondsAgo = System.currentTimeMillis() / 1000 - timestamp
     val minutesAgo = secondsAgo / 60
     val hoursAgo = minutesAgo / 60
     val daysAgo = hoursAgo / 24
@@ -66,22 +47,29 @@ fun epochMillisToTimeAgo(timestamp: Long, context: Context) : String {
     }
 }
 
-fun Long.epochMillisToDateString(): String {
-    val dateTime = epochMillisToDateTime()
-    return String.format("%02d.%02d.%04d", dateTime.dayOfMonth, dateTime.monthValue, dateTime.year)
+fun Long.epochSecondsToDateString(): String {
+    val dateTime = epochSecondsToDateTime()
+    return String.format("%02d.%02d.%02d", dateTime.dayOfMonth, dateTime.monthValue, dateTime.year % 100)
 }
 
-fun Long.epochMillisToTimeString(): String {
-    val dateTime = epochMillisToDateTime()
+fun Long.epochSecondsToTimeString(): String {
+    val dateTime = epochSecondsToDateTime()
     return String.format("%02d:%02d", dateTime.hour, dateTime.minute)
 }
 
-fun Long.isSameDayAs(other: Long): Boolean {
-    val dateTime1 = epochMillisToDateTime()
-    val dateTime2 = other.epochMillisToDateTime()
-    return dateTime1.year == dateTime2.year &&
-            dateTime1.monthValue == dateTime2.monthValue &&
-            dateTime1.dayOfMonth == dateTime2.dayOfMonth
+fun Long.epochSecondsToDateTimeString(): String {
+    val dateTime = epochSecondsToDateTime()
+    if (dateTime.toLocalDate() == LocalDateTime.now().toLocalDate()) {
+        return String.format("%02d:%02d", dateTime.hour, dateTime.minute)
+    }
+    return String.format(
+        "%02d.%02d.%02d %02d:%02d",
+        dateTime.dayOfMonth,
+        dateTime.monthValue,
+        dateTime.year % 100,
+        dateTime.hour,
+        dateTime.minute
+    )
 }
 
 fun currentZoneOffset(): ZoneOffset {
@@ -89,8 +77,8 @@ fun currentZoneOffset(): ZoneOffset {
     return ZonedDateTime.now(zoneId).offset
 }
 
-private fun Long.epochMillisToDateTime(): LocalDateTime {
-    return LocalDateTime.ofEpochSecond(this / 1000, 0, currentZoneOffset())
+private fun Long.epochSecondsToDateTime(): LocalDateTime {
+    return LocalDateTime.ofEpochSecond(this, 0, currentZoneOffset())
 }
 
 fun Gender.stringId(): Int = when (this) {
@@ -120,7 +108,8 @@ fun FandomCategory.toStringId(): Int = when (this) {
 
 private const val LATIN = "abcdefghijklmnopqrstuvwxyz"
 private const val LOGIN_SPECIAL_SYMBOLS = "_-"
-private const val SPECIAL_SYMBOLS = "!@#$%^*()-_"
+private const val SPECIAL_SYMBOLS = "!@#$%^*()-._"
+private fun String.isLatinOrDigitOrSpecial() = this.all { it.isDigit() || it.lowercase() in LATIN || it in SPECIAL_SYMBOLS }
 fun String.checkNameLength() = this.length in 2..20
 fun String.checkNameContent() = this.all { it.isLetter() || it == ' ' || it == '\'' }
 fun String.checkEmailContent() = this.isNotEmpty() && "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$".toRegex().matches(this)
@@ -131,9 +120,9 @@ fun String.checkPasswordLength() = this.length >= 8
 fun String.checkPasswordContent() = this.any { it.isDigit() }
         && this.any { it.lowercase() in LATIN }
         && this.any { it !in LATIN && !it.isDigit() }
-        && this.all { it.isLetterOrDigit() || it in SPECIAL_SYMBOLS }
+        && this.isLatinOrDigitOrSpecial()
 fun String.checkFandomNameLength() = this.length in 2..100
-fun String.checkPostContentLength() = this.length <= 2000 // todo какая длина?
+fun String.checkPostContentLength() = this.length <= 2000
 
 @Composable
 fun FandomCategory.getColor(): Color {

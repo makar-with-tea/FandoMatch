@@ -17,6 +17,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.auth.ResetPasswordUseCase
 
@@ -39,6 +40,7 @@ class PasswordRecoveryViewModelTest {
         viewModel = PasswordRecoveryViewModel(
             getVerificationCodeUseCase = getVerificationCodeUseCase,
             resetPasswordUseCase = resetPasswordUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )
@@ -140,7 +142,7 @@ class PasswordRecoveryViewModelTest {
         advanceUntilIdle()
         viewModel.obtainEvent(PasswordRecoveryEvent.NewPasswordChanged("Password123!"))
         viewModel.obtainEvent(PasswordRecoveryEvent.RepeatNewPasswordChanged("Password123!"))
-        `when`(resetPasswordUseCase.execute("1234", "Password123!")).thenReturn(
+        `when`(resetPasswordUseCase.execute("1234", "Password123!", "user@mail.com")).thenReturn(
             Result.failure(IllegalArgumentException("invalid code"))
         )
 
@@ -157,7 +159,7 @@ class PasswordRecoveryViewModelTest {
         advanceUntilIdle()
         viewModel.obtainEvent(PasswordRecoveryEvent.NewPasswordChanged("Password123!"))
         viewModel.obtainEvent(PasswordRecoveryEvent.RepeatNewPasswordChanged("Password123!"))
-        `when`(resetPasswordUseCase.execute("1234", "Password123!")).thenReturn(Result.success(Unit))
+        `when`(resetPasswordUseCase.execute("1234", "Password123!", "user@mail.com")).thenReturn(Result.success(Unit))
 
         viewModel.obtainEvent(PasswordRecoveryEvent.SavePasswordClicked("1234"))
         advanceUntilIdle()

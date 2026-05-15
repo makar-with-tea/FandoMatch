@@ -3,10 +3,12 @@ package ru.hse.fandomatch.domain.usecase.user
 import ru.hse.fandomatch.domain.model.User
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
+import ru.hse.fandomatch.domain.usecase.auth.RefreshAuthUseCase
 
 class GetUserUseCase(
     private val globalRepository: GlobalRepository,
     private val sharedPrefRepository: SharedPrefRepository,
+    private val refreshAuthUseCase: RefreshAuthUseCase,
 ) {
     suspend fun execute(profileId: String?, isCurrentUser: Boolean): Result<User> {
         val id = when {
@@ -15,7 +17,9 @@ class GetUserUseCase(
             else -> null
         } ?: return Result.failure(IllegalArgumentException("Profile ID must be provided for non-current user"))
         return runCatching {
-            globalRepository.getUser(id)
+            refreshAuthUseCase.execute {
+                globalRepository.getUser(id)
+            }
         }
     }
 }

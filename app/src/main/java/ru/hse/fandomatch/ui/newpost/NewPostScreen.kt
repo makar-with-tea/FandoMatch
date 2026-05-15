@@ -70,49 +70,17 @@ fun NewPostScreen(
 
         is NewPostAction.NavigateToAddFandom -> {
             navigateToAddFandom()
-            viewModel.obtainEvent(NewPostEvent.Clear)
+            viewModel.obtainEvent(NewPostEvent.ActionHandled)
         }
 
         is NewPostAction.ShowErrorToast -> {
             Toast.makeText(LocalContext.current, R.string.network_error, Toast.LENGTH_SHORT).show()
-            viewModel.obtainEvent(NewPostEvent.ToastShown)
+            viewModel.obtainEvent(NewPostEvent.ActionHandled)
         }
 
         null -> {}
     }
 
-    when (state.value) {
-        is NewPostState.Main -> {
-            MainState(
-                state.value as NewPostState.Main,
-                onContentChanged = { viewModel.obtainEvent(NewPostEvent.ContentChanged(it)) },
-                onAttachmentsChanged = { viewModel.obtainEvent(NewPostEvent.AttachmentsChanged(it)) },
-                onPostClick = { viewModel.obtainEvent(NewPostEvent.PostButtonClicked) },
-                onFandomAdded = { viewModel.obtainEvent(NewPostEvent.FandomAdded(it)) },
-                onFandomRemoved = { viewModel.obtainEvent(NewPostEvent.FandomRemoved(it)) },
-                onFandomSearched = { viewModel.obtainEvent(NewPostEvent.FandomSearched(it)) },
-                onAddFandomClicked = { viewModel.obtainEvent(NewPostEvent.AddFandomClicked) },
-                setTopBarState = setTopBarState,
-            )
-        }
-        is NewPostState.Loading -> {
-            LoadingState()
-        }
-    }
-}
-
-@Composable
-fun MainState(
-    state: NewPostState.Main,
-    onContentChanged: (String) -> Unit,
-    onAttachmentsChanged: (List<Pair<ByteArray, MediaType>>) -> Unit,
-    onPostClick: () -> Unit,
-    onFandomAdded: (Fandom) -> Unit,
-    onFandomRemoved: (Fandom) -> Unit,
-    onFandomSearched: (String?) -> Unit,
-    onAddFandomClicked: () -> Unit,
-    setTopBarState: (TopBarState) -> Unit,
-) {
     setTopBarState(
         TopBarState(
             titleContent = @Composable {
@@ -129,8 +97,13 @@ fun MainState(
                         color = MaterialTheme.colorScheme.secondaryContainer,
                         modifier = Modifier
                             .clip(RoundedCornerShape(30.dp))
-                            .background(MaterialTheme.colorScheme.onSecondaryContainer)
-                            .clickable { onPostClick() }
+                            .background(
+                                if (state.value.canPost()) MaterialTheme.colorScheme.onSecondaryContainer
+                                else MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f)
+                            )
+                            .clickable(enabled = state.value.canPost()) {
+                                viewModel.obtainEvent(NewPostEvent.PostButtonClicked)
+                            }
                             .padding(8.dp)
                     )
                 }
@@ -138,7 +111,34 @@ fun MainState(
             endIcons = listOf()
         )
     )
+    when (state.value) {
+        is NewPostState.Main -> {
+            MainState(
+                state.value as NewPostState.Main,
+                onContentChanged = { viewModel.obtainEvent(NewPostEvent.ContentChanged(it)) },
+                onAttachmentsChanged = { viewModel.obtainEvent(NewPostEvent.AttachmentsChanged(it)) },
+                onFandomAdded = { viewModel.obtainEvent(NewPostEvent.FandomAdded(it)) },
+                onFandomRemoved = { viewModel.obtainEvent(NewPostEvent.FandomRemoved(it)) },
+                onFandomSearched = { viewModel.obtainEvent(NewPostEvent.FandomSearched(it)) },
+                onAddFandomClicked = { viewModel.obtainEvent(NewPostEvent.AddFandomClicked) },
+            )
+        }
+        is NewPostState.Loading -> {
+            LoadingState()
+        }
+    }
+}
 
+@Composable
+fun MainState(
+    state: NewPostState.Main,
+    onContentChanged: (String) -> Unit,
+    onAttachmentsChanged: (List<Pair<ByteArray, MediaType>>) -> Unit,
+    onFandomAdded: (Fandom) -> Unit,
+    onFandomRemoved: (Fandom) -> Unit,
+    onFandomSearched: (String?) -> Unit,
+    onAddFandomClicked: () -> Unit,
+) {
     var content by remember { mutableStateOf(state.content) }
     var attachedFiles by remember { mutableStateOf(state.attachedFilesWithTypes) }
 
@@ -266,6 +266,13 @@ fun MainState(
     if (state.isLoading) {
         LoadingBlock()
     }
+}
+
+private fun NewPostState.canPost() : Boolean {
+    if (this !is NewPostState.Main) return false
+    return contentError == NewPostState.NewPostError.IDLE
+            && (content.isNotBlank() || attachedFilesWithTypes.isNotEmpty())
+            && !isLoading
 }
 
 @Composable

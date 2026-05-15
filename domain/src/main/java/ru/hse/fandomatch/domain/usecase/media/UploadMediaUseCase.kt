@@ -1,7 +1,6 @@
-package ru.hse.fandomatch.domain.usecase.chat
+package ru.hse.fandomatch.domain.usecase.media
 
 import ru.hse.fandomatch.domain.model.MediaType
-import ru.hse.fandomatch.domain.model.UploadMedia
 import ru.hse.fandomatch.domain.repos.GlobalRepository
 
 class UploadMediaUseCase(

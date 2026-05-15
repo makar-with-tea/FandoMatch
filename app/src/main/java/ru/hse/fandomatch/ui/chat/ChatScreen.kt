@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,14 +28,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,16 +49,16 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kotlinx.coroutines.launch
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.koin.androidx.compose.koinViewModel
-import ru.hse.fandomatch.utils.MAX_NUMBER_OF_ATTACHMENTS
 import ru.hse.fandomatch.R
-import ru.hse.fandomatch.utils.currentZoneOffset
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
-import ru.hse.fandomatch.utils.getBytesFromUri
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.ui.composables.AttachmentsRow
 import ru.hse.fandomatch.ui.composables.AvatarAndNameBlock
@@ -62,8 +66,11 @@ import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.ImagesScreen
 import ru.hse.fandomatch.ui.composables.Message
 import ru.hse.fandomatch.ui.composables.SkeletonView
+import ru.hse.fandomatch.utils.MAX_NUMBER_OF_ATTACHMENTS
+import ru.hse.fandomatch.utils.currentZoneOffset
+import ru.hse.fandomatch.utils.epochSecondsToDateTimeString
+import ru.hse.fandomatch.utils.getBytesFromUri
 import java.time.LocalDateTime
-import kotlin.collections.plus
 
 @Composable
 fun ChatScreen(
@@ -104,6 +111,30 @@ fun ChatScreen(
 
     Log.d("ChatScreen", "State: $state")
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    viewModel.obtainEvent(ChatEvent.SubscribeToChatUpdates(profileId))
+                }
+
+                Lifecycle.Event.ON_STOP -> {
+                    viewModel.obtainEvent(ChatEvent.Clear)
+                }
+
+                else -> Unit
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            viewModel.obtainEvent(ChatEvent.Clear)
+        }
+    }
+
     when (state.value) {
         is ChatState.Main -> MainState(
             state = state.value as ChatState.Main,
@@ -126,6 +157,9 @@ fun ChatScreen(
             },
             onDownloadMediaItem = { mediaItem ->
                 viewModel.obtainEvent(ChatEvent.DownloadMediaItem(mediaItem))
+            },
+            onLoadOlderMessages = {
+                viewModel.obtainEvent(ChatEvent.LoadOlderMessages)
             }
         )
 
@@ -149,23 +183,38 @@ private fun MainState(
     state: ChatState.Main,
     setTopBarState: (TopBarState?) -> Unit,
     onAttachmentsChanged: (List<Pair<ByteArray, MediaType>>) -> Unit,
-    onMessageDraftChanged: (String) -> Unit,
+    onMessageDraftChanged: (TextFieldValue) -> Unit,
     onSendMessage: () -> Unit,
     onClickProfile: () -> Unit,
     onDownloadMediaItem: (MediaItem) -> Unit,
+    onLoadOlderMessages: () -> Unit,
 ) {
-    setTopBarState(
-        TopBarState(
-            titleContent = {
-                AvatarAndNameBlock(
-                    name = state.participantName,
-                    avatarUrl = state.participantAvatarUrl,
-                    login = null,
-                    onClick = { onClickProfile() },
-                )
-            },
-        )
-    )
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    setTopBarState(
+                        TopBarState(
+                            titleContent = {
+                                AvatarAndNameBlock(
+                                    name = state.participantName,
+                                    avatarUrl = state.participantAvatarUrl,
+                                    login = null,
+                                    onClick = { onClickProfile() },
+                                )
+                            },
+                        )
+                    )
+                }
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     val context = LocalContext.current
     val pickMedia = when (MAX_NUMBER_OF_ATTACHMENTS - state.attachedFilesWithTypes.size) {
@@ -210,9 +259,41 @@ private fun MainState(
     }
     var mediaItemsForScreen by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
     var currentItemIndex by remember { mutableStateOf(0) }
+    var attachmentsSenderName by remember { mutableStateOf("") }
+    var attachmentsSentTime by remember { mutableStateOf("") }
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(listState, state.hasMoreOlder, state.isLoadingMore, state.uiElements.size) {
+        snapshotFlow {
+            val totalCount = listState.layoutInfo.totalItemsCount
+            val lastVisibleIndex = listState.layoutInfo.visibleItemsInfo.maxOfOrNull { it.index } ?: 0
+            totalCount to lastVisibleIndex
+        }.collect { (totalCount, lastVisibleIndex) ->
+            val isNearTop =
+                totalCount > 0 && lastVisibleIndex >= totalCount - LOAD_OLDER_THRESHOLD_ITEMS
+            if (isNearTop && state.hasMoreOlder && !state.isLoadingMore) {
+                onLoadOlderMessages()
+            }
+        }
+    }
+
     BackHandler(enabled = mediaItemsForScreen.isNotEmpty()) {
         mediaItemsForScreen = emptyList()
         currentItemIndex = 0
+        attachmentsSenderName = ""
+        attachmentsSentTime = ""
+        setTopBarState(
+            TopBarState(
+                titleContent = {
+                    AvatarAndNameBlock(
+                        name = state.participantName,
+                        avatarUrl = state.participantAvatarUrl,
+                        login = null,
+                        onClick = { onClickProfile() },
+                    )
+                },
+            )
+        )
     }
 
     Column(
@@ -230,6 +311,7 @@ private fun MainState(
             modifier = Modifier
                 .weight(1f)
                 .padding(horizontal = 16.dp),
+            state = listState,
             reverseLayout = true,
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
@@ -259,6 +341,11 @@ private fun MainState(
                     }
 
                     is ChatUiElement.MessageElement -> {
+                        val senderName = if (uiElement.message.isFromThisUser) {
+                            stringResource(R.string.you)
+                        } else {
+                            state.participantName
+                        }
                         Message(
                             message = uiElement.message,
                             modifier = Modifier.padding(vertical = 4.dp),
@@ -266,8 +353,24 @@ private fun MainState(
                             onItemClicked = { itemsList, index ->
                                 mediaItemsForScreen = itemsList
                                 currentItemIndex = index
+                                attachmentsSenderName = senderName
+                                attachmentsSentTime =
+                                    uiElement.message.timestamp.epochSecondsToDateTimeString()
                             }
                         )
+                    }
+                }
+            }
+
+            if (state.isLoadingMore) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        CircularProgressIndicator()
                     }
                 }
             }
@@ -317,11 +420,11 @@ private fun MainState(
                         .size(24.dp)
                         .clip(CircleShape)
                         .background(
-                            if (state.messageDraft.isBlank() && state.attachedFilesWithTypes.isEmpty())
+                            if (state.messageDraft.text.isBlank() && state.attachedFilesWithTypes.isEmpty())
                                 MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                             else MaterialTheme.colorScheme.primaryContainer
                         ),
-                    enabled = state.messageDraft.isNotBlank() || state.attachedFilesWithTypes.isNotEmpty(),
+                    enabled = state.messageDraft.text.isNotBlank() || state.attachedFilesWithTypes.isNotEmpty(),
                     onClick = {
                         onSendMessage()
                     },
@@ -340,7 +443,15 @@ private fun MainState(
             items = mediaItemsForScreen,
             initialPage = currentItemIndex,
             titleContent = {
-                // todo: from <user>, <time>
+                Text(
+                    text = stringResource(
+                        R.string.attachments_sender_and_time_description,
+                        attachmentsSenderName,
+                        attachmentsSentTime
+                    ),
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                )
             },
             onDownloadItem = { onDownloadMediaItem(it) },
             setTopBarState = setTopBarState,
@@ -379,7 +490,7 @@ private fun LoadingMessages() {
             .fillMaxSize()
             .padding(top = 16.dp, bottom = 0.dp, start = 16.dp, end = 16.dp)
     ) {
-        repeat(5) {
+        repeat(8) {
             SkeletonView(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -411,3 +522,6 @@ private fun ErrorState(
 ) {
     BasicErrorState(onRetry)
 }
+
+private const val LOAD_OLDER_THRESHOLD_ITEMS = 4
+

@@ -17,6 +17,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
@@ -24,7 +25,7 @@ import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.ProfileType
 import ru.hse.fandomatch.domain.model.User
-import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
+import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.fandoms.GetFandomsByQueryUseCase
 import ru.hse.fandomatch.domain.usecase.user.EditProfileUseCase
 import ru.hse.fandomatch.domain.usecase.user.GetCitiesByQueryUseCase
@@ -58,6 +59,7 @@ class EditProfileViewModelTest {
             getUserUseCase = getUserUseCase,
             uploadMediaUseCase = uploadMediaUseCase,
             editProfileUseCase = editProfileUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )
@@ -240,7 +242,7 @@ class EditProfileViewModelTest {
         advanceUntilIdle()
         assertEquals(EditProfileAction.ShowErrorToast, viewModel.action.value)
 
-        viewModel.obtainEvent(EditProfileEvent.ToastShown)
+        viewModel.obtainEvent(EditProfileEvent.ActionHandled)
         assertEquals(null, viewModel.action.value)
     }
 

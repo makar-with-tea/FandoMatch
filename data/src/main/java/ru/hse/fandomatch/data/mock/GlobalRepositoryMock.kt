@@ -1,12 +1,17 @@
 package ru.hse.fandomatch.data.mock
 
 import android.util.Log
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.mapNotNull
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
 import ru.hse.fandomatch.domain.model.AuthInfo
 import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.model.City
+import ru.hse.fandomatch.domain.model.Comment
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Filters
@@ -50,20 +55,18 @@ class GlobalRepositoryMock: GlobalRepository {
         name: String,
         email: String,
         login: String,
-        dateOfBirthMillis: Long,
+        dateOfBirthEpochSeconds: Long,
         gender: Gender,
-        avatarMediaId: String?,
         password: String
     ): AuthInfo {
         mockUser = mockUser.copy(
             name = name,
-            age = ((System.currentTimeMillis() - dateOfBirthMillis) / (1000L * 60 * 60 * 24 * 365)).toInt(),
+            age = ((System.currentTimeMillis() / 1000 - dateOfBirthEpochSeconds) / (60 * 60 * 24 * 365)).toInt(),
             gender = gender,
             profileType = ProfileType.Own(
                 email = email,
                 login = login,
             ),
-            avatar = avatarMediaId?.let { mockUser.avatar?.copy(id = avatarMediaId) }
         )
         mockUserPosts = mockUserPosts.map {
             it.copy(
@@ -184,7 +187,7 @@ class GlobalRepositoryMock: GlobalRepository {
         }
     }
 
-    override suspend fun resetPassword(code: String, newPassword: String) {
+    override suspend fun resetPassword(code: String, newPassword: String, email: String) {
         if (code == mockVerificationCode) {
             mockPassword = newPassword
             Log.d("GlobalRepositoryMock", "resetPassword: password reset successful with code $code")
@@ -243,6 +246,10 @@ class GlobalRepositoryMock: GlobalRepository {
         Log.d("GlobalRepositoryMock", "changeEmail: changed email to $newEmail")
     }
 
+    override suspend fun saveDeviceToken(token: String, userId: String?) {
+        Log.d("GlobalRepositoryMock", "saveDeviceToken: saved token $token")
+    }
+
     override suspend fun getSuggestedProfiles(size: Int): List<ProfileCard> {
         return mockProfileCards.shuffled().take(size).also {
             Log.d(
@@ -288,23 +295,53 @@ class GlobalRepositoryMock: GlobalRepository {
         beforeTimestamp: Long?,
         size: Int
     ): StateFlow<List<ChatPreview>> {
-        return mockChatPreviews.also {
-            Log.d("GlobalRepositoryMock", "subscribeToChatPreviews: subscribed with size $size")
+        return mockChatPreviews
+            .filter { beforeTimestamp == null || it.lastMessageTimestamp < beforeTimestamp }
+            .sortedByDescending { it.lastMessageTimestamp }
+            .take(size)
+            .let { previews ->
+                MutableStateFlow(previews).also {
+                    Log.d(
+                        "GlobalRepositoryMock",
+                        "subscribeToChatPreviews: returned ${previews.size} chat previews before $beforeTimestamp"
+                    )
+                }
+            }
+    }
+
+    override fun unsubscribeFromChatPreviews() {
+        Log.d("GlobalRepositoryMock", "unsubscribeFromChatPreviews: unsubscribed from chat previews")
+    }
+
+    override suspend fun subscribeToChatMessages(
+        userId: String,
+    ): Flow<Message> {
+        mockMessageFlow.value = null
+        return mockMessageFlow
+            .filterNotNull()
+            .also {
+                Log.d(
+                    "GlobalRepositoryMock",
+                    "subscribeToChatMessages: returned flow"
+                )
         }
     }
 
+    override fun unsubscribeFromChatMessages() {
+        Log.d("GlobalRepositoryMock", "unsubscribeFromChatMessages: unsubscribed from chat messages")
+    }
 
-    override suspend fun subscribeToChatMessages(
+    override suspend fun getChatMessagesPage(
         chatId: String,
         userId: String,
         beforeTimestamp: Long?,
-        size: Int
-    ): StateFlow<List<Message>> {
-        Log.d(
-            "GlobalRepositoryMock",
-            "subscribeToChatMessages: subscribed to chat $chatId for user $userId with size $size"
-        )
+        size: Int,
+    ): List<Message> {
         return mockMessages
+            .filter { beforeTimestamp == null || it.timestamp <= beforeTimestamp }
+            .sortedByDescending { it.timestamp }
+            .take(size)
+            .sortedBy { it.timestamp }
     }
 
     override suspend fun loadChatInfo(userId: String): Chat {
@@ -318,8 +355,8 @@ class GlobalRepositoryMock: GlobalRepository {
         mediaIdsWithTypes: List<Pair<String, MediaType>>,
         timestamp: Long
     ) {
-        mockMessages.value += Message(
-            messageId = (mockMessages.value.size + 1).toString(),
+        val message = Message(
+            messageId = (mockMessages.size + 1).toString(),
             isFromThisUser = true,
             content = content,
             mediaItems = mediaIdsWithTypes.map { (mediaId, type) ->
@@ -330,8 +367,10 @@ class GlobalRepositoryMock: GlobalRepository {
             },
             timestamp = timestamp,
         )
+        mockMessages += message
+        mockMessageFlow.value = message
 
-        mockChatPreviews.value = mockChatPreviews.value.map {
+        mockChatPreviews = mockChatPreviews.map {
             if (it.participantName == mockChat.participantName) {
                 it.copy(
                     lastMessage = content,
@@ -343,6 +382,11 @@ class GlobalRepositoryMock: GlobalRepository {
             .sortedBy {
                 -it.lastMessageTimestamp
             }
+        mockChatPreviewsFlow.value = mockChatPreviews
+        Log.d(
+            "GlobalRepositoryMock",
+            "sendMessage: sent message to $receiverId with content: $content and media: $mediaIdsWithTypes"
+        )
     }
 
     override suspend fun getUploadMediaUrl(mediaType: MediaType): UploadMedia {
@@ -354,7 +398,7 @@ class GlobalRepositoryMock: GlobalRepository {
         return UploadMedia(
             url = url,
             mediaId = "mock_media_id_${System.currentTimeMillis()}",
-            expiresAt = LocalDateTime.now().plusHours(1).toEpochSecond(ZoneOffset.UTC) * 1000,
+            expiresAt = LocalDateTime.now().plusHours(1).toEpochSecond(ZoneOffset.UTC),
         )
     }
 
@@ -473,11 +517,28 @@ class GlobalRepositoryMock: GlobalRepository {
             fandoms = fandomIds.mapNotNull { id -> mockFandoms.find { it.id == id } },
             likeCount = 0,
             isLikedByCurrentUser = false,
-            timestamp = System.currentTimeMillis(),
+            timestamp = System.currentTimeMillis() / 1000,
             commentCount = 0,
         )
         mockUserPosts = listOf(newPost) + mockUserPosts
         Log.d("GlobalRepositoryMock", "createPost: created new post with id ${newPost.id}")
+    }
+
+    override suspend fun sendComment(postId: String, content: String, timestamp: Long) {
+        val newComment = Comment(
+            authorName = mockUser.name,
+            authorLogin = (mockUser.profileType as ProfileType.Own).login,
+            authorAvatar = mockUser.avatar,
+            content = content,
+            timestamp = timestamp,
+        )
+        mockComments = mockComments + newComment
+        mockPosts = mockPosts.map {
+            if (it.id == postId) {
+                it.copy(commentCount = it.commentCount + 1)
+            } else it
+        }
+        Log.d("GlobalRepositoryMock", "sendComment: added new comment to post $postId with content: $content")
     }
 
     override suspend fun getFandomCategories(): List<FandomCategory> {

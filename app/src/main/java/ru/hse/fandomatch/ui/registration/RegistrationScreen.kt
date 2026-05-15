@@ -113,10 +113,10 @@ fun RegistrationScreen(
 
             is RegistrationState.DateOfBirth -> DateStep(
                 state = state,
-                onNext = { dobMillis ->
+                onNext = { dobEpochSeconds ->
                     viewModel.obtainEvent(
                         RegistrationEvent.DateSelected(
-                            dobMillis
+                            dobEpochSeconds
                         )
                     )
                 },
@@ -178,6 +178,7 @@ internal fun RegistrationState.RegistrationError.getText(): String {
         RegistrationState.RegistrationError.PASSWORD_CONTENT -> stringResource(R.string.password_content_error)
         RegistrationState.RegistrationError.PASSWORD_MISMATCH -> stringResource(R.string.password_mismatch_error)
         RegistrationState.RegistrationError.EMAIL_CONTENT -> stringResource(R.string.email_content_error)
+        RegistrationState.RegistrationError.EMAIL_TAKEN -> stringResource(R.string.email_taken_error)
         RegistrationState.RegistrationError.LOGIN_TAKEN -> stringResource(R.string.login_taken_error)
         RegistrationState.RegistrationError.NETWORK -> stringResource(R.string.network_error)
         RegistrationState.RegistrationError.DOB_TOO_YOUNG -> stringResource(R.string.birthdate_too_young_error)
@@ -192,6 +193,7 @@ internal fun RegistrationState.RegistrationError.isFieldError(): Boolean {
     return when (this) {
         RegistrationState.RegistrationError.IDLE,
         RegistrationState.RegistrationError.LOGIN_TAKEN,
+        RegistrationState.RegistrationError.EMAIL_TAKEN,
         RegistrationState.RegistrationError.NETWORK -> false
         else -> true
     }

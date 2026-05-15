@@ -18,10 +18,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,12 +32,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,16 +55,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.navigation.EndIconState
+import ru.hse.fandomatch.navigation.TopBarState
+import ru.hse.fandomatch.ui.chat.ChatEvent
+import ru.hse.fandomatch.ui.composables.BasicErrorState
+import ru.hse.fandomatch.ui.composables.ImageOrPlaceholder
 import ru.hse.fandomatch.ui.composables.MyTitle
 import ru.hse.fandomatch.ui.composables.NewMessagesIndicator
 import ru.hse.fandomatch.ui.composables.SkeletonView
-import ru.hse.fandomatch.navigation.EndIconState
-import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.utils.epochMillisToTimeAgo
-import ru.hse.fandomatch.ui.composables.BasicErrorState
-import ru.hse.fandomatch.ui.composables.ImageOrPlaceholder
+import ru.hse.fandomatch.utils.epochSecondsToTimeAgo
 
 @Composable
 fun ChatsListScreen(
@@ -69,8 +78,34 @@ fun ChatsListScreen(
 ) {
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
+    val listState = rememberLazyListState()
 
     Log.d("ChatsListScreen", "State: $state")
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    viewModel.obtainEvent(ChatsListEvent.LoadChats)
+                }
+
+                Lifecycle.Event.ON_STOP -> {
+                    viewModel.obtainEvent(ChatsListEvent.Clear)
+                }
+
+                else -> Unit
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+            viewModel.obtainEvent(ChatsListEvent.Clear)
+        }
+    }
+
     when (val action = action.value) {
         is ChatsListAction.NavigateToChat -> {
             navigateToChat(action.chatId)
@@ -86,14 +121,29 @@ fun ChatsListScreen(
                 state = state.value as ChatsListState.Main,
                 onChatClicked = { id -> viewModel.obtainEvent(ChatsListEvent.ChatClicked(id)) },
                 setTopBarState = setTopBarState,
-                onSearch = { query -> viewModel.obtainEvent(ChatsListEvent.SearchChats(query)) }
+                onSearch = { query -> viewModel.obtainEvent(ChatsListEvent.SearchChats(query)) },
+                listState = listState,
+                loadMoreChats = { viewModel.obtainEvent(ChatsListEvent.LoadChats) },
             )
         }
         is ChatsListState.Idle -> {
+            setTopBarState(
+                TopBarState(
+                    titleContent = {
+                         MyTitle(text = stringResource(R.string.chats_list_title))
+                    },
+                )
+            )
             IdleState()
-            viewModel.obtainEvent(ChatsListEvent.LoadChats)
         }
         is ChatsListState.Loading -> {
+            setTopBarState(
+                TopBarState(
+                    titleContent = {
+                        MyTitle(text = stringResource(R.string.chats_list_title))
+                    },
+                )
+            )
             LoadingState()
         }
         is ChatsListState.Error -> {
@@ -110,7 +160,22 @@ private fun MainState(
     onChatClicked: (String) -> Unit,
     setTopBarState: (TopBarState?) -> Unit,
     onSearch: (String?) -> Unit,
+    listState: LazyListState,
+    loadMoreChats: () -> Unit,
 ) {
+    LaunchedEffect(listState, state) {
+        snapshotFlow {
+            val totalCount = listState.layoutInfo.totalItemsCount
+            val lastVisibleIndex = listState.layoutInfo.visibleItemsInfo.maxOfOrNull { it.index } ?: 0
+            totalCount to lastVisibleIndex
+        }.collect { (totalCount, lastVisibleIndex) ->
+            val isNearEnd = totalCount > 0 && lastVisibleIndex >= totalCount - LOAD_MORE_THRESHOLD_ITEMS
+            if (isNearEnd && state.hasMore && !state.isLoadingMore) {
+                loadMoreChats()
+            }
+        }
+    }
+
     var isSearchActive by remember { mutableStateOf(false) }
     var searchInput by remember { mutableStateOf("") }
 
@@ -178,7 +243,8 @@ private fun MainState(
 
     LazyColumn(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxSize(),
+        state = listState,
     ) {
         items(state.chats) { chat ->
             Box(
@@ -186,7 +252,7 @@ private fun MainState(
                     .fillMaxWidth()
                     .height(64.dp)
                     .padding(vertical = 1.dp, horizontal = 4.dp)
-                    .clickable { onChatClicked(chat.chatId) }
+                    .clickable { onChatClicked(chat.userId) }
             ) {
                 Row {
                     val placeholderIcon: ImageVector = ImageVector.vectorResource(R.drawable.ic_account_placeholder)
@@ -218,7 +284,7 @@ private fun MainState(
                                 overflow = TextOverflow.Ellipsis,
                             )
                             Text(
-                                text = epochMillisToTimeAgo(
+                                text = epochSecondsToTimeAgo(
                                     timestamp = chat.lastMessageTimestamp,
                                     context = LocalContext.current
                                 ),
@@ -250,8 +316,34 @@ private fun MainState(
                     .background(MaterialTheme.colorScheme.secondaryContainer)
             )
         }
+
+        if (state.isLoadingMore) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+    }
+
+    if (state.chats.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(stringResource(R.string.no_chats_found))
+        }
     }
 }
+
+private const val LOAD_MORE_THRESHOLD_ITEMS = 4
 
 @Composable
 private fun LoadingState() {
@@ -283,7 +375,7 @@ private fun LoadingState() {
         modifier = Modifier
             .fillMaxSize()
     ) {
-        repeat(5) {
+        repeat(10) {
             SkeletonView(
                 modifier = Modifier
                     .fillMaxWidth()

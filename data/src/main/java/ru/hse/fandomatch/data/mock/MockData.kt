@@ -189,68 +189,68 @@ internal var mockChat = Chat(
     participantName = mockProfileCards[0].name,
     participantAvatarUrl = mockProfileCards[0].avatar?.url,
 )
-internal val mockMessages: MutableStateFlow<List<Message>> = MutableStateFlow(listOf(
+internal var mockMessages: List<Message> = listOf(
     Message(
         messageId = "1",
         isFromThisUser = false,
         content = "Привет! Как дела?",
-        timestamp = LocalDateTime.now().minusDays(2).toEpochSecond(ZoneOffset.UTC) * 1000,
+        timestamp = LocalDateTime.now().minusDays(2).toEpochSecond(ZoneOffset.UTC),
     ),
     Message(
         messageId = "2",
         isFromThisUser = true,
         content = "Привет! Все хорошо, спасибо. А у тебя?",
         timestamp = LocalDateTime.now().minusDays(2).plusMinutes(5)
-            .toEpochSecond(ZoneOffset.UTC) * 1000,
+            .toEpochSecond(ZoneOffset.UTC),
     ),
     Message(
         messageId = "3",
         isFromThisUser = false,
         content = "Тоже отлично! Какие фандомы ты любишь?",
         timestamp = LocalDateTime.now().minusDays(2).plusMinutes(10)
-            .toEpochSecond(ZoneOffset.UTC) * 1000,
+            .toEpochSecond(ZoneOffset.UTC),
     ),
     Message(
         messageId = "4",
         isFromThisUser = true,
         content = "Я обожаю аниме, особенно One Piece! А ты?",
         timestamp = LocalDateTime.now().minusDays(2).plusMinutes(15)
-            .toEpochSecond(ZoneOffset.UTC) * 1000,
+            .toEpochSecond(ZoneOffset.UTC),
     ),
     Message(
         messageId = "5",
         isFromThisUser = false,
         content = "One Piece тоже мой любимый! А до какого момента ты досмотрел?",
         timestamp = LocalDateTime.now().minusDays(2).plusMinutes(20)
-            .toEpochSecond(ZoneOffset.UTC) * 1000,
+            .toEpochSecond(ZoneOffset.UTC),
     ),
     Message(
         messageId = "6",
         isFromThisUser = true,
         content = "Я сейчас на Whole Cake Island. Бедный Санжи :(",
         timestamp = LocalDateTime.now().minusDays(2).plusMinutes(25)
-            .toEpochSecond(ZoneOffset.UTC) * 1000,
+            .toEpochSecond(ZoneOffset.UTC),
     ),
     Message(
         messageId = "7",
         isFromThisUser = false,
         content = "Ооо, понимаю... Удачи тебе там))",
         timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
-            .toEpochSecond(ZoneOffset.UTC) * 1000,
+            .toEpochSecond(ZoneOffset.UTC),
     ),
     Message(
         messageId = "8",
         isFromThisUser = false,
         content = "А я аниме уже досмотрела, сейчас читаю мангу",
         timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
-            .toEpochSecond(ZoneOffset.UTC) * 1000,
+            .toEpochSecond(ZoneOffset.UTC),
     ),
     Message(
         messageId = "9",
         isFromThisUser = false,
         content = "Но хочу пересмотреть когда-нибудь заново)",
         timestamp = LocalDateTime.now().minusDays(2).plusMinutes(30)
-            .toEpochSecond(ZoneOffset.UTC) * 1000,
+            .toEpochSecond(ZoneOffset.UTC),
         mediaItems = listOf(),
     ),
     Message(
@@ -258,85 +258,85 @@ internal val mockMessages: MutableStateFlow<List<Message>> = MutableStateFlow(li
         isFromThisUser = false,
         content = "Там же столько деталей, которые можно упустить при первом просмотре",
         timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
-            .toEpochSecond(ZoneOffset.UTC) * 1000,
+            .toEpochSecond(ZoneOffset.UTC),
     ),
     Message(
         messageId = "11",
         isFromThisUser = false,
         content = "Та же предыстория Санджи многое меняет в восприятии первых серий, где он появляется",
         timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
-            .toEpochSecond(ZoneOffset.UTC) * 1000,
+            .toEpochSecond(ZoneOffset.UTC),
     ),
     Message(
         messageId = "12",
         isFromThisUser = false,
         content = "Ну и я просто хочу посмотреть на East Blue Луффи, он такой хаотичный котенок там))",
         timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
-            .toEpochSecond(ZoneOffset.UTC) * 1000,
+            .toEpochSecond(ZoneOffset.UTC),
     ),
     Message(
         messageId = "13",
         isFromThisUser = true,
         content = "А может, как-нибудь посмотрим ван пис с начала вместе?",
-        timestamp = LocalDateTime.now().minusDays(2).plusMinutes(35)
-            .toEpochSecond(ZoneOffset.UTC) * 1000,
+        timestamp = LocalDateTime.now().minusDays(2).plusMinutes(36)
+            .toEpochSecond(ZoneOffset.UTC),
     )
 )
-)
+internal var mockMessageFlow: MutableStateFlow<Message?> = MutableStateFlow(null)
 
-internal var mockChatPreviews = MutableStateFlow(
+internal var mockChatPreviews =
     listOf(
         ChatPreview(
-            chatId = "5",
+            userId = "5",
             participantName = mockProfileCards[4].name,
             participantAvatarUrl = mockProfileCards[4].avatar?.url,
             lastMessage = "Как вы допустили смерть Лидроса на зимке?..",
             isLastMessageFromThisUser = false,
             lastMessageTimestamp = LocalDateTime.now().minusMinutes(25)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
+                .toEpochSecond(ZoneOffset.UTC),
             newMessagesCount = 101,
         ),
         ChatPreview(
-            chatId = "3",
+            userId = "3",
             participantName = mockProfileCards[2].name,
             participantAvatarUrl = mockProfileCards[2].avatar?.url,
             lastMessage = "Привет! Как дела?",
             isLastMessageFromThisUser = false,
             lastMessageTimestamp = LocalDateTime.now().minusMinutes(30)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
+                .toEpochSecond(ZoneOffset.UTC),
             newMessagesCount = 0,
         ),
         ChatPreview(
-            chatId = "2",
+            userId = "2",
             participantName = mockProfileCards[1].name,
             participantAvatarUrl = mockProfileCards[1].avatar?.url,
             lastMessage = "Я тоже люблю аниме!",
             isLastMessageFromThisUser = false,
             lastMessageTimestamp = LocalDateTime.now().minusHours(5)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
+                .toEpochSecond(ZoneOffset.UTC),
             newMessagesCount = 2,
         ),
         ChatPreview(
-            chatId = "1",
+            userId = "1",
             participantName = mockProfileCards[0].name,
             participantAvatarUrl = mockProfileCards[0].avatar?.url,
-            lastMessage = mockMessages.value[mockMessages.value.size - 1].content,
-            isLastMessageFromThisUser = mockMessages.value[mockMessages.value.size - 1].isFromThisUser,
-            lastMessageTimestamp = mockMessages.value[mockMessages.value.size - 1].timestamp,
+            lastMessage = mockMessages[mockMessages.size - 1].content,
+            isLastMessageFromThisUser = mockMessages[mockMessages.size - 1].isFromThisUser,
+            lastMessageTimestamp = mockMessages[mockMessages.size - 1].timestamp,
             newMessagesCount = 0,
         ),
         ChatPreview(
-            chatId = "4",
+            userId = "4",
             participantName = mockProfileCards[3].name,
             participantAvatarUrl = mockProfileCards[3].avatar?.url,
             lastMessage = "Посмотрела новый эпизод Токийского Гуля, очень понравилось!",
             isLastMessageFromThisUser = true,
             lastMessageTimestamp = LocalDateTime.now().minusDays(10)
-                .toEpochSecond(ZoneOffset.UTC) * 1000,
+                .toEpochSecond(ZoneOffset.UTC),
             newMessagesCount = 0,
         ),
     )
-)
+internal var mockChatPreviewsFlow = MutableStateFlow(mockChatPreviews)
 
 internal var mockUser = User(
     id = "1",
@@ -369,7 +369,7 @@ internal var mockUserPosts = listOf(
         likeCount = 100,
         commentCount = 50,
         isLikedByCurrentUser = false,
-        timestamp = System.currentTimeMillis() - 3600_000, // 1 hour ago
+        timestamp = System.currentTimeMillis() / 1000 - 3600, // 1 hour ago
         fandoms = listOf(mockFandoms[0], mockFandoms[2], mockFandoms[4])
     ),
     Post(
@@ -383,7 +383,7 @@ internal var mockUserPosts = listOf(
         likeCount = 150,
         commentCount = 75,
         isLikedByCurrentUser = false,
-        timestamp = System.currentTimeMillis() - 7200_000, // 2 hours ago
+        timestamp = System.currentTimeMillis() / 1000 - 7200, // 2 hours ago
         fandoms = listOf(mockFandoms[0], mockFandoms[1])
     ),
     Post(
@@ -397,31 +397,31 @@ internal var mockUserPosts = listOf(
         likeCount = 200,
         commentCount = 100,
         isLikedByCurrentUser = true,
-        timestamp = System.currentTimeMillis() - 10800_000, // 3 hours ago
+        timestamp = System.currentTimeMillis() / 1000 - 10800, // 3 hours ago
         fandoms = listOf(mockFandoms[2], mockFandoms[3], mockFandoms[4])
     )
 )
 
-val mockComments = listOf(
+var mockComments = listOf(
     Comment(
         authorName = "Алиса",
         authorLogin = "alice",
         authorAvatar = "luffy".getMediaByName(),
-        timestamp = System.currentTimeMillis() - 1800_000, // 30 minutes ago
+        timestamp = System.currentTimeMillis() / 1000 - 1800, // 30 minutes ago
         content = "Отличный пост! Я тоже люблю аниме и музыку!"
     ),
     Comment(
         authorName = "Пользователь",
         authorLogin = "pirate123",
         authorAvatar = "peace_was_never_an_option".getMediaByName(),
-        timestamp = System.currentTimeMillis() - 1200_000, // 20 minutes ago
+        timestamp = System.currentTimeMillis() / 1000 - 1200, // 20 minutes ago
         content = "Приветствую! Рада видеть новых людей, которые любят аниме! Какие у вас любимые серии?"
     ),
     Comment(
         authorName = "Лесное нечто",
         authorLogin = "forestentity",
         authorAvatar = "pet_the_forbidden_dog".getMediaByName(),
-        timestamp = System.currentTimeMillis() - 600_000, // 10 minutes ago
+        timestamp = System.currentTimeMillis() / 1000 - 600, // 10 minutes ago
         content = "Привет! Я тоже обожаю аниме, особенно One Piece"
     ),
 )
@@ -438,7 +438,7 @@ var mockPosts = listOf(
         likeCount = 10,
         commentCount = 5,
         isLikedByCurrentUser = false,
-        timestamp = System.currentTimeMillis() - 3600_000, // 1 hour ago
+        timestamp = System.currentTimeMillis() / 1000 - 3600, // 1 hour ago
         fandoms = listOf(mockFandoms[0], mockFandoms[2])
     ),
     Post(
@@ -452,7 +452,7 @@ var mockPosts = listOf(
         likeCount = 20,
         commentCount = 10,
         isLikedByCurrentUser = true,
-        timestamp = System.currentTimeMillis() - 7200_000, // 2 hours ago
+        timestamp = System.currentTimeMillis() / 1000 - 7200, // 2 hours ago
         fandoms = listOf(mockFandoms[0])
     ),
     Post(
@@ -466,7 +466,7 @@ var mockPosts = listOf(
         likeCount = 5,
         commentCount = 2,
         isLikedByCurrentUser = false,
-        timestamp = System.currentTimeMillis() - 10800_000, // 3 hours ago
+        timestamp = System.currentTimeMillis() / 1000 - 10800, // 3 hours ago
         fandoms = listOf(mockFandoms[2])
     ),
     Post(
@@ -480,7 +480,7 @@ var mockPosts = listOf(
         likeCount = 0,
         commentCount = 0,
         isLikedByCurrentUser = false,
-        timestamp = System.currentTimeMillis() - 14400_000, // 4 hours ago
+        timestamp = System.currentTimeMillis() / 1000 - 14400, // 4 hours ago
         fandoms = mockFandoms,
     )
 )

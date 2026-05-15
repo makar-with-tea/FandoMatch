@@ -8,9 +8,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import ru.hse.fandomatch.domain.exception.EmailAlreadyInUseException
 import ru.hse.fandomatch.domain.exception.LoginAlreadyInUseException
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.Gender
+import ru.hse.fandomatch.domain.model.MediaType
+import ru.hse.fandomatch.domain.usecase.auth.CheckVerificationCodeUseCase
+import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.auth.RegisterUseCase
+import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
+import ru.hse.fandomatch.domain.usecase.user.EditProfileUseCase
 import ru.hse.fandomatch.utils.checkEmailContent
 import ru.hse.fandomatch.utils.checkLoginContent
 import ru.hse.fandomatch.utils.checkLoginLength
@@ -18,10 +25,6 @@ import ru.hse.fandomatch.utils.checkNameContent
 import ru.hse.fandomatch.utils.checkNameLength
 import ru.hse.fandomatch.utils.checkPasswordContent
 import ru.hse.fandomatch.utils.checkPasswordLength
-import ru.hse.fandomatch.domain.model.MediaType
-import ru.hse.fandomatch.domain.usecase.chat.UploadMediaUseCase
-import ru.hse.fandomatch.domain.usecase.auth.CheckVerificationCodeUseCase
-import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -31,6 +34,8 @@ class RegistrationViewModel(
     private val getVerificationCodeUseCase: GetVerificationCodeUseCase,
     private val checkVerificationCodeUseCase: CheckVerificationCodeUseCase,
     private val uploadMediaUseCase: UploadMediaUseCase,
+    private val editProfileUseCase: EditProfileUseCase,
+    private val logger: Logger,
     private val dispatcherIO: CoroutineDispatcher = Dispatchers.IO,
     private val dispatcherMain: CoroutineDispatcher = Dispatchers.Main
 ) : ViewModel() {
@@ -39,7 +44,7 @@ class RegistrationViewModel(
         var name: String = "",
         var email: String = "",
         var login: String = "",
-        var dateOfBirthMillis: Long? = null,
+        var dateOfBirthEpochSeconds: Long? = null,
         var gender: Gender = Gender.NOT_SPECIFIED,
         var avatarByteArray: ByteArray? = null,
         var password: String = "",
@@ -52,7 +57,7 @@ class RegistrationViewModel(
 
             other as Form
 
-            if (dateOfBirthMillis != other.dateOfBirthMillis) return false
+            if (dateOfBirthEpochSeconds != other.dateOfBirthEpochSeconds) return false
             if (agreed != other.agreed) return false
             if (name != other.name) return false
             if (email != other.email) return false
@@ -66,7 +71,7 @@ class RegistrationViewModel(
         }
 
         override fun hashCode(): Int {
-            var result = dateOfBirthMillis?.hashCode() ?: 0
+            var result = dateOfBirthEpochSeconds?.hashCode() ?: 0
             result = 31 * result + agreed.hashCode()
             result = 31 * result + name.hashCode()
             result = 31 * result + email.hashCode()
@@ -94,7 +99,7 @@ class RegistrationViewModel(
             is RegistrationEvent.LoginChanged -> onLoginChanged(event.login)
             RegistrationEvent.NameSubmitted -> handlePersonal()
             is RegistrationEvent.CodeSubmitted -> handleCode(event.code)
-            is RegistrationEvent.DateSelected -> handleDate(event.dateOfBirthMillis)
+            is RegistrationEvent.DateSelected -> handleDate(event.dateOfBirthEpochSeconds)
             is RegistrationEvent.GenderSelected -> handleGender(event.gender)
             is RegistrationEvent.AvatarSelected -> handleAvatar(event.avatarByteArray)
             is RegistrationEvent.PasswordChanged -> onPasswordChanged(event.password)
@@ -152,7 +157,7 @@ class RegistrationViewModel(
         var loginErr = RegistrationState.RegistrationError.IDLE
         var hasError = false
 
-        if (!currentState.name.checkNameLength()){
+        if (!currentState.name.checkNameLength()) {
             nameErr = RegistrationState.RegistrationError.NAME_LENGTH
             hasError = true
         }
@@ -173,25 +178,31 @@ class RegistrationViewModel(
             )
             return
         }
+        _state.value = currentState.copy(
+            isLoading = true
+        )
 
         viewModelScope.launch(dispatcherIO) {
-            val result = getVerificationCodeUseCase.execute(currentState.email)
-            if (result.isFailure) {
-                withContext(dispatcherMain) {
-                    _state.value = currentState.copy(
-                        nameError = RegistrationState.RegistrationError.NETWORK,
-                        emailError = RegistrationState.RegistrationError.NETWORK,
-                        loginError = RegistrationState.RegistrationError.NETWORK
-                    )
+            getVerificationCodeUseCase.execute(currentState.email.trim())
+                .onFailure { e ->
+                    logger.e("RegistrationViewModel", "Failed to get verification code", e)
+                    withContext(dispatcherMain) {
+                        _state.value = currentState.copy(
+                            nameError = RegistrationState.RegistrationError.NETWORK,
+                            emailError = RegistrationState.RegistrationError.NETWORK,
+                            loginError = RegistrationState.RegistrationError.NETWORK
+                        )
+                    }
+                    return@launch
                 }
-                return@launch
-            }
-            withContext(dispatcherMain) {
-                form.name = currentState.name
-                form.email = currentState.email
-                form.login = currentState.login
-                _state.value = RegistrationState.Code()
-            }
+                .onSuccess {
+                    withContext(dispatcherMain) {
+                        form.name = currentState.name
+                        form.email = currentState.email
+                        form.login = currentState.login
+                        _state.value = RegistrationState.Code()
+                    }
+                }
         }
     }
 
@@ -199,46 +210,49 @@ class RegistrationViewModel(
         _state.value = (state.value as? RegistrationState.Code)?.copy(isLoading = true) ?: return
 
         viewModelScope.launch(dispatcherIO) {
-            val result = checkVerificationCodeUseCase.execute(code, form.email)
-            val isValid = result.getOrNull() ?: run {
-                withContext(dispatcherMain) {
-                    _state.value = RegistrationState.Code(
-                        codeError = RegistrationState.RegistrationError.NETWORK,
-                        isLoading = false
-                    )
+            checkVerificationCodeUseCase.execute(code.trim(), form.email.trim())
+                .onFailure {
+                    logger.e("RegistrationViewModel", "Error while checking verification code", it)
+                    withContext(dispatcherMain) {
+                        _state.value = RegistrationState.Code(
+                            codeError = RegistrationState.RegistrationError.NETWORK,
+                            isLoading = false
+                        )
+                    }
                 }
-                return@launch
-            }
-            withContext(dispatcherMain) {
-                if (isValid) {
-                    _state.value = RegistrationState.DateOfBirth(form.dateOfBirthMillis)
-                } else {
-                    _state.value = RegistrationState.Code(
-                        codeError = RegistrationState.RegistrationError.INVALID_CODE,
-                        isLoading = false
-                    )
+                .onSuccess { isValid ->
+                    logger.d("RegistrationViewModel", "Verification code check result: $isValid")
+                    withContext(dispatcherMain) {
+                        if (isValid) {
+                            _state.value = RegistrationState.DateOfBirth(form.dateOfBirthEpochSeconds)
+                        } else {
+                            _state.value = RegistrationState.Code(
+                                codeError = RegistrationState.RegistrationError.INVALID_CODE,
+                                isLoading = false
+                            )
+                        }
+                    }
                 }
-            }
         }
     }
 
-    private fun handleDate(dateOfBirthMillis: Long?) {
-        if (dateOfBirthMillis == null) {
+    private fun handleDate(dateOfBirthEpochSeconds: Long?) {
+        if (dateOfBirthEpochSeconds == null) {
             _state.value = RegistrationState.DateOfBirth(
-                dateOfBirthMillis = null,
+                dateOfBirthEpochSeconds = null,
                 error = RegistrationState.RegistrationError.DOB_EMPTY
             )
             return
         }
-        val date = Instant.ofEpochMilli(dateOfBirthMillis).atZone(ZoneId.systemDefault()).toLocalDate()
+        val date = Instant.ofEpochSecond(dateOfBirthEpochSeconds).atZone(ZoneId.systemDefault()).toLocalDate()
         if (date.isAfter(LocalDate.now().minusYears(MIN_AGE_IN_YEARS))) {
             _state.value = RegistrationState.DateOfBirth(
-                dateOfBirthMillis = dateOfBirthMillis,
+                dateOfBirthEpochSeconds = dateOfBirthEpochSeconds,
                 error = RegistrationState.RegistrationError.DOB_TOO_YOUNG
             )
             return
         }
-        form.dateOfBirthMillis = dateOfBirthMillis
+        form.dateOfBirthEpochSeconds = dateOfBirthEpochSeconds
         _state.value = RegistrationState.GenderChoice(form.gender)
     }
 
@@ -259,9 +273,13 @@ class RegistrationViewModel(
             !password.checkPasswordContent() -> RegistrationState.RegistrationError.PASSWORD_CONTENT
             else -> RegistrationState.RegistrationError.IDLE
         }
+        val repeatErr = if (currentState.passwordRepeat != password)
+            RegistrationState.RegistrationError.PASSWORD_MISMATCH
+        else RegistrationState.RegistrationError.IDLE
         _state.value = currentState.copy(
             password = password,
-            passwordError = passErr
+            passwordError = passErr,
+            passwordRepeatError = repeatErr
         )
     }
 
@@ -321,7 +339,7 @@ class RegistrationViewModel(
             isLoading = true
         )
 
-        if (form.dateOfBirthMillis == null) {
+        if (form.dateOfBirthEpochSeconds == null) {
             // This should never happen
             _state.value = RegistrationState.Password(
                 password = currentState.password,
@@ -333,49 +351,75 @@ class RegistrationViewModel(
         }
 
         viewModelScope.launch(dispatcherIO) {
-            val avatarId = form.avatarByteArray?.let {
-                uploadMediaUseCase.execute(
-                    it,
-                    MediaType.IMAGE
-                ).getOrNull()
-            }
-            val result = registerUseCase.execute(
-                form.name,
-                form.email,
-                form.login,
-                form.dateOfBirthMillis!!,
+            registerUseCase.execute(
+                form.name.trim(),
+                form.email.trim(),
+                form.login.trim(),
+                form.dateOfBirthEpochSeconds!!,
                 form.gender,
-                avatarId,
-                form.password
+                form.password.trim()
             )
-            if (result.isFailure) {
-                val e = result.exceptionOrNull()
-                val loginErr = if (e is LoginAlreadyInUseException)
-                    RegistrationState.RegistrationError.LOGIN_TAKEN
-                else RegistrationState.RegistrationError.NETWORK
-                withContext(dispatcherMain) {
-                    _state.value = RegistrationState.Name(
-                        name = form.name,
-                        email = form.email,
-                        login = form.login,
-                        loginError = loginErr,
-                        nameError = RegistrationState.RegistrationError.NETWORK,
-                        emailError = RegistrationState.RegistrationError.NETWORK,
-                        isLoading = false
-                    )
+                .onFailure { e ->
+                    logger.e("RegistrationViewModel", "Registration failed", e)
+                    val loginErr = when (e) {
+                        is LoginAlreadyInUseException -> RegistrationState.RegistrationError.LOGIN_TAKEN
+                        is EmailAlreadyInUseException -> RegistrationState.RegistrationError.IDLE
+                        else -> RegistrationState.RegistrationError.NETWORK
+                    }
+                    val emailErr = when (e) {
+                        is EmailAlreadyInUseException -> RegistrationState.RegistrationError.EMAIL_TAKEN
+                        is LoginAlreadyInUseException -> RegistrationState.RegistrationError.IDLE
+                        else -> RegistrationState.RegistrationError.NETWORK
+                    }
+                    val nameErr = if (e is LoginAlreadyInUseException || e is EmailAlreadyInUseException)
+                        RegistrationState.RegistrationError.IDLE
+                    else RegistrationState.RegistrationError.NETWORK
+                    withContext(dispatcherMain) {
+                        _state.value = RegistrationState.Name(
+                            name = form.name,
+                            email = form.email,
+                            login = form.login,
+                            loginError = loginErr,
+                            nameError = nameErr,
+                            emailError = emailErr,
+                            isLoading = false
+                        )
+                    }
                 }
-                return@launch
-            }
-
-            withContext(dispatcherMain) {
-                _state.value = RegistrationState.Password(
-                    password = form.password,
-                    passwordRepeat = form.passwordRepeat,
-                    agreedToTerms = form.agreed,
-                    isLoading = false
-                )
-                _action.value = RegistrationAction.NavigateToMatches
-            }
+                .onSuccess {
+                    form.avatarByteArray?.let {
+                        uploadMediaUseCase.execute(
+                            it,
+                            MediaType.IMAGE
+                        )
+                            .onFailure { e ->
+                                logger.e("RegistrationViewModel", "Failed to upload avatar", e)
+                            }
+                            .onSuccess { avatarId ->
+                                logger.d("RegistrationViewModel", "Avatar uploaded successfully with id $avatarId")
+                                editProfileUseCase.execute(
+                                    name = form.name,
+                                    bio = null,
+                                    city = null,
+                                    fandoms = listOf(),
+                                    avatarMediaId = avatarId,
+                                    backgroundMediaId = null
+                                )
+                                    .onFailure { e1 ->
+                                        logger.e("RegistrationViewModel", "Failed to set avatar for user profile", e1)
+                                    }
+                            }
+                    }
+                    withContext(dispatcherMain) {
+                        _state.value = RegistrationState.Password(
+                            password = form.password,
+                            passwordRepeat = form.passwordRepeat,
+                            agreedToTerms = form.agreed,
+                            isLoading = false
+                        )
+                        _action.value = RegistrationAction.NavigateToMatches
+                    }
+                }
         }
     }
 
@@ -402,7 +446,7 @@ class RegistrationViewModel(
             )
             is RegistrationState.DateOfBirth -> RegistrationState.Code()
             is RegistrationState.GenderChoice -> RegistrationState.DateOfBirth(
-                dateOfBirthMillis = form.dateOfBirthMillis
+                dateOfBirthEpochSeconds = form.dateOfBirthEpochSeconds
             )
             is RegistrationState.Avatar -> RegistrationState.GenderChoice(
                 gender = form.gender
@@ -422,7 +466,7 @@ class RegistrationViewModel(
             name = ""
             email = ""
             login = ""
-            dateOfBirthMillis = null
+            dateOfBirthEpochSeconds = null
             gender = Gender.NOT_SPECIFIED
             avatarByteArray = null
             password = ""

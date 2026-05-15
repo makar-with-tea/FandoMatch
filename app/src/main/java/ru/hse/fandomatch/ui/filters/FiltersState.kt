@@ -31,7 +31,7 @@ sealed class FiltersEvent {
     data class LocationToggled(val isChecked: Boolean) : FiltersEvent()
     object ResetFilters : FiltersEvent()
     object ApplyFilters : FiltersEvent()
-    object ToastShown : FiltersEvent()
+    object ActionHandled : FiltersEvent()
     object AddFandomClicked: FiltersEvent()
     object Clear : FiltersEvent()
     object LoadInitialFilters : FiltersEvent()

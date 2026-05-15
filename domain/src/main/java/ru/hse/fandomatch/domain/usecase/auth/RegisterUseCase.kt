@@ -12,23 +12,24 @@ class RegisterUseCase(
         name: String,
         email: String,
         login: String,
-        dateOfBirthMillis: Long,
+        dateOfBirthEpochSeconds: Long,
         gender: Gender,
-        avatarMediaId: String?,
         password: String
     ): Result<Unit> = runCatching {
-        // todo use LoginAlreadyInUseException
         val res = globalRepository.register(
             name = name,
             email = email,
             login = login,
-            dateOfBirthMillis = dateOfBirthMillis,
+            dateOfBirthEpochSeconds = dateOfBirthEpochSeconds,
             gender = gender,
-            avatarMediaId = avatarMediaId,
             password = password
         )
         sharedPrefRepository.saveUserId(res.userId)
         sharedPrefRepository.saveToken(res.accessToken)
         sharedPrefRepository.saveRefreshToken(res.refreshToken)
+        val fcmToken = sharedPrefRepository.getFCMToken()
+        fcmToken?.let {
+            globalRepository.saveDeviceToken(it, res.userId)
+        }
     }
 }

@@ -16,6 +16,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.usecase.auth.GetPastLoginUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -35,7 +36,6 @@ class IntroViewModelTest {
         viewModel = IntroViewModel(
             getPastLoginUseCase = getPastLoginUseCase,
             dispatcherIO = testDispatcher,
-            dispatcherMain = testDispatcher,
         )
     }
 

@@ -19,6 +19,7 @@ import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import ru.hse.fandomatch.domain.exception.InvalidCredentialsException
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.usecase.auth.LoginUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -40,6 +41,7 @@ class AuthorizationViewModelTest {
         loginUseCase = mock(LoginUseCase::class.java)
         viewModel = AuthorizationViewModel(
             loginUseCase = loginUseCase,
+            logger = Logger.NoOpLogger,
             dispatcherIO = testDispatcher,
             dispatcherMain = testDispatcher,
         )

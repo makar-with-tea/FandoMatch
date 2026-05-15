@@ -7,10 +7,23 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import ru.hse.fandomatch.MainActivity
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.domain.usecase.auth.SaveDeviceTokenUseCase
+import ru.hse.fandomatch.domain.usecase.chat.GetCurrentChatIdUseCase
 
-class FandoMatchMessagingService(): FirebaseMessagingService() {
+class FandoMatchMessagingService : FirebaseMessagingService(), KoinComponent {
+    private val saveDeviceTokenUseCase: SaveDeviceTokenUseCase by inject()
+    private val getCurrentChatIdUseCase: GetCurrentChatIdUseCase by inject()
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
         Log.i("FCM", "Message data payload: ${message.data}")
@@ -19,10 +32,17 @@ class FandoMatchMessagingService(): FirebaseMessagingService() {
             NotificationType.MATCH.rawValue -> NotificationType.MATCH
             else -> return
         }
-        val id = when(type) {
-            NotificationType.CHAT -> message.data[CHAT_ID]
-            NotificationType.MATCH -> message.data[USER_ID]
+        val userId = message.data[USER_ID]
+        if (type == NotificationType.CHAT) {
+            val currentChatId = getCurrentChatIdUseCase.execute()
+            if (currentChatId != null && currentChatId == userId) {
+                Log.i("FCM", "Notification ignored, user is currently in chat with user $currentChatId")
+                return
+            } else {
+                Log.i("FCM", "current chat with $currentChatId, message from $userId")
+            }
         }
+
         val title = resources.getString(
             when (type) {
                 NotificationType.CHAT -> R.string.notification_title_new_message
@@ -44,12 +64,13 @@ class FandoMatchMessagingService(): FirebaseMessagingService() {
 
         val intent = Intent(this, MainActivity::class.java).apply {
             putExtra(NAVIGATE_TO, type.rawValue)
-            putExtra(ID, id)
+            putExtra(USER_ID, userId)
+            Log.i("FCM", "Creating intent with navigateTo: ${type.rawValue}, userId: $userId")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or
                 Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
-        val requestCode = "$type:$id".hashCode()
+        val requestCode = "$type:$userId".hashCode()
         val pendingIntent = PendingIntent.getActivity(
             this,
             requestCode,
@@ -74,12 +95,20 @@ class FandoMatchMessagingService(): FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         Log.d("FCM", "Refreshed token: $token")
+        serviceScope.launch(Dispatchers.IO) {
+            saveDeviceTokenUseCase.execute(token)
+                .onSuccess {
+                    Log.d("FCM", "Device token saved successfully")
+                }
+                .onFailure { e ->
+                    Log.e("FCM", "Failed to save device token", e)
+                }
+        }
+    }
 
-        // If you want to send messages to this application instance or
-        // manage this apps subscriptions on the server side, send the
-        // FCM registration token to your app server.
-        // todo
-//        sendRegistrationToServer(token)
+    override fun onDestroy() {
+        serviceScope.cancel()
+        super.onDestroy()
     }
 }
 
@@ -88,8 +117,6 @@ private enum class NotificationType(val rawValue: String) {
 }
 
 private const val USER_ID = "userId"
-private const val CHAT_ID = "chatId"
-private const val ID = "id"
 private const val NAVIGATE_TO = "navigateTo"
 private const val TYPE = "type"
 private const val NAME = "name"
