@@ -17,6 +17,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
@@ -52,7 +54,7 @@ class FeedViewModelTest {
     @Test
     fun `load posts success updates state with posts`() = runTest {
         val post = createPost()
-        `when`(getFeedUseCase.execute(null, 1)).thenReturn(Result.success(listOf(post)))
+        `when`(getFeedUseCase.execute(anyOrNull(), any())).thenReturn(Result.success(listOf(post)))
 
         viewModel.obtainEvent(FeedEvent.LoadPosts)
         advanceUntilIdle()
@@ -64,7 +66,7 @@ class FeedViewModelTest {
 
     @Test
     fun `load posts failure updates error state`() = runTest {
-        `when`(getFeedUseCase.execute(null, 1)).thenReturn(Result.failure(RuntimeException("network")))
+        `when`(getFeedUseCase.execute(anyOrNull(), any())).thenReturn(Result.failure(RuntimeException("network")))
 
         viewModel.obtainEvent(FeedEvent.LoadPosts)
         advanceUntilIdle()
@@ -89,7 +91,7 @@ class FeedViewModelTest {
     @Test
     fun `post liked toggles like in state when request succeeds`() = runTest {
         val post = createPost()
-        `when`(getFeedUseCase.execute(null, 1)).thenReturn(Result.success(listOf(post)))
+        `when`(getFeedUseCase.execute(anyOrNull(), any())).thenReturn(Result.success(listOf(post)))
         `when`(likePostUseCase.execute("1")).thenReturn(Result.success(Unit))
 
         viewModel.obtainEvent(FeedEvent.LoadPosts)

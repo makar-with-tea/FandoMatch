@@ -20,7 +20,10 @@ import org.mockito.Mockito.mock
 import ru.hse.fandomatch.domain.exception.LoginAlreadyInUseException
 import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.Gender
+import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
+import ru.hse.fandomatch.domain.model.ProfileType
+import ru.hse.fandomatch.domain.model.User
 import ru.hse.fandomatch.domain.usecase.auth.CheckVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.auth.GetVerificationCodeUseCase
 import ru.hse.fandomatch.domain.usecase.auth.RegisterUseCase
@@ -77,12 +80,8 @@ class RegistrationViewModelTest {
 
     @Test
     fun `name submitted success moves to code step`() = runTest {
-        fillNameStep(
-            name = "John Doe",
-            email = "john@mail.com",
-            login = "john_doe"
-        )
-        `when`(getVerificationCodeUseCase.execute("john@mail.com")).thenReturn(Result.success(Unit))
+        fillNameStep()
+        `when`(getVerificationCodeUseCase.execute(profileType.email)).thenReturn(Result.success(Unit))
 
         viewModel.obtainEvent(RegistrationEvent.NameSubmitted)
         advanceUntilIdle()
@@ -92,12 +91,8 @@ class RegistrationViewModelTest {
 
     @Test
     fun `name submitted failure sets network errors`() = runTest {
-        fillNameStep(
-            name = "John Doe",
-            email = "john@mail.com",
-            login = "john_doe"
-        )
-        `when`(getVerificationCodeUseCase.execute("john@mail.com")).thenReturn(Result.failure(RuntimeException()))
+        fillNameStep()
+        `when`(getVerificationCodeUseCase.execute(profileType.email)).thenReturn(Result.failure(RuntimeException()))
 
         viewModel.obtainEvent(RegistrationEvent.NameSubmitted)
         advanceUntilIdle()
@@ -112,11 +107,11 @@ class RegistrationViewModelTest {
     fun `code submitted invalid shows invalid code error`() = runTest {
         goToCodeStep()
         advanceUntilIdle()
-        `when`(checkVerificationCodeUseCase.execute("123456", "john@mail.com")).thenReturn(
+        `when`(checkVerificationCodeUseCase.execute(code, profileType.email)).thenReturn(
             Result.success(false)
         )
 
-        viewModel.obtainEvent(RegistrationEvent.CodeSubmitted("123456"))
+        viewModel.obtainEvent(RegistrationEvent.CodeSubmitted(code))
         advanceUntilIdle()
 
         val state = viewModel.state.first() as RegistrationState.Code
@@ -127,11 +122,11 @@ class RegistrationViewModelTest {
     fun `code submitted network failure shows network error`() = runTest {
         goToCodeStep()
         advanceUntilIdle()
-        `when`(checkVerificationCodeUseCase.execute("123456", "john@mail.com")).thenReturn(
+        `when`(checkVerificationCodeUseCase.execute(code, profileType.email)).thenReturn(
             Result.failure(RuntimeException())
         )
 
-        viewModel.obtainEvent(RegistrationEvent.CodeSubmitted("123456"))
+        viewModel.obtainEvent(RegistrationEvent.CodeSubmitted(code))
         advanceUntilIdle()
 
         val state = viewModel.state.first() as RegistrationState.Code
@@ -143,7 +138,7 @@ class RegistrationViewModelTest {
         goToDateOfBirthStep()
         advanceUntilIdle()
 
-        viewModel.obtainEvent(RegistrationEvent.DateSelected(dateMillis(LocalDate.now().minusYears(10))))
+        viewModel.obtainEvent(RegistrationEvent.DateSelected(dateEpochSeconds(LocalDate.now().minusYears(10))))
 
         val state = viewModel.state.first() as RegistrationState.DateOfBirth
         assertEquals(RegistrationState.RegistrationError.DOB_TOO_YOUNG, state.error)
@@ -154,7 +149,7 @@ class RegistrationViewModelTest {
         goToDateOfBirthStep()
         advanceUntilIdle()
 
-        viewModel.obtainEvent(RegistrationEvent.DateSelected(dateMillis(LocalDate.now().minusYears(20))))
+        viewModel.obtainEvent(RegistrationEvent.DateSelected(dateEpochSeconds(LocalDate.now().minusYears(20))))
 
         val state = viewModel.state.first()
         assertTrue(state is RegistrationState.GenderChoice)
@@ -214,20 +209,20 @@ class RegistrationViewModelTest {
     fun `password submit success emits navigate to matches action`() = runTest {
         goToPasswordStep(byteArrayOf(7, 8, 9), Gender.MALE)
         advanceUntilIdle()
-        viewModel.obtainEvent(RegistrationEvent.PasswordChanged("Password123!"))
-        viewModel.obtainEvent(RegistrationEvent.PasswordRepeatChanged("Password123!"))
+        viewModel.obtainEvent(RegistrationEvent.PasswordChanged(password))
+        viewModel.obtainEvent(RegistrationEvent.PasswordRepeatChanged(password))
         viewModel.obtainEvent(RegistrationEvent.AgreedToTermsChanged(true))
         `when`(uploadMediaUseCase.execute(byteArrayOf(7, 8, 9), MediaType.IMAGE)).thenReturn(
             Result.success("avatar-id")
         )
         `when`(
             registerUseCase.execute(
-                name = "John Doe",
-                email = "john@mail.com",
-                login = "john_doe",
-                dateOfBirthEpochSeconds = dateMillis(LocalDate.now().minusYears(20)),
-                gender = Gender.MALE,
-                password = "Password123!"
+                name = user.name,
+                email = profileType.email,
+                login = profileType.login,
+                dateOfBirthEpochSeconds = dateEpochSeconds(LocalDate.now().minusYears(user.age.toLong())),
+                gender = user.gender,
+                password = password
             )
         ).thenReturn(Result.success(Unit))
 
@@ -241,17 +236,17 @@ class RegistrationViewModelTest {
     fun `password submit with taken login returns to name step with login taken error`() = runTest {
         goToPasswordStep(null, Gender.MALE)
         advanceUntilIdle()
-        viewModel.obtainEvent(RegistrationEvent.PasswordChanged("Password123!"))
-        viewModel.obtainEvent(RegistrationEvent.PasswordRepeatChanged("Password123!"))
+        viewModel.obtainEvent(RegistrationEvent.PasswordChanged(password))
+        viewModel.obtainEvent(RegistrationEvent.PasswordRepeatChanged(password))
         viewModel.obtainEvent(RegistrationEvent.AgreedToTermsChanged(true))
         `when`(
             registerUseCase.execute(
-                name = "John Doe",
-                email = "john@mail.com",
-                login = "john_doe",
-                dateOfBirthEpochSeconds = dateMillis(LocalDate.now().minusYears(20)),
-                gender = Gender.MALE,
-                password = "Password123!"
+                name = user.name,
+                email = profileType.email,
+                login = profileType.login,
+                dateOfBirthEpochSeconds = dateEpochSeconds(LocalDate.now().minusYears(user.age.toLong())),
+                gender = user.gender,
+                password = password
             )
         ).thenReturn(Result.failure(LoginAlreadyInUseException()))
 
@@ -294,41 +289,75 @@ class RegistrationViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun fillNameStep(name: String, email: String, login: String) {
+    private fun fillNameStep(
+        name: String = user.name,
+        email: String = profileType.email,
+        login: String = profileType.login,
+    ) {
         viewModel.obtainEvent(RegistrationEvent.NameChanged(name))
         viewModel.obtainEvent(RegistrationEvent.EmailChanged(email))
         viewModel.obtainEvent(RegistrationEvent.LoginChanged(login))
     }
 
     private suspend fun goToCodeStep() {
-        fillNameStep("John Doe", "john@mail.com", "john_doe")
-        `when`(getVerificationCodeUseCase.execute("john@mail.com")).thenReturn(Result.success(Unit))
+        fillNameStep(user.name, profileType.email, profileType.login)
+        `when`(getVerificationCodeUseCase.execute(profileType.email)).thenReturn(Result.success(Unit))
         viewModel.obtainEvent(RegistrationEvent.NameSubmitted)
+        testDispatcher.scheduler.advanceUntilIdle()
     }
 
     private suspend fun goToDateOfBirthStep() {
         goToCodeStep()
-        `when`(checkVerificationCodeUseCase.execute("123456", "john@mail.com")).thenReturn(
+        `when`(checkVerificationCodeUseCase.execute(code, profileType.email)).thenReturn(
             Result.success(true)
         )
-        viewModel.obtainEvent(RegistrationEvent.CodeSubmitted("123456"))
+        viewModel.obtainEvent(RegistrationEvent.CodeSubmitted(code))
+        testDispatcher.scheduler.advanceUntilIdle()
     }
 
     private suspend fun goToGenderChoiceStep() {
         goToDateOfBirthStep()
-        viewModel.obtainEvent(RegistrationEvent.DateSelected(dateMillis(LocalDate.now().minusYears(20))))
+        viewModel.obtainEvent(RegistrationEvent.DateSelected(dateEpochSeconds(LocalDate.now().minusYears(20))))
+        testDispatcher.scheduler.advanceUntilIdle()
     }
 
     private suspend fun goToAvatarStep(gender: Gender = Gender.NOT_SPECIFIED) {
         goToGenderChoiceStep()
         viewModel.obtainEvent(RegistrationEvent.GenderSelected(gender))
+        testDispatcher.scheduler.advanceUntilIdle()
     }
 
     private suspend fun goToPasswordStep(avatar: ByteArray? = null, gender: Gender = Gender.NOT_SPECIFIED) {
         goToAvatarStep(gender)
         viewModel.obtainEvent(RegistrationEvent.AvatarSelected(avatar))
+        testDispatcher.scheduler.advanceUntilIdle()
     }
 
-    private fun dateMillis(date: LocalDate): Long =
-        date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    private fun dateEpochSeconds(date: LocalDate): Long =
+        date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000
+
+    private companion object {
+        val profileType = ProfileType.Own(
+            email = "john@mail.com",
+            login = "john_doe",
+        )
+        val code = "123456"
+        val password = "qwerty123!"
+        val user = User(
+            id = "user-1",
+            fandoms = listOf(),
+            description = null,
+            name = "John Doe",
+            gender = Gender.MALE,
+            age = 20,
+            avatar = MediaItem(
+                id = "avatar-1",
+                mediaType = MediaType.IMAGE,
+                url = "http://example.com/avatar.jpg"
+            ),
+            background = null,
+            city = null,
+            profileType = profileType
+        )
+    }
 }

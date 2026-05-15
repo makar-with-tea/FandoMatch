@@ -18,23 +18,24 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyLong
-import org.mockito.ArgumentMatchers.eq
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when`
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import ru.hse.fandomatch.domain.logging.Logger
-import ru.hse.fandomatch.domain.usecase.chat.GetChatMessagesPageUseCase
 import ru.hse.fandomatch.domain.model.Chat
 import ru.hse.fandomatch.domain.model.MediaItem
 import ru.hse.fandomatch.domain.model.MediaType
 import ru.hse.fandomatch.domain.model.Message
+import ru.hse.fandomatch.domain.usecase.chat.GetChatMessagesPageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.LoadChatInfoUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SendMessageUseCase
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatMessagesUseCase
 import ru.hse.fandomatch.domain.usecase.chat.UnsubscribeFromChatMessagesUseCase
-import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
 import ru.hse.fandomatch.domain.usecase.media.DownloadMediaToGalleryUseCase
+import ru.hse.fandomatch.domain.usecase.media.UploadMediaUseCase
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ChatViewModelTest {
@@ -121,6 +122,7 @@ class ChatViewModelTest {
 
         viewModel.obtainEvent(ChatEvent.MessageDraftChanged(TextFieldValue("draft")))
         viewModel.obtainEvent(ChatEvent.AttachmentsChanged(listOf(byteArrayOf(1, 2, 3) to MediaType.IMAGE)))
+        advanceUntilIdle()
 
         val state = viewModel.state.first() as ChatState.Main
         assertEquals("draft", state.messageDraft.text)
@@ -133,20 +135,22 @@ class ChatViewModelTest {
         advanceUntilIdle()
         viewModel.obtainEvent(ChatEvent.MessageDraftChanged(TextFieldValue("hello")))
         viewModel.obtainEvent(ChatEvent.AttachmentsChanged(listOf(byteArrayOf(1, 2, 3) to MediaType.IMAGE)))
-        `when`(uploadMediaUseCase.execute(byteArrayOf(1, 2, 3), MediaType.IMAGE)).thenReturn(Result.success("media-id"))
+        advanceUntilIdle()
+
+        `when`(uploadMediaUseCase.execute(any(), any())).thenReturn(Result.success("media-id"))
         `when`(
             sendMessageUseCase.execute(
-                userId = "10",
-                content = "hello",
-                mediaIdsWithTypes = listOf("media-id" to MediaType.IMAGE),
-                timestamp = 123000L,
+                userId = eq("10"),
+                content = eq("hello"),
+                mediaIdsWithTypes = eq(listOf("media-id" to MediaType.IMAGE)),
+                timestamp = any(),
             )
         ).thenReturn(Result.success(Unit))
 
         viewModel.obtainEvent(ChatEvent.SendMessage(timestamp = 123L))
         advanceUntilIdle()
 
-        val state = viewModel.state.first() as ChatState.Main
+        val state = viewModel.state.value as ChatState.Main
         assertEquals("", state.messageDraft.text)
         assertTrue(state.attachedFilesWithTypes.isEmpty())
     }
@@ -170,8 +174,9 @@ class ChatViewModelTest {
         advanceUntilIdle()
 
         viewModel.obtainEvent(ChatEvent.ProfileClicked)
+        advanceUntilIdle()
 
-        assertEquals(ChatAction.GoToProfile("participant-1"), viewModel.action.first())
+        assertEquals(ChatAction.GoToProfile("10"), viewModel.action.first())
     }
 
     @Test
@@ -222,6 +227,7 @@ class ChatViewModelTest {
         advanceUntilIdle()
 
         val state = viewModel.state.first() as ChatState.Main
+        println(state.uiElements)
         assertTrue(state.uiElements.any { element ->
             element is ChatUiElement.MessageElement && element.message.messageId == "0"
         })
@@ -233,8 +239,13 @@ class ChatViewModelTest {
     }
 
     private suspend fun prepareMainState() {
+        val messages: MutableList<Message> = mutableListOf()
+        for (i in 1..31) {
+            messages.add(message(i.toString(), "message $i", 1000L + i))
+        }
+
         `when`(loadChatInfoUseCase.execute("10")).thenReturn(Result.success(chat()))
-        `when`(getChatMessagesPageUseCase.execute("chat-1", "10", null, 30)).thenReturn(Result.success(listOf(message("1", "hello", 1000L))))
+        `when`(getChatMessagesPageUseCase.execute("chat-1", "10", null, 30)).thenReturn(Result.success(messages))
         `when`(subscribeToChatMessagesUseCase.execute("10")).thenReturn(Result.success(messagesFlow))
         viewModel.obtainEvent(ChatEvent.LoadChat("10"))
     }

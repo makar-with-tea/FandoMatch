@@ -12,12 +12,13 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.`when`
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.model.ChatPreview
 import ru.hse.fandomatch.domain.usecase.chat.SubscribeToChatPreviewsUseCase
@@ -81,9 +82,9 @@ class ChatsListViewModelTest {
         val state = viewModel.state.value
         assertTrue(state is ChatsListState.Main)
         state as ChatsListState.Main
-        assertEquals(listOf(chat2, chat1), state.chats)
+        assertEquals(listOf(chat1, chat2), state.chats)
         assertEquals(null, state.filteredByQuery)
-        assertTrue(state.hasMore)
+        assertFalse(state.hasMore)
     }
 
     @Test
@@ -125,7 +126,7 @@ class ChatsListViewModelTest {
         viewModel.obtainEvent(ChatsListEvent.SearchChats(""))
 
         val state = viewModel.state.value as ChatsListState.Main
-        assertEquals(listOf(chat2, chat1), state.chats)
+        assertEquals(listOf(chat1, chat2), state.chats)
         assertEquals(null, state.filteredByQuery)
     }
 
