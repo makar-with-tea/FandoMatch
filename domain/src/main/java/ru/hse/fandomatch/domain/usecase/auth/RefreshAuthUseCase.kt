@@ -16,7 +16,7 @@ class RefreshAuthUseCase(
         return try {
             block()
         } catch (_: NotAuthorizedException) {
-            logger.i("RefreshAuthUseCase","Got NotAuthorizedException, trying to refresh token")
+            logger.d("RefreshAuthUseCase","Got NotAuthorizedException, trying to refresh token")
             sharedPrefRepository.clearToken()
             sharedPrefRepository.clearUserId()
             val refreshToken = sharedPrefRepository.getRefreshToken()

@@ -80,7 +80,7 @@ fun MainView(
     userId: String? = null,
     onNotificationConsumed: () -> Unit = {},
 ) {
-    Log.d("MainView", "MainView created: navigateTo=$navigateTo, userId=$userId")
+    Log.d("MainView", "MainView created: navigateTo=$navigateTo")
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -251,7 +251,7 @@ fun MainView(
                     updateTopBar()
                     MatchesScreen(
                         navigateToProfile = { profileId ->
-                            Log.d("Navigation", "Navigate to profile $profileId")
+                            Log.d("Navigation", "Navigate to profile")
                             navigateToRouteWithArgs(
                                 Route.Profile.createRoute(profileId)
                             )
@@ -289,13 +289,13 @@ fun MainView(
                             )
                         },
                         goToProfile = { profileId ->
-                            Log.d("Navigation", "Navigate to profile $profileId from MyProfile")
+                            Log.d("Navigation", "Navigate to profile from MyProfile")
                             navigateToRouteWithArgs(
                                 Route.Profile.createRoute(profileId)
                             )
                         },
                         goToPost = { postId ->
-                            Log.d("Navigation", "Navigate to post $postId from MyProfile")
+                            Log.d("Navigation", "Navigate to post from MyProfile")
                             navigateToRouteWithArgs(
                                 Route.Post.createRoute(postId)
                             )
@@ -305,7 +305,7 @@ fun MainView(
                 composable(Route.ChatsList.route) {
                     ChatsListScreen(
                         navigateToChat = { userId ->
-                            Log.d("Navigation", "Navigate to chat $userId")
+                            Log.d("Navigation", "Navigate to chat")
                             navigateToRouteWithArgs(
                                 Route.Chat.createRoute(userId)
                             )
@@ -351,7 +351,7 @@ fun MainView(
                             /* do nothing */
                             Log.d(
                                 "Navigation",
-                                "Impossible: go to profile $profileId from profile $profileId"
+                                "Impossible: go to profile from profile"
                             )
                         },
                         goToPost = { postId ->

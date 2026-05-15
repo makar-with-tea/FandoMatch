@@ -35,7 +35,6 @@ fun SwipeableCardStack(
     onDislike: (String) -> Unit,
     onCardClick: (String) -> Unit,
 ) {
-    Log.i("SwipeableCardStack", "Rendering SwipeableCardStack with: ${profiles.map { it.name }}")
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         profiles.forEachIndexed { index, profile ->
             val isTop = index == profiles.lastIndex

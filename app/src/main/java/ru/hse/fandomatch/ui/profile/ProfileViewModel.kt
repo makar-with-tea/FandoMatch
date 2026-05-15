@@ -43,7 +43,7 @@ class ProfileViewModel(
     }
 
     fun obtainEvent(event: ProfileEvent) {
-        logger.i("ProfileViewModel", "Obtained event: $event")
+        logger.d("ProfileViewModel", "Obtained event: $event")
         when (event) {
             is ProfileEvent.LoadProfile -> {
                 loadProfile(event.userId, event.isCurrentUser)
@@ -111,7 +111,7 @@ class ProfileViewModel(
                             isLoadingMorePosts = false
                         }
                     val type = user.profileType
-                    logger.i("ProfileViewModel", "Loading profile for userId: $userId")
+                    logger.d("ProfileViewModel", "Loading profile for userId: $userId")
                     withContext(dispatcherMain) {
                         _state.value = ProfileState.Main(
                             id = user.id,

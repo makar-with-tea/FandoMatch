@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.matches
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,7 +26,6 @@ fun MatchesScreen(
 ) {
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
-    Log.i("MatchesScreen", "Rendering MatchesScreen with state: ${state.value}")
 
         when (val action = action.value) {
             is MatchesAction.NavigateToProfile -> {
@@ -36,8 +34,6 @@ fun MatchesScreen(
             }
             null -> {}
         }
-
-    Log.d("MatchesScreen", "State: $state")
 
     when (state.value) {
         is MatchesState.Idle -> {

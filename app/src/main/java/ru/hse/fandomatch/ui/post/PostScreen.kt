@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.post
 
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -83,8 +82,6 @@ fun PostScreen(
 
         null -> Unit
     }
-
-    Log.d("PostScreen", "State: $state")
 
     when (state.value) {
         is PostState.Main -> MainState(

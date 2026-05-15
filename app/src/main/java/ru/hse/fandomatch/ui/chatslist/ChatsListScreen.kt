@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.chatslist
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
@@ -62,7 +61,6 @@ import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
 import ru.hse.fandomatch.navigation.EndIconState
 import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.ui.chat.ChatEvent
 import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.ImageOrPlaceholder
 import ru.hse.fandomatch.ui.composables.MyTitle
@@ -79,8 +77,6 @@ fun ChatsListScreen(
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
     val listState = rememberLazyListState()
-
-    Log.d("ChatsListScreen", "State: $state")
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {

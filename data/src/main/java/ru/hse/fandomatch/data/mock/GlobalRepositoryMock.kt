@@ -555,7 +555,7 @@ class GlobalRepositoryMock: GlobalRepository {
         category: FandomCategory,
         description: String
     ) {
-        Log.i(
+        Log.d(
             "GlobalRepositoryMock",
             "requestNewFandom: user $userId requested new fandom with name $name, category ${category.name}, description $description"
         )

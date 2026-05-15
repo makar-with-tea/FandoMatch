@@ -53,7 +53,6 @@ fun AddFandomScreen(
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
 
-    Log.d("AddFandomScreen", "State: $state")
     when (action.value) {
         AddFandomAction.ShowSuccessToastAndGoBack -> {
             Toast.makeText(

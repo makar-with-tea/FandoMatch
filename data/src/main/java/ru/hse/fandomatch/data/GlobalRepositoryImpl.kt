@@ -244,7 +244,6 @@ class GlobalRepositoryImpl(
                 refreshToken = refreshToken
             )
         )
-        Log.i("GlobalRepositoryImpl", "refreshed token: $response")
         when (response.status) {
             ResponseStatusDTO.SUCCESS -> {
                 return AuthInfo(
@@ -629,9 +628,6 @@ class GlobalRepositoryImpl(
             .catch { exception ->
                 Log.e("GlobalRepositoryImpl", "WebSocket error", exception)
             }
-            .onEach { incoming ->
-                Log.i("GlobalRepositoryImpl", "Received new chat message via socket: $incoming")
-            }
         chatMessagesJob = messageFlow.launchIn(repositoryScope)
 
         return messageFlow
@@ -662,7 +658,6 @@ class GlobalRepositoryImpl(
         response.errorResponse?.let {
             throw Exception("Failed to load chat messages: ${it.errorCode}, ${it.errorMessage}")
         }
-        Log.i("GlobalRepositoryImpl", "Loaded chat messages response: $response")
         return response.successResponse?.messages?.map { dto ->
             Message(
                 messageId = dto.messageId,

@@ -34,7 +34,7 @@ class MainActivity : ComponentActivity() {
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
     ) { isGranted: Boolean ->
-        Log.i("MainActivity", "Notification permission granted: $isGranted")
+        Log.d("MainActivity", "Notification permission granted: $isGranted")
     }
 
     private var showNotificationRationale by mutableStateOf(false)
@@ -47,7 +47,10 @@ class MainActivity : ComponentActivity() {
     private fun updateNotificationTarget(intent: Intent?) {
         navigateToTarget = intent?.getStringExtra("navigateTo")
         targetId = intent?.getStringExtra("userId")
-        Log.i("MainActivity", "Received intent with navigateTo: $navigateToTarget, userId: $targetId")
+        Log.d(
+            "MainActivity",
+            "Received intent with navigateTo: $navigateToTarget"
+        )
     }
 
     private fun askNotificationPermission() {
@@ -70,20 +73,16 @@ class MainActivity : ComponentActivity() {
             askNotificationPermission()
             setPermissionShownUseCase.execute(true)
         }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
-            PackageManager.PERMISSION_GRANTED
-        ) {
-            Log.i("MainActivity", "Setting up notification channel")
-            val channelId = "default_channel"
-            val channelName = "Default Channel"
-            val channelDescription = "General notifications"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(channelId, channelName, importance).apply {
-                description = channelDescription
-            }
-            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            manager.createNotificationChannel(channel)
+
+        val channelId = "default_channel"
+        val channelName = "Default Channel"
+        val channelDescription = "General notifications"
+        val importance = NotificationManager.IMPORTANCE_DEFAULT
+        val channel = NotificationChannel(channelId, channelName, importance).apply {
+            description = channelDescription
         }
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        manager.createNotificationChannel(channel)
 
         enableEdgeToEdge()
         setContent {

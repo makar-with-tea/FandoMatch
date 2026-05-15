@@ -36,7 +36,6 @@ fun AuthorizationScreen(
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
 
-    Log.d("AuthorizationScreen", "State: $state")
     when (action.value) {
         is AuthorizationAction.NavigateToMatches -> {
             navigateToMatches()

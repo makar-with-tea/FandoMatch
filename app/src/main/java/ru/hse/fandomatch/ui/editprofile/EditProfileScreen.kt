@@ -60,7 +60,6 @@ fun EditProfileScreen(
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
 
-    Log.d("EditProfileScreen", "State: $state")
     when (action.value) {
         is EditProfileAction.NavigateToAddFandom -> {
             navigateToAddFandom()

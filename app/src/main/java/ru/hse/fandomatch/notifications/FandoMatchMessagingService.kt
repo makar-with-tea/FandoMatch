@@ -3,7 +3,6 @@ package ru.hse.fandomatch.notifications
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
@@ -16,17 +15,19 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import ru.hse.fandomatch.MainActivity
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.domain.logging.Logger
 import ru.hse.fandomatch.domain.usecase.auth.SaveDeviceTokenUseCase
 import ru.hse.fandomatch.domain.usecase.chat.GetCurrentChatIdUseCase
 
 class FandoMatchMessagingService : FirebaseMessagingService(), KoinComponent {
     private val saveDeviceTokenUseCase: SaveDeviceTokenUseCase by inject()
     private val getCurrentChatIdUseCase: GetCurrentChatIdUseCase by inject()
+    private val logger: Logger by inject()
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-        Log.i("FCM", "Message data payload: ${message.data}")
+        logger.d("FCM", "Message data payload: ${message.data}")
         val type = when (message.data[TYPE]) {
             NotificationType.CHAT.rawValue -> NotificationType.CHAT
             NotificationType.MATCH.rawValue -> NotificationType.MATCH
@@ -36,10 +37,10 @@ class FandoMatchMessagingService : FirebaseMessagingService(), KoinComponent {
         if (type == NotificationType.CHAT) {
             val currentChatId = getCurrentChatIdUseCase.execute()
             if (currentChatId != null && currentChatId == userId) {
-                Log.i("FCM", "Notification ignored, user is currently in chat with user $currentChatId")
+                logger.d("FCM", "Notification ignored, user is currently in chat with user $currentChatId")
                 return
             } else {
-                Log.i("FCM", "current chat with $currentChatId, message from $userId")
+                logger.d("FCM", "current chat with $currentChatId, message from $userId")
             }
         }
 
@@ -65,7 +66,7 @@ class FandoMatchMessagingService : FirebaseMessagingService(), KoinComponent {
         val intent = Intent(this, MainActivity::class.java).apply {
             putExtra(NAVIGATE_TO, type.rawValue)
             putExtra(USER_ID, userId)
-            Log.i("FCM", "Creating intent with navigateTo: ${type.rawValue}, userId: $userId")
+            logger.d("FCM", "Creating intent with navigateTo: ${type.rawValue}, userId: $userId")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                 Intent.FLAG_ACTIVITY_CLEAR_TOP or
                 Intent.FLAG_ACTIVITY_SINGLE_TOP
@@ -90,18 +91,18 @@ class FandoMatchMessagingService : FirebaseMessagingService(), KoinComponent {
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(requestCode, notification)
 
-        Log.i("FCM", "message shown: ${message.data}")
+        logger.d("FCM", "message shown: ${message.data}")
     }
 
     override fun onNewToken(token: String) {
-        Log.d("FCM", "Refreshed token: $token")
+        logger.d("FCM", "Refreshed token: $token")
         serviceScope.launch(Dispatchers.IO) {
             saveDeviceTokenUseCase.execute(token)
                 .onSuccess {
-                    Log.d("FCM", "Device token saved successfully")
+                    logger.d("FCM", "Device token saved successfully")
                 }
                 .onFailure { e ->
-                    Log.e("FCM", "Failed to save device token", e)
+                    logger.e("FCM", "Failed to save device token", e)
                 }
         }
     }

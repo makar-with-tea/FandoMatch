@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.intro
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,7 +30,6 @@ fun IntroScreen(
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
 
-    Log.d("IntroScreen", "State: $state")
     when (action.value) {
         is IntroAction.NavigateToMatches -> {
             navigateToMatches()

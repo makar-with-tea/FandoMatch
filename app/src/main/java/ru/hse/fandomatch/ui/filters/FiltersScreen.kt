@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.filters
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -43,16 +42,16 @@ import ru.hse.fandomatch.domain.model.City
 import ru.hse.fandomatch.domain.model.Fandom
 import ru.hse.fandomatch.domain.model.FandomCategory
 import ru.hse.fandomatch.domain.model.Gender
-import ru.hse.fandomatch.utils.getColor
-import ru.hse.fandomatch.utils.stringId
-import ru.hse.fandomatch.utils.toStringId
 import ru.hse.fandomatch.ui.composables.BasicErrorState
 import ru.hse.fandomatch.ui.composables.FandomInput
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MySwitch
 import ru.hse.fandomatch.ui.composables.getName
 import ru.hse.fandomatch.ui.theme.FandoMatchTheme
+import ru.hse.fandomatch.utils.getColor
 import ru.hse.fandomatch.utils.getIcon
+import ru.hse.fandomatch.utils.stringId
+import ru.hse.fandomatch.utils.toStringId
 import kotlin.math.roundToInt
 
 @Composable
@@ -64,7 +63,6 @@ fun FiltersScreen(
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
 
-    Log.d("FiltersScreen", "State: $state")
     when (action.value) {
         is FiltersAction.NavigateToMatches -> {
             navigateToMatches()

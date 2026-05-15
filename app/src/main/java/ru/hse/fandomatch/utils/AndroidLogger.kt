@@ -1,12 +1,13 @@
 package ru.hse.fandomatch.utils
 
 import android.util.Log
+import ru.hse.fandomatch.BuildConfig
 import ru.hse.fandomatch.domain.logging.Logger
 
 class AndroidLogger() : Logger {
 
     override fun d(tag: String, message: String) {
-        Log.d(tag, message)
+        if (BuildConfig.DEBUG) Log.d(tag, message)
     }
 
     override fun i(tag: String, message: String) {

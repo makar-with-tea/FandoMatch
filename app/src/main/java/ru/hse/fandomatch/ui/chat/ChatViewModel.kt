@@ -64,7 +64,7 @@ class ChatViewModel(
     }
 
     fun obtainEvent(event: ChatEvent) {
-        logger.i("ChatViewModel", "Obtained event: $event")
+        logger.d("ChatViewModel", "Obtained event: $event")
         when (event) {
             ChatEvent.Clear -> clear()
             is ChatEvent.LoadChat -> loadChat(event.profileId)
@@ -205,7 +205,7 @@ class ChatViewModel(
         val message = currentState.messageDraft
         val filesWithTypes = currentState.attachedFilesWithTypes
         if (message.text.isBlank() && filesWithTypes.isEmpty()) return
-        logger.i("ChatViewModel", "Sending message: $message at $timestamp")
+        logger.d("ChatViewModel", "Sending message: $message at $timestamp")
         viewModelScope.launch(dispatcherIO) {
             val mediaIds = filesWithTypes.mapNotNull { (bytes, type) ->
                 val uploadInfoResult = uploadMediaUseCase.execute(bytes, type)

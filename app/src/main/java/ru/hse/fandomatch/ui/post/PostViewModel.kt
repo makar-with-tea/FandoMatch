@@ -35,7 +35,7 @@ class PostViewModel(
     val action: StateFlow<PostAction?> get() = _action
 
     fun obtainEvent(event: PostEvent) {
-        logger.i("PostViewModel", "Obtained event: $event")
+        logger.d("PostViewModel", "Obtained event: $event")
         when (event) {
             PostEvent.Clear -> clear()
             is PostEvent.LoadPost -> loadPost(event.postId)

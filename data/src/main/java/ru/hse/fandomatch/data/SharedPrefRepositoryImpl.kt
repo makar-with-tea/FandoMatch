@@ -2,7 +2,6 @@ package ru.hse.fandomatch.data
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import androidx.core.content.edit
 import ru.hse.fandomatch.domain.repos.SharedPrefRepository
 
@@ -12,7 +11,6 @@ class SharedPrefRepositoryImpl(
     private val preferences: SharedPreferences = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
 
     override fun saveUserId(id: String) {
-        Log.d("SharedPrefRepository", "saveUserId: $id")
         preferences.edit { putString("user_id", id) }
     }
 
@@ -21,19 +19,16 @@ class SharedPrefRepositoryImpl(
             if (it == "") {
                 null
             } else {
-                Log.d("SharedPrefRepository", "getUserId: $it")
                 it
             }
         }
     }
 
     override fun clearUserId() {
-        Log.d("SharedPrefRepository", "clearUserId")
         preferences.edit { remove("user_id") }
     }
 
     override fun clearInfo() {
-        Log.d("SharedPrefRepository", "clearInfo")
         preferences.edit { clear() }
     }
 

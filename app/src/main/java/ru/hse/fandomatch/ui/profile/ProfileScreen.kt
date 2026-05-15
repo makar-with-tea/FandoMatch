@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.profile
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -85,7 +84,6 @@ fun ProfileScreen(
             }
         }
     }
-    Log.i("ProfileScreen", "Rendering ProfileScreen with state: ${state.value}")
 
     when (val action = action.value) {
         is ProfileAction.GoToMessages -> {
@@ -125,8 +123,6 @@ fun ProfileScreen(
 
         null -> {}
     }
-
-    Log.d("ProfileScreen", "State: $state")
 
     when (val state = state.value) {
         is ProfileState.Main -> MainState(

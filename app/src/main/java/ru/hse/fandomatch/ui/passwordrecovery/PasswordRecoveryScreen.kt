@@ -36,7 +36,6 @@ fun PasswordRecoveryScreen(
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
 
-    Log.d("PasswordRecoveryScreen", "State: $state")
     when (action.value) {
         is PasswordRecoveryAction.NavigateToAuthorization -> {
             Toast.makeText(

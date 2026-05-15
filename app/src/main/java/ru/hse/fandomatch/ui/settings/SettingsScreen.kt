@@ -1,6 +1,5 @@
 package ru.hse.fandomatch.ui.settings
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
+import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.ui.composables.AccountButton
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.composables.MyAlertDialog
@@ -41,9 +41,6 @@ import ru.hse.fandomatch.ui.composables.MyPasswordField
 import ru.hse.fandomatch.ui.composables.MySwitch
 import ru.hse.fandomatch.ui.composables.MyTextField
 import ru.hse.fandomatch.ui.composables.MyTitle
-import ru.hse.fandomatch.navigation.TopBarState
-import ru.hse.fandomatch.ui.registration.RegistrationState
-import ru.hse.fandomatch.ui.registration.getText
 import ru.hse.fandomatch.ui.theme.FandoMatchTheme
 
 @Composable
@@ -56,8 +53,6 @@ fun SettingsScreen(
 
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
-
-    Log.d("SettingsScreen", "State: $state")
 
     when (action.value) {
         is SettingsAction.NavigateToIntro -> {

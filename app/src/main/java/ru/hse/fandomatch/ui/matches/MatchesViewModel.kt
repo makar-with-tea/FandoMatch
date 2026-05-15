@@ -33,7 +33,7 @@ class MatchesViewModel(
     @Volatile private var isLoadingNext: Boolean = false
 
     fun obtainEvent(event: MatchesEvent) {
-        logger.i("MatchesViewModel", "Obtained event: $event")
+        logger.d("MatchesViewModel", "Obtained event: $event")
         when (event) {
             is MatchesEvent.LikedProfile -> {
                 likeProfile(event.profileId)
@@ -56,7 +56,7 @@ class MatchesViewModel(
             profileStack = buffer.toList(),
             isLoading = true,
         )
-        logger.i("MatchesViewModel", "Starting initial load of suggested profiles")
+        logger.d("MatchesViewModel", "Starting initial load of suggested profiles")
         viewModelScope.launch(dispatcherIO) {
             loadSuggestedProfilesUseCase.execute(batchSize)
                 .onFailure {

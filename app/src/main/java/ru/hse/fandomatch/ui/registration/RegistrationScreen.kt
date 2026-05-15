@@ -1,30 +1,19 @@
 package ru.hse.fandomatch.ui.registration
 
-import android.util.Log
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
 import ru.hse.fandomatch.R
-import ru.hse.fandomatch.domain.model.Gender
 import ru.hse.fandomatch.navigation.TopBarState
 import ru.hse.fandomatch.ui.composables.LoadingBlock
 import ru.hse.fandomatch.ui.registration.steps.AvatarStep
@@ -44,11 +33,9 @@ fun RegistrationScreen(
 ) {
     val state = viewModel.state.collectAsState()
     val action = viewModel.action.collectAsState()
-    Log.i("RegistrationScreen", "State: ${state.value}")
 
     setTopBarState(
         if (state.value != RegistrationState.Idle && state.value != RegistrationState.Loading) {
-            Log.i("RegistrationScreen", "Setting top bar state for registration")
             TopBarState(
                 titleContent = {
                     LinearWavyProgressIndicator(
@@ -72,9 +59,7 @@ fun RegistrationScreen(
                     )
                 }
             )
-        } else null.also {
-            Log.i("RegistrationScreen", "Clearing top bar state for registration")
-        }
+        } else null
     )
 
     when (action.value) {
