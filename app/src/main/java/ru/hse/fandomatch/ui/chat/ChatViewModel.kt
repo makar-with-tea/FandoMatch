@@ -315,7 +315,7 @@ class ChatViewModel(
         for ((index, message) in withIndex()) {
             val dateString = message.timestamp.epochSecondsToDateString()
             if (dateString != currentDate) {
-                result.add(ChatUiElement.DayElement(dateString))
+                currentDate?.let { result.add(ChatUiElement.DayElement(it)) }
                 currentDate = dateString
             }
             val hasTail = index == 0 || this[index - 1].isFromThisUser != message.isFromThisUser
@@ -326,12 +326,10 @@ class ChatViewModel(
                 )
             )
         }
-        if (result.lastOrNull() !is ChatUiElement.DayElement) {
-            val dateString = result.lastOrNull { it is ChatUiElement.MessageElement }
-                ?.let { (it as ChatUiElement.MessageElement).message.timestamp.epochSecondsToDateString() }
-            dateString?.let {
-                result.add(ChatUiElement.DayElement(it))
-            }
+        val dateString = result.lastOrNull { it is ChatUiElement.MessageElement }
+            ?.let { (it as ChatUiElement.MessageElement).message.timestamp.epochSecondsToDateString() }
+        dateString?.let {
+            result.add(ChatUiElement.DayElement(it))
         }
         return result
     }
